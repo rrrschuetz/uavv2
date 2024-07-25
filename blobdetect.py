@@ -20,25 +20,20 @@ def detect_rectangles(image_path, output_path):
     # Find contours
     contours, _ = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # List to store rectangular blobs
-    rectangles = []
-
     for contour in contours:
-        # Approximate the contour
-        epsilon = 0.02 * cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, epsilon, True)
+        # Get the minimum area rectangle for the contour
+        rect = cv2.minAreaRect(contour)
+        box = cv2.boxPoints(rect)
+        box = np.int32(box)  # Changed to np.int32
 
-        # If the approximated contour has 4 vertices and is large enough, it is considered a rectangle
-        if len(approx) == 4 and cv2.contourArea(approx) > 100:
-            # Further filter by aspect ratio if needed
-            (x, y, w, h) = cv2.boundingRect(approx)
-            aspect_ratio = w / float(h)
-            if 0.1 <= aspect_ratio <= 1.5:  # Adjust as necessary
-                rectangles.append(approx)
-
-    # Draw rectangles on the original image
-    for rect in rectangles:
-        cv2.drawContours(image, [rect], 0, (0, 255, 0), 10)
+        # Filter rectangles by area and aspect ratio if needed
+        width, height = rect[1]
+        angle = rect[2]
+        if width > 100 and height > 100:
+            aspect_ratio = width / height if width > height else height / width
+            angle = abs(angle) if width > height else abs(angle + 90)
+            if 75 <= angle <= 105 and 1.5 <= aspect_ratio <= 3:  # Adjust as necessary
+                cv2.drawContours(image, [box], 0, (255, 255, 0), 15)  # Ensure color and thickness are appropriate
 
     # Save the image with rectangles
     cv2.imwrite(output_path, image)
