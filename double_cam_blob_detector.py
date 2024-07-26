@@ -82,25 +82,27 @@ def detect_and_label_rectangles(image):
 
 def main():
     # Initialize the cameras
-    picam2 = Picamera2(camera_num=0)
-    picam3 = Picamera2(camera_num=1)
+    picam0 = Picamera2(camera_num=0)
+    picam1 = Picamera2(camera_num=1)
 
     # Configure the cameras with a higher resolution
     config = {"format": 'RGB888', "size": (1920, 1080)}
-    picam2.configure(picam2.create_preview_configuration(main=config))
-    picam3.configure(picam3.create_preview_configuration(main=config))
+    picam0.configure(picam0.create_preview_configuration(main=config))
+    picam1.configure(picam1.create_preview_configuration(main=config))
 
     # Start the cameras
-    picam2.start()
-    picam3.start()
+    picam0.start()
+    picam1.start()
 
     while True:
         # Capture images from both cameras
-        image2 = picam2.capture_array()
-        image3 = picam3.capture_array()
+        image0 = picam0.capture_array()
+        image1 = picam1.capture_array()
+        image0_flipped = cv2.flip(image0, 0)
+        image1_flipped = cv2.flip(image1, 0)
 
         # Combine the images side by side
-        combined_image = np.hstack((image2, image3))
+        combined_image = np.hstack((image0, image1))
 
         # Detect and label rectangles on the combined image
         labeled_image, dilated_image = detect_and_label_rectangles(combined_image)
