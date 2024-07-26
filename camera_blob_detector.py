@@ -9,10 +9,12 @@ def adjust_contrast(image):
     return adjusted
 
 def detect_and_label_rectangles(image):
-    # Ignore the upper third of the image
+    # Ignore the upper part of the image
     height, width, _ = image.shape
+    blob_min_height = height // 20
+    blob_min_width = width // 20
     mask = np.zeros((height, width), dtype=np.uint8)
-    mask[height//4:, :] = 255
+    mask[height//2:, :] = 255
 
     # Adjust contrast
     adjusted = adjust_contrast(image)
@@ -25,11 +27,12 @@ def detect_and_label_rectangles(image):
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
     # Perform edge detection with adjusted parameters
-    edged = cv2.Canny(blurred, 50, 200)
+    edged = cv2.Canny(blurred, 50, 150)
 
     # Apply morphological operations to strengthen edges
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    dilated = cv2.dilate(edged, kernel, iterations=2)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    #eroded = cv2.erode(edged, kernel, iterations=1)  # Erode to thin the lines
+    dilated = cv2.dilate(edged, kernel, iterations=1)  # Dilate to recover shapes
 
     # Find contours
     contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -43,10 +46,10 @@ def detect_and_label_rectangles(image):
         # Filter rectangles by area, aspect ratio, and angle
         width, height = rect[1]
         angle = rect[2]
-        if width > 100 and height > 100:
+        if width > blob_min_width and height > blob_min_height:
             aspect_ratio = width / height if width > height else height / width
             angle = abs(angle) if width > height else abs(angle + 90)
-            if 75 <= angle <= 105 and 1.5 <= aspect_ratio <= 3:
+            if 80 <= angle <= 100 and 1.5 <= aspect_ratio <= 3:
                 # Analyze the color composition within the bounding box
                 x, y, w, h = cv2.boundingRect(contour)
                 roi = image[y:y+h, x:x+w]
@@ -76,14 +79,15 @@ def detect_and_label_rectangles(image):
                 cv2.putText(image, label, (x, y - 20), cv2.FONT_HERSHEY_SIMPLEX, 2.0, (255, 0, 0), 10)
                 print(f"Detected - Width: {width}, Height: {height}, Angle: {angle}, Aspect Ratio: {aspect_ratio}, Label: {label}")
 
-    return image
+    return image, dilated
 
 def main():
     # Initialize the camera
     picam2 = Picamera2()
 
     # Configure the camera
-    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (640, 480)}))
+    #picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (640, 480)}))
+    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (1920, 1080)}))
 
     # Start the camera
     picam2.start()
@@ -93,10 +97,14 @@ def main():
         image = picam2.capture_array()
 
         # Detect and label rectangles
-        labeled_image = detect_and_label_rectangles(image)
+        labeled_image, dilated_image = detect_and_label_rectangles(image)
+
+        s_labeled_image = cv2.resize(labeled_image, (0, 0), fx=0.25, fy=0.25)
+        s_dilated_image = cv2.resize(dilated_image, (0, 0), fx=0.25, fy=0.25)
 
         # Display the image
-        cv2.imshow('Camera', labeled_image)
+        cv2.imshow('Camera', s_labeled_image)
+        cv2.imshow('Blob Detector', s_dilated_image)
 
         # Press 'q' on the keyboard to exit the loop
         if cv2.waitKey(1) & 0xFF == ord('q'):
