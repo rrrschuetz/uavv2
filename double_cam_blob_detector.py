@@ -14,7 +14,7 @@ def detect_and_label_rectangles(image):
     blob_min_height = height // 20
     blob_min_width = width // 40
     mask = np.zeros((height, width), dtype=np.uint8)
-    mask[height//3:, :] = 255
+    mask[height//4:, :] = 255
 
     # Adjust contrast
     adjusted = adjust_contrast(image)
@@ -98,8 +98,8 @@ def main():
         # Capture images from both cameras
         image0 = picam0.capture_array()
         image1 = picam1.capture_array()
-        image0_flipped = cv2.flip(image0, 0)
-        image1_flipped = cv2.flip(image1, 0)
+        image0_flipped = cv2.flip(image0, -1)
+        image1_flipped = cv2.flip(image1, -1)
 
         # Combine the images side by side
         combined_image = np.hstack((image1_flipped, image0_flipped))
