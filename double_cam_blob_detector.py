@@ -14,7 +14,7 @@ def detect_and_label_rectangles(image):
     blob_min_height = height // 20
     blob_min_width = width // 40
     mask = np.zeros((height, width), dtype=np.uint8)
-    mask[height//2:, :] = 255
+    mask[height//3:, :] = 255
 
     # Adjust contrast
     adjusted = adjust_contrast(image)
