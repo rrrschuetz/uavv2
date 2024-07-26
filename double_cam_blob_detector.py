@@ -102,7 +102,7 @@ def main():
         image1_flipped = cv2.flip(image1, 0)
 
         # Combine the images side by side
-        combined_image = np.hstack((image0_flipped, image1_flipped))
+        combined_image = np.hstack((image1_flipped, image0_flipped))
 
         # Detect and label rectangles on the combined image
         labeled_image, dilated_image = detect_and_label_rectangles(combined_image)
