@@ -1,30 +1,30 @@
+from picamera2 import Picamera2, Preview
 import cv2
+import numpy as np
 
 def main():
-    # Open the default camera
-    cap = cv2.VideoCapture(0)
+    # Initialize the camera
+    picam2 = Picamera2()
 
-    if not cap.isOpened():
-        print("Error: Could not open camera.")
-        return
+    # Configure the camera
+    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (640, 480)}))
+
+    # Start the camera
+    picam2.start()
 
     while True:
-        # Capture frame-by-frame
-        ret, frame = cap.read()
+        # Capture an image
+        image = picam2.capture_array()
 
-        if not ret:
-            print("Error: Could not read frame.")
-            break
-
-        # Display the resulting frame
-        cv2.imshow('Camera', frame)
+        # Display the image
+        cv2.imshow('Camera', image)
 
         # Press 'q' on the keyboard to exit the loop
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # When everything done, release the capture
-    cap.release()
+    # Release the camera
+    picam2.stop()
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
