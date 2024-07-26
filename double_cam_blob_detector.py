@@ -98,11 +98,11 @@ def main():
         # Capture images from both cameras
         image0 = picam0.capture_array()
         image1 = picam1.capture_array()
-        image0_flipped = cv2.flip(image0, 1)
-        image1_flipped = cv2.flip(image1, 1)
+        image0_flipped = cv2.flip(image0, 0)
+        image1_flipped = cv2.flip(image1, 0)
 
         # Combine the images side by side
-        combined_image = np.hstack((image0, image1))
+        combined_image = np.hstack((image0_flipped, image1_flipped))
 
         # Detect and label rectangles on the combined image
         labeled_image, dilated_image = detect_and_label_rectangles(combined_image)
