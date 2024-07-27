@@ -27,10 +27,45 @@ def set_motor_speed(channel, speed):
     pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
 
 
-try:
-    # Arm the ESC by setting it to minimum speed
-    set_motor_speed(0, 0)
+def calibrate_esc(channel):
+    """
+    Calibrates the ESC by setting the maximum and minimum throttle positions.
+
+    :param channel: The channel number on the PCA9685 where the ESC is connected (0-15).
+    """
+    print("Calibrating ESC...")
+
+    # Set to maximum throttle
+    print("Setting to maximum throttle...")
+    set_motor_speed(channel, 100)
+    time.sleep(2)
+
+    # Set to minimum throttle
+    print("Setting to minimum throttle...")
+    set_motor_speed(channel, 0)
+    time.sleep(2)
+
+    print("Calibration complete")
+
+
+def arm_esc(channel):
+    """
+    Arms the ESC by setting it to minimum throttle for a short period.
+
+    :param channel: The channel number on the PCA9685 where the ESC is connected (0-15).
+    """
+    print("Arming ESC...")
+    set_motor_speed(channel, 0)
     time.sleep(1)
+    print("ESC armed")
+
+
+try:
+    # Calibrate the ESC
+    calibrate_esc(0)
+
+    # Arm the ESC
+    arm_esc(0)
 
     while True:
         # Example usage: gradually increase speed from 0% to 100%
