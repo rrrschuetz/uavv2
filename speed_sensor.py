@@ -1,8 +1,8 @@
 
-# sudo apt-get install python3-rpi.gpio
+# sudo apt-get install python3-gpiozero
 # LM 393 Speed Sensor
 
-import RPi.GPIO as GPIO
+from gpiozero import Button
 import time
 
 # Define the GPIO pin connected to the sensor
@@ -11,16 +11,15 @@ SENSOR_PIN = 17
 # Initialize the pulse count
 pulse_count = 0
 
-def pulse_callback(channel):
+def pulse_callback():
     global pulse_count
     pulse_count += 1
 
-# Set up the GPIO
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# Set up the sensor input
+sensor = Button(SENSOR_PIN)
 
-# Add an interrupt to detect pulses
-GPIO.add_event_detect(SENSOR_PIN, GPIO.FALLING, callback=pulse_callback)
+# Attach the callback function to the sensor's when_pressed event
+sensor.when_pressed = pulse_callback
 
 try:
     start_time = time.time()
@@ -35,4 +34,4 @@ try:
 except KeyboardInterrupt:
     print("Program stopped by User")
 finally:
-    GPIO.cleanup()
+    print("Cleaning up GPIO")
