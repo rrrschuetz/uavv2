@@ -1,6 +1,7 @@
 from picamera2 import Picamera2, Preview
 import cv2
 import numpy as np
+import time
 
 def gamma_correction(image, gamma=1.5):
     inv_gamma = 1.0 / gamma
@@ -81,6 +82,8 @@ def detect_and_label_blobs(image):
     contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     filtered_contours = filter_contours(contours)
     im_with_keypoints = image.copy()
+    blob_data = []
+
     for box in filtered_contours:
         cv2.drawContours(im_with_keypoints, [box], 0, (0, 255, 255), 5)
         rect = cv2.minAreaRect(box)
@@ -88,7 +91,11 @@ def detect_and_label_blobs(image):
         label = "R" if np.any(red_mask[center[1], center[0]]) else "G"
         label_position = (center[0], center[1])
         cv2.putText(im_with_keypoints, label, label_position, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3)
-    return im_with_keypoints, red_mask, green_mask
+        left_end = min(box[:, 0])
+        right_end = max(box[:, 0])
+        blob_data.append((left_end, right_end, label))
+
+    return im_with_keypoints, red_mask, green_mask, blob_data
 
 def main():
     picam0 = Picamera2(camera_num=0)
@@ -100,6 +107,7 @@ def main():
     picam1.start()
 
     while True:
+        start_time = time.time()
         image0 = picam0.capture_array()
         image1 = picam1.capture_array()
         image0_flipped = cv2.flip(image0, 0)
@@ -107,20 +115,21 @@ def main():
         combined_image = np.hstack((image1_flipped, image0_flipped))
 
         height = combined_image.shape[0]
-        cropped_image = combined_image[height//3:, :]
+        cropped_image = combined_image[height // 3:, :]
 
-        labeled_image, red_mask, green_mask = detect_and_label_blobs(cropped_image)
-
-        #s_labeled_image = cv2.resize(labeled_image, (0, 0), fx=0.5, fy=0.5)
-        #s_red_mask = cv2.resize(red_mask, (0, 0), fx=0.5, fy=0.5)
-        #s_green_mask = cv2.resize(green_mask, (0, 0), fx=0.5, fy=0.5)
-
+        labeled_image, red_mask, green_mask, blob_data = detect_and_label_blobs(cropped_image)
         cv2.imshow('Combined Camera - Blobs', labeled_image)
-        #cv2.imshow('Red Mask', s_red_mask)
-        #cv2.imshow('Green Mask', s_green_mask)
+
+        for blob in blob_data:
+            print(f"X-coordinates: Left end = {blob[0]}, Right end = {blob[1]}, Color = {blob[2]}")
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+        # Ensure the loop runs at 10 fps
+        elapsed_time = time.time() - start_time
+        time_to_wait = max(0, (1 / 10) - elapsed_time)
+        time.sleep(time_to_wait)
 
     picam0.stop()
     picam1.stop()
