@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Test blob detection" />
+    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -343,12 +343,29 @@
       <option name="project" value="LOCAL" />
       <updated>1722075698745</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="Test blob detection">
+      <option name="closed" value="true" />
+      <created>1722076060986</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1722076060986</updated>
+    </task>
+    <task id="LOCAL-00030" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1722077295723</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1722077295723</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Test blob detection" />
-    <option name="LAST_COMMIT_MESSAGE" value="Test blob detection" />
+    <MESSAGE value="Initial setup to read out lidar data" />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial setup to read out lidar data" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
