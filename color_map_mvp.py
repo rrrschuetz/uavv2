@@ -128,8 +128,9 @@ def main():
         cv2.imshow('Red Mask', red_mask)
         cv2.imshow('Green Mask', green_mask)
 
-        for blob in blob_data:
-            print(f"X-coordinates: Left end = {blob[0]}, Right end = {blob[1]}, Color = {blob[2]}")
+        if blob_data:
+            blob_output = ','.join(f"{blob[0]},{blob[1]},{blob[2]}" for blob in blob_data)
+            print(blob_output)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
