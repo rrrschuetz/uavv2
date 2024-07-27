@@ -24,9 +24,17 @@ def preprocess_image(image):
 
 
 def apply_morphological_operations(mask):
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=3)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=3)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=4)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
+    return mask
+
+
+def remove_small_contours(mask, min_area=1500):
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        if cv2.contourArea(contour) < min_area:
+            cv2.drawContours(mask, [contour], -1, 0, -1)
     return mask
 
 
@@ -65,8 +73,8 @@ def detect_and_label_blobs(image):
     red_upper1 = np.array([10, 255, 255])
     red_lower2 = np.array([160, 100, 100])
     red_upper2 = np.array([180, 255, 255])
-    green_lower = np.array([40, 40, 40])  # Fine-tuned green criteria
-    green_upper = np.array([90, 255, 255])
+    green_lower = np.array([35, 50, 50])  # Further fine-tuned green criteria
+    green_upper = np.array([85, 255, 255])
 
     # Create masks for red and green colors
     red_mask1 = cv2.inRange(hsv, red_lower1, red_upper1)
@@ -78,14 +86,18 @@ def detect_and_label_blobs(image):
     red_mask = apply_morphological_operations(red_mask)
     green_mask = apply_morphological_operations(green_mask)
 
+    # Remove small contours that are likely to be noise
+    red_mask = remove_small_contours(red_mask)
+    green_mask = remove_small_contours(green_mask)
+
     # Apply bilateral filter to preserve edges while reducing noise
     bilateral_filtered_image = cv2.bilateralFilter(image, 9, 75, 75)
 
     # Convert to grayscale for edge detection
     gray = cv2.cvtColor(bilateral_filtered_image, cv2.COLOR_BGR2GRAY)
 
-    # Apply Canny edge detection
-    edges = cv2.Canny(gray, 100, 200)
+    # Apply Canny edge detection with adjusted parameters
+    edges = cv2.Canny(gray, 50, 150)
 
     # Combine edge mask with color masks
     red_edges = cv2.bitwise_and(edges, red_mask)
