@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data" />
+    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -359,7 +361,15 @@
       <option name="project" value="LOCAL" />
       <updated>1722077295723</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1722077312971</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1722077312971</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
