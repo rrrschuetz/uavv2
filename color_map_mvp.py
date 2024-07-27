@@ -69,14 +69,19 @@ def detect_and_label_blobs(image):
     red_upper1 = np.array([10, 255, 255])
     red_lower2 = np.array([160, 70, 50])
     red_upper2 = np.array([180, 255, 255])
-    green_lower = np.array([35, 40, 40])
-    green_upper = np.array([90, 255, 255])
+    green_lower1 = np.array([35, 40, 40])
+    green_upper1 = np.array([70, 255, 255])
+    green_lower2 = np.array([70, 40, 40])
+    green_upper2 = np.array([90, 255, 255])
 
     # Create masks
     red_mask1 = cv2.inRange(hsv, red_lower1, red_upper1)
     red_mask2 = cv2.inRange(hsv, red_lower2, red_upper2)
     red_mask = cv2.bitwise_or(red_mask1, red_mask2)
-    green_mask = cv2.inRange(hsv, green_lower, green_upper)
+
+    green_mask1 = cv2.inRange(hsv, green_lower1, green_upper1)
+    green_mask2 = cv2.inRange(hsv, green_lower2, green_upper2)
+    green_mask = cv2.bitwise_or(green_mask1, green_mask2)
 
     # Apply morphological operations and remove small contours
     red_mask = remove_small_contours(apply_morphological_operations(red_mask))
@@ -119,8 +124,8 @@ def main():
         start_time = time.time()
         image0 = picam0.capture_array()
         image1 = picam1.capture_array()
-        image0_flipped = cv2.flip(image0, -1)
-        image1_flipped = cv2.flip(image1, -1)
+        image0_flipped = cv2.flip(image0, 0)
+        image1_flipped = cv2.flip(image1, 0)
         combined_image = np.hstack((image1_flipped, image0_flipped))
 
         height = combined_image.shape[0]
@@ -128,8 +133,8 @@ def main():
 
         labeled_image, red_mask, green_mask, blob_data = detect_and_label_blobs(cropped_image)
         cv2.imshow('Combined Camera - Blobs', labeled_image)
-        #cv2.imshow('Red Mask', red_mask)
-        #cv2.imshow('Green Mask', green_mask)
+        cv2.imshow('Red Mask', red_mask)
+        cv2.imshow('Green Mask', green_mask)
 
         for blob in blob_data:
             print(f"X-coordinates: Left end = {blob[0]}, Right end = {blob[1]}, Color = {blob[2]}")
