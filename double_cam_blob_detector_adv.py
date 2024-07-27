@@ -43,7 +43,7 @@ def apply_morphological_operations(mask):
     return mask
 
 
-def remove_small_contours(mask, min_area=1500):
+def remove_small_contours(mask, min_area=2000):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         if cv2.contourArea(contour) < min_area:
@@ -51,7 +51,7 @@ def remove_small_contours(mask, min_area=1500):
     return mask
 
 
-def filter_contours(contours, min_area=1500, aspect_ratio_range=(1.5, 3.0), angle_range=(80, 100)):
+def filter_contours(contours, min_area=2000, aspect_ratio_range=(1.5, 3.0), angle_range=(80, 100)):
     filtered_contours = []
     for contour in contours:
         # Filter by area
