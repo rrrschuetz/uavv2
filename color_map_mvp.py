@@ -3,12 +3,10 @@ import cv2
 import numpy as np
 import time
 
-
 def gamma_correction(image, gamma=1.5):
     inv_gamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
     return cv2.LUT(image, table)
-
 
 def enhance_lighting(image):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -19,13 +17,11 @@ def enhance_lighting(image):
     enhanced = cv2.cvtColor(hsv_enhanced, cv2.COLOR_HSV2BGR)
     return enhanced
 
-
 def preprocess_image(image):
     gamma_corrected = gamma_correction(image)
     enhanced = enhance_lighting(gamma_corrected)
     hsv = cv2.cvtColor(enhanced, cv2.COLOR_BGR2HSV)
     return hsv
-
 
 def apply_morphological_operations(mask):
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
@@ -33,14 +29,12 @@ def apply_morphological_operations(mask):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
     return mask
 
-
 def remove_small_contours(mask, min_area=2000):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         if cv2.contourArea(contour) < min_area:
             cv2.drawContours(mask, [contour], -1, 0, -1)
     return mask
-
 
 def filter_contours(contours, min_area=2000, aspect_ratio_range=(1.5, 3.0), angle_range=(80, 100)):
     filtered_contours = []
@@ -60,14 +54,13 @@ def filter_contours(contours, min_area=2000, aspect_ratio_range=(1.5, 3.0), angl
             filtered_contours.append(box)
     return filtered_contours
 
-
 def detect_and_label_blobs(image):
     hsv = preprocess_image(image)
 
-    # Define color ranges
-    red_lower1 = np.array([0, 70, 50])
+    # Adaptive color ranges for red and green detection
+    red_lower1 = np.array([0, 50, 50])
     red_upper1 = np.array([10, 255, 255])
-    red_lower2 = np.array([160, 70, 50])
+    red_lower2 = np.array([160, 50, 50])
     red_upper2 = np.array([180, 255, 255])
     green_lower1 = np.array([35, 40, 40])
     green_upper1 = np.array([70, 255, 255])
@@ -110,7 +103,6 @@ def detect_and_label_blobs(image):
 
     return im_with_keypoints, red_mask, green_mask, blob_data
 
-
 def main():
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
@@ -150,7 +142,6 @@ def main():
     picam0.stop()
     picam1.stop()
     cv2.destroyAllWindows()
-
 
 if __name__ == "__main__":
     main()
