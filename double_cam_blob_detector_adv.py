@@ -3,22 +3,35 @@ import cv2
 import numpy as np
 
 
-def adjust_contrast(image):
-    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
+def gamma_correction(image, gamma=1.5):
+    inv_gamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    return cv2.LUT(image, table)
+
+
+def enhance_lighting(image):
+    # Convert to HSV color space
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Apply CLAHE to the V channel
+    h, s, v = cv2.split(hsv)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    cl = clahe.apply(l)
-    limg = cv2.merge((cl, a, b))
-    adjusted = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-    return adjusted
+    v = clahe.apply(v)
+    hsv_enhanced = cv2.merge([h, s, v])
+    enhanced = cv2.cvtColor(hsv_enhanced, cv2.COLOR_HSV2BGR)
+
+    return enhanced
 
 
 def preprocess_image(image):
-    # Adjust contrast
-    adjusted = adjust_contrast(image)
+    # Apply gamma correction
+    gamma_corrected = gamma_correction(image)
+
+    # Enhance lighting conditions
+    enhanced = enhance_lighting(gamma_corrected)
 
     # Convert to HSV color space for color filtering
-    hsv = cv2.cvtColor(adjusted, cv2.COLOR_BGR2HSV)
+    hsv = cv2.cvtColor(enhanced, cv2.COLOR_BGR2HSV)
 
     return hsv
 
@@ -69,12 +82,12 @@ def detect_and_label_blobs(image):
     hsv = preprocess_image(image)
 
     # Define the color ranges for red and green in HSV
-    red_lower1 = np.array([0, 100, 100])
+    red_lower1 = np.array([0, 70, 50])
     red_upper1 = np.array([10, 255, 255])
-    red_lower2 = np.array([160, 100, 100])
+    red_lower2 = np.array([160, 70, 50])
     red_upper2 = np.array([180, 255, 255])
-    green_lower = np.array([35, 50, 50])  # Further fine-tuned green criteria
-    green_upper = np.array([85, 255, 255])
+    green_lower = np.array([35, 40, 40])  # Further fine-tuned green criteria for poor lighting
+    green_upper = np.array([90, 255, 255])
 
     # Create masks for red and green colors
     red_mask1 = cv2.inRange(hsv, red_lower1, red_upper1)
