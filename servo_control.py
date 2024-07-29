@@ -1,10 +1,11 @@
 
-#import timesudo apt-get install python3-pip python3-smbus
+#sudo apt-get install python3-pip python3-smbus
 #pip3 install adafruit-circuitpython-pca9685
 
 from adafruit_pca9685 import PCA9685
 from board import SCL, SDA
 import busio
+import time
 
 # Initialize the I2C bus
 i2c = busio.I2C(SCL, SDA)
@@ -22,8 +23,8 @@ def set_servo_angle(channel, angle):
     :param angle: The desired angle to set the servo to (0-180 degrees).
     """
     # Convert the angle to the corresponding pulse width
-    pulse_min = 150  # Pulse width for 0 degrees
-    pulse_max = 600  # Pulse width for 180 degrees
+    pulse_min = 260  # Pulse width for 0 degrees
+    pulse_max = 380  # Pulse width for 180 degrees
     pulse_width = pulse_min + (angle / 180.0) * (pulse_max - pulse_min)
 
     # Set the pulse width for the specified channel
@@ -34,9 +35,11 @@ try:
     while True:
         # Example usage: sweep the servo back and forth
         for angle in range(0, 181, 10):
+            print(f"Setting servo angle to {angle} degrees")
             set_servo_angle(0, angle)
             time.sleep(0.5)
         for angle in range(180, -1, -10):
+            print(f"Setting servo angle to {angle} degrees")
             set_servo_angle(0, angle)
             time.sleep(0.5)
 except KeyboardInterrupt:
