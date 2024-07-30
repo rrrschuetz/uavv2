@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
-      <change afterPath="$PROJECT_DIR$/plot_lidar_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plot_lidar_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/plot_lidar_data.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -465,7 +465,23 @@
       <option name="project" value="LOCAL" />
       <updated>1722324122049</updated>
     </task>
-    <option name="localTasksCounter" value="44" />
+    <task id="LOCAL-00044" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1722324595884</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1722324595884</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1722324786201</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1722324786201</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
