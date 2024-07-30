@@ -3,7 +3,6 @@ import struct
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 
 def connect_lidar(ip, port=8089):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -60,7 +59,7 @@ def decode_dense_mode_packet(packet, old_start_angle=0.0):
 
     start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
     start_angle = start_angle_q6 / 64.0
-    angle_diff = start_angle - old_start_angle
+    angle_diff =  start_angle - old_start_angle
     if angle_diff < 0: angle_diff += 360.0
 
     distances = []
@@ -71,7 +70,6 @@ def decode_dense_mode_packet(packet, old_start_angle=0.0):
         if index + 1 >= len(packet):
             raise ValueError(f"Packet is too short for expected data: index {index}")
         distance = (packet[index] | (packet[index+1] << 8))
-
         distances.append(distance)
         angle = start_angle + i * angle_diff/40.0
         angles.append(angle)
@@ -88,14 +86,6 @@ def initialize(sock):
 def main():
     IP_ADDRESS = '192.168.11.2'
     PORT = 8089
-
-    fig, ax = plt.subplots()
-    scatter = ax.scatter([], [], s=1)
-    ax.set_xlim(-0.100,0.100)
-    ax.set_ylim(-0.100,0.100)
-
-    all_x_coords = []
-    all_y_coords = []
 
     sock = connect_lidar(IP_ADDRESS, PORT)
 
@@ -115,15 +105,35 @@ def main():
     start_scan(sock)
 
     old_start_angle = 0.0
-    for i in range(100):
+    all_distances = []
+    all_angles = []
+
+    for i in range(2000):
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data, old_start_angle)
         old_start_angle = decoded_data['start_angle']
-        print(old_start_angle, decoded_data['distances'], decoded_data['angles'])
+        all_distances.extend(decoded_data['distances'])
+        all_angles.extend(decoded_data['angles'])
 
     print('Stopping scan...')
     stop_scan(sock)
     sock.close()
+
+    # Convert polar coordinates to Cartesian coordinates for plotting
+    all_distances = np.array(all_distances) / 1000.0  # Convert to meters if needed
+    all_angles = np.radians(all_angles)
+    x_coords = all_distances * np.cos(all_angles)
+    y_coords = all_distances * np.sin(all_angles)
+
+    # Plotting the data
+    fig, ax = plt.subplots()
+    ax.scatter(x_coords, y_coords, s=1)
+    ax.set_xlim(-0.100, 0.100)
+    ax.set_ylim(-0.100, 0.100)
+    ax.set_xlabel('X (meters)')
+    ax.set_ylabel('Y (meters)')
+    ax.set_title('LIDAR Data')
+    plt.show()
 
 if __name__ == '__main__':
     main()
