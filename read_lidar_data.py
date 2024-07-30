@@ -54,37 +54,29 @@ def decode_dense_mode_packet(packet):
     if len(packet) < 84:  # Minimum length for a dense packet
         raise ValueError("Packet too short to be valid")
 
-    # Extract and validate sync bytes
     sync1 = packet[0]
     sync2 = packet[1]
+    if sync1 != 0xA5 or sync2 != 0x5A:
+        raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
 
-    #if sync1 != 0xA5 or sync2 != 0x5A:
-    #    raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
-
-    # Extract checksum
     checksum_high = (packet[2] >> 4) & 0x0F
     checksum_low = packet[2] & 0x0F
     checksum = (checksum_high << 4) | checksum_low
-
-    # Validate checksum (simple example, real checksum might be more complex)
     computed_checksum = sum(packet[3:]) & 0xFF
-    #if checksum != (computed_checksum & 0x0F):
-    #    raise ValueError(f"Checksum validation failed: expected={checksum:#04x}, computed={computed_checksum & 0x0F:#04x}")
+    if checksum != (computed_checksum & 0x0F):
+        raise ValueError(f"Checksum validation failed: expected={checksum:#04x}, computed={computed_checksum & 0x0F:#04x}")
 
-    # Extract start angle
     start_angle_q6 = ((packet[3] & 0xFF) << 8) | (packet[4] & 0xFF)
-    start_angle = start_angle_q6 / 64.0  # Convert Q6.4 to float
+    start_angle = start_angle_q6 / 64.0
 
-    # Extract cabin data (distance measurements)
     distances = []
     for i in range(40):
         index = 5 + i * 2
         distance = (packet[index] & 0xFF) | ((packet[index + 1] & 0xFF) << 8)
         distances.append(distance)
 
-    # Calculate angles for each distance measurement
     angles = []
-    angle_diff = 360 / 40  # Assuming 40 measurements cover 360 degrees
+    angle_diff = 360 / 40
     for i in range(40):
         angle = start_angle + (i * angle_diff)
         if angle >= 360:
