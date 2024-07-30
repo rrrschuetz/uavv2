@@ -32,6 +32,12 @@ def get_info(sock):
     serialnum_str = serialnum[::-1].hex()
     return model, firmware_minor, firmware_major, hardware, serialnum_str
 
+def query_scan_mode(sock):
+    sock.send(b'\xA5\x84\x7C')
+    response = receive_full_data(sock, 10)
+    print(f"Received scan modes data: {response}")
+    return
+
 def start_scan(sock):
     sock.send(b'\xA5\x82\x05\x00\x00\x00\x00\x00\x22')
     response = receive_full_data(sock, 10)
@@ -112,6 +118,9 @@ def main():
         print('Getting LIDAR health...')
         health = get_health(sock)
         print('LIDAR Health:', health)
+
+        print('Querying scan modes...')
+        query_scan_mode(sock)
 
         print('Starting scan...')
         start_scan(sock)
