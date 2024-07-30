@@ -32,21 +32,6 @@ def get_info(sock):
     serialnum_str = serialnum[::-1].hex()
     return model, firmware_minor, firmware_major, hardware, serialnum_str
 
-def get_typical_scan_mode(sock):
-    sock.send(b'\xA5\x36')
-    response = receive_full_data(sock, 7)  # Length of typical scan mode response
-    mode_id, us_per_sample, max_distance, ans_type = struct.unpack('<BIBB', response[1:])
-    return {
-        'Mode ID': mode_id,
-        'Us Per Sample': us_per_sample,
-        'Max Distance': max_distance,
-        'Ans Type': ans_type
-    }
-
-def print_typical_scan_mode(mode):
-    print(f"{'Mode ID':<12} {'Us Per Sample':<15} {'Max Distance':<15} {'Ans Type':<10}")
-    print(f"{mode['Mode ID']:<12} {mode['Us Per Sample']:<15} {mode['Max Distance']:<15} {mode['Ans Type']:<10}")
-
 def start_scan(sock):
     sock.send(b'\xA5\x82\x05\x00\x00\x00\x00\x00\x22')
     response = receive_full_data(sock, 10)
@@ -56,7 +41,7 @@ def stop_scan(sock):
     sock.send(b'\xA5\x25')
     time.sleep(0.1)
 
-def decode_dense_mode_packet(packet):
+def decode_dense_mode_packet(packet, old_start_angle=0.0):
     if len(packet) != 84:
         raise ValueError(f"Invalid packet length: {len(packet)}")
 
@@ -73,11 +58,10 @@ def decode_dense_mode_packet(packet):
     if checksum_received != checksum_computed:
         raise ValueError(f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
 
-    start_angle_q6 = ((packet[2] & 0xFF) | ((packet[3] & 0xFF) << 8)) >> 1
+    start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
     start_angle = start_angle_q6 / 64.0
-
-    angle_diff_q3 = ((packet[3] & 0x01) << 8) | (packet[4] & 0xFF)
-    angle_diff = angle_diff_q3 / 8.0
+    angle_diff = start_angle - old_start_angle
+    if angle_diff < 0: angle_diff += 360.0
 
     distances = []
     angles = []
@@ -86,11 +70,10 @@ def decode_dense_mode_packet(packet):
         index = 4 + i * 2  # Corrected to index + 4
         if index + 1 >= len(packet):
             raise ValueError(f"Packet is too short for expected data: index {index}")
-        distance = (packet[index] & 0xFF) | ((packet[index + 1] & 0xFF) << 8)
+        distance = (packet[index] | (packet[index+1] << 8))
+
         distances.append(distance)
-        angle = start_angle + i * angle_diff
-        if angle >= 360.0:
-            angle -= 360.0
+        angle = start_angle + i * angle_diff/40.0
         angles.append(angle)
 
     return {
@@ -108,62 +91,39 @@ def main():
 
     fig, ax = plt.subplots()
     scatter = ax.scatter([], [], s=1)
-    ax.set_xlim(-1, 1)
-    ax.set_ylim(-1, 1)
+    ax.set_xlim(-0.100,0.100)
+    ax.set_ylim(-0.100,0.100)
 
     all_x_coords = []
     all_y_coords = []
 
     sock = connect_lidar(IP_ADDRESS, PORT)
-    try:
-        print('Initializing LIDAR...')
-        initialize(sock)
-        print('Initialization complete.')
 
-        print('Getting LIDAR info...')
-        info = get_info(sock)
-        print('LIDAR Info:', info)
+    print('Initializing LIDAR...')
+    initialize(sock)
+    print('Initialization complete.')
 
-        print('Getting LIDAR health...')
-        health = get_health(sock)
-        print('LIDAR Health:', health)
+    print('Getting LIDAR info...')
+    info = get_info(sock)
+    print('LIDAR Info:', info)
 
-        print('Querying scan modes...')
-        get_typical_scan_mode(sock)
+    print('Getting LIDAR health...')
+    health = get_health(sock)
+    print('LIDAR Health:', health)
 
-        print('Starting scan...')
-        start_scan(sock)
+    print('Starting scan...')
+    start_scan(sock)
 
-        def update(frame):
-            data = receive_full_data(sock, 84)
-            decoded_data = decode_dense_mode_packet(data)
-            x_coords = []
-            y_coords = []
-            for angle, distance in zip(decoded_data['angles'], decoded_data['distances']):
-                angle_rad = np.radians(angle)
-                x = distance * 0.001 * np.cos(angle_rad)  # Convert mm to meters
-                y = distance * 0.001 * np.sin(angle_rad)
-                x_coords.append(x)
-                y_coords.append(y)
+    old_start_angle = 0.0
+    for i in range(100):
+        data = receive_full_data(sock, 84)
+        decoded_data = decode_dense_mode_packet(data, old_start_angle)
+        old_start_angle = decoded_data['start_angle']
+        print(old_start_angle, decoded_data['distances'], decoded_data['angles'])
 
-            all_x_coords.extend(x_coords)
-            all_y_coords.extend(y_coords)
-            scatter.set_offsets(np.c_[all_x_coords, all_y_coords])
-            return scatter,
-
-        ani = FuncAnimation(fig, update, interval=100)
-        plt.show()
-
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            print('Stopping scan...')
-            stop_scan(sock)
-    finally:
-        sock.close()
+    print('Stopping scan...')
+    stop_scan(sock)
+    sock.close()
 
 if __name__ == '__main__':
     main()
