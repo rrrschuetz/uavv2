@@ -54,18 +54,15 @@ def decode_dense_mode_packet(packet):
     if len(packet) < 84:  # Minimum length for a dense packet
         raise ValueError("Packet too short to be valid")
 
-    sync1 = packet[0]
-    sync2 = packet[1]
-    #if sync1 != 0xA5 or sync2 != 0x5A:
-    #    raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
+    sync1 = (packet[0] & 0xF0) >> 4
+    sync2 = (packet[1] & 0xF0) >> 4
+    if sync1 != 0xA and sync2 != 0x5:
+        raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
 
-    checksum_received = packet[2]
+    checksum_received = ((packet[1] & 0x0F) << 4) | (packet[0] & 0x0F)
     checksum_computed = 0
-    for byte in packet[3:]:
+    for byte in packet[2:]:
         checksum_computed ^= byte
-
-    #if checksum_received != checksum_computed:
-    #    raise ValueError(f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
 
     start_angle_q6 = ((packet[3] & 0xFF) << 8) | (packet[4] & 0xFF)
     start_angle = start_angle_q6 / 64.0
