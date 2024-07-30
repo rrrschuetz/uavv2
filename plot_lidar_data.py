@@ -47,7 +47,7 @@ def decode_dense_mode_packet(packet):
 
     sync1 = (packet[0] & 0xF0) >> 4
     sync2 = (packet[1] & 0xF0) >> 4
-    if sync1 != 0xA and sync2 != 0x5:
+    if sync1 != 0xA or sync2 != 0x5:
         raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
 
     checksum_received = ((packet[1] & 0x0F) << 4) | (packet[0] & 0x0F)
@@ -91,9 +91,12 @@ def main():
     PORT = 8089
 
     fig, ax = plt.subplots()
-    scatter = ax.scatter([], [])
+    scatter = ax.scatter([], [], s=1)  # Smaller dots
     ax.set_xlim(-10, 10)
     ax.set_ylim(-10, 10)
+
+    all_x_coords = []
+    all_y_coords = []
 
     sock = connect_lidar(IP_ADDRESS, PORT)
     try:
@@ -123,7 +126,10 @@ def main():
                 y = distance * 0.001 * np.sin(angle_rad)
                 x_coords.append(x)
                 y_coords.append(y)
-            scatter.set_offsets(np.c_[x_coords, y_coords])
+
+            all_x_coords.extend(x_coords)
+            all_y_coords.extend(y_coords)
+            scatter.set_offsets(np.c_[all_x_coords, all_y_coords])
             return scatter,
 
         ani = FuncAnimation(fig, update, interval=100)
