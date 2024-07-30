@@ -59,19 +59,21 @@ def decode_dense_mode_packet(packet, old_start_angle=0.0):
 
     start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
     start_angle = start_angle_q6 / 64.0
-    angle_diff =  start_angle - old_start_angle
+    angle_diff = start_angle - old_start_angle
     if angle_diff < 0: angle_diff += 360.0
 
     distances = []
     angles = []
 
     for i in range(40):
-        index = 4 + i * 2  # Corrected to index + 4
+        index = 4 + i * 2
         if index + 1 >= len(packet):
             raise ValueError(f"Packet is too short for expected data: index {index}")
         distance = (packet[index] | (packet[index+1] << 8))
+        distance /= 1000.0  # Convert from millimeters to meters
+
         distances.append(distance)
-        angle = start_angle + i * angle_diff/40.0
+        angle = start_angle + i * angle_diff / 40.0
         angles.append(angle)
 
     return {
@@ -82,6 +84,20 @@ def decode_dense_mode_packet(packet, old_start_angle=0.0):
 
 def initialize(sock):
     pass
+
+def draw_radar_chart(distances, angles):
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+    ax.set_theta_direction(-1)
+    ax.set_theta_offset(np.pi / 2.0)
+
+    ax.scatter(angles, distances, s=1)
+    ax.set_ylim(0, max(distances) * 1.1)
+
+    ax.set_xlabel('Angle (radians)')
+    ax.set_ylabel('Distance (meters)')
+    ax.set_title('LIDAR Data')
+
+    plt.show()
 
 def main():
     IP_ADDRESS = '192.168.11.2'
@@ -108,7 +124,7 @@ def main():
     all_distances = []
     all_angles = []
 
-    for i in range(2000):
+    for i in range(100):
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data, old_start_angle)
         old_start_angle = decoded_data['start_angle']
@@ -119,21 +135,10 @@ def main():
     stop_scan(sock)
     sock.close()
 
-    # Convert polar coordinates to Cartesian coordinates for plotting
-    all_distances = np.array(all_distances) / 1000.0  # Convert to meters if needed
+    all_distances = np.array(all_distances)
     all_angles = np.radians(all_angles)
-    x_coords = all_distances * np.cos(all_angles)
-    y_coords = all_distances * np.sin(all_angles)
 
-    # Plotting the data
-    fig, ax = plt.subplots()
-    ax.scatter(x_coords, y_coords, s=1)
-    ax.set_xlim(-0.100, 0.100)
-    ax.set_ylim(-0.100, 0.100)
-    ax.set_xlabel('X (meters)')
-    ax.set_ylabel('Y (meters)')
-    ax.set_title('LIDAR Data')
-    plt.show()
+    draw_radar_chart(all_distances, all_angles)
 
 if __name__ == '__main__':
     main()
