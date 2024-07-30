@@ -32,11 +32,20 @@ def get_info(sock):
     serialnum_str = serialnum[::-1].hex()
     return model, firmware_minor, firmware_major, hardware, serialnum_str
 
-def query_scan_mode(sock):
-    sock.send(b'\xA5\x84\x7C')
-    response = receive_full_data(sock, 10)
-    print(f"Received scan modes data: {response}")
-    return
+def get_typical_scan_mode(sock):
+    sock.send(b'\xA5\x36')
+    response = receive_full_data(sock, 7)  # Length of typical scan mode response
+    mode_id, us_per_sample, max_distance, ans_type = struct.unpack('<BIBB', response[1:])
+    return {
+        'Mode ID': mode_id,
+        'Us Per Sample': us_per_sample,
+        'Max Distance': max_distance,
+        'Ans Type': ans_type
+    }
+
+def print_typical_scan_mode(mode):
+    print(f"{'Mode ID':<12} {'Us Per Sample':<15} {'Max Distance':<15} {'Ans Type':<10}")
+    print(f"{mode['Mode ID']:<12} {mode['Us Per Sample']:<15} {mode['Max Distance']:<15} {mode['Ans Type']:<10}")
 
 def start_scan(sock):
     sock.send(b'\xA5\x82\x05\x00\x00\x00\x00\x00\x22')
@@ -120,7 +129,7 @@ def main():
         print('LIDAR Health:', health)
 
         print('Querying scan modes...')
-        query_scan_mode(sock)
+        get_typical_scan_mode(sock)
 
         print('Starting scan...')
         start_scan(sock)
