@@ -1,278 +1,140 @@
-#!/usr/bin/python3
 import socket
-import json
-import base64
-import math
-from pprint import pprint
-from pathlib import Path
 import struct
 import time
-import sys
 
+def connect_lidar(ip, port=8089):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Use UDP
+    sock.connect((ip, port))
+    return sock
 
-class SlamtecMapper:
-    def __init__(self, host, port, dump=False, dump_dir="dump"):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((host, port))
-        self.request_id = 0
-        self.dump = dump
-        if self.dump:
-            self.dump_dir = Path(f"{dump_dir}/{int(time.time())}/")
-            self.dump_dir.mkdir(parents=True)
-        else:
-            self.dump_dir = None
+def receive_sync_bytes(sock, timeout=5):
+    sock.settimeout(timeout)
+    while True:
+        try:
+            byte = sock.recv(1)
+            if byte == b'\xA5':
+                next_byte = sock.recv(1)
+                if next_byte == b'\x5A':
+                    return b'\xA5\x5A'
+        except socket.timeout:
+            raise TimeoutError("Sync bytes not received within timeout period")
 
-    def disconnect(self):
-        self.socket.close()
+def receive_full_data(sock, expected_length):
+    data = b''
+    while len(data) < expected_length:
+        packet, _ = sock.recvfrom(expected_length - len(data))
+        data += packet
+    return data
 
-    def _send_request(self, command, args=None):
-        request = {
-            "command": command,
-            "args": args,
-            "request_id": self.request_id
-        }
-        self.request_id += 1
-        data = json.dumps(request)
-        # print("Sent:     {}".format(data))
-        if self.dump:
-            p = Path(f"{self.dump_dir}/{request['command']}-request.json")
-            p.write_text(json.dumps(request, indent=2))
+def get_health(sock):
+    sock.send(b'\xA5\x52')
+    response = receive_full_data(sock, 10)
+    print(f"Received health data: {response}")
+    status, error_code = struct.unpack('<BH', response[3:6])
+    return status, error_code
 
-        data_ascii = [ord(character) for character in data]
-        data_ascii.extend([10, 13, 10, 13, 10])
+def get_info(sock):
+    sock.send(b'\xA5\x50')
+    response = receive_full_data(sock, 27)
+    print(f"Received info data: {response}")
+    model, firmware_minor, firmware_major, hardware, serialnum = struct.unpack('<BBBB16s', response[3:])
+    serialnum_str = serialnum[::-1].hex()
+    return model, firmware_minor, firmware_major, hardware, serialnum_str
 
-        # Connect to server and send data
-        self.socket.sendall(bytearray(data_ascii))
-        received = b""
-        while True:
-            size = 1024
-            # Receive data from the server and shut down
-            response = self.socket.recv(size)
+def start_scan(sock):
+    sock.send(b'\xA5\x82\x05\x00\x00\x00\x00\x00\x22')
+    response = receive_full_data(sock, 10)
+    print(f"Start scan response: {response}")
 
-            received += response
-            if response[-4:] == b"\r\n\r\n":
-                break
+def stop_scan(sock):
+    sock.send(b'\xA5\x25')
+    time.sleep(0.1)
 
-        received = received.decode("utf-8")
-        received_json = json.loads(received)
-        if type(received_json["result"]) == str:
-            received_json["result"] = json.loads(received_json["result"])
+def decode_dense_mode_packet(packet):
+    if len(packet) < 84:  # Minimum length for a dense packet
+        raise ValueError("Packet too short to be valid")
 
-        if self.dump:
-            p = Path(f"{self.dump_dir}/{request['command']}-response.json")
-            p.write_text(json.dumps(received_json, indent=2))
+    # Extract and validate sync bytes
+    sync1 = packet[0]
+    sync2 = packet[1]
 
-        if received_json["request_id"] != request["request_id"]:
-            print("wrong request_id in response (%s != %s)" % (received_json["request_id"], request["request_id"]))
-            print(received_json)
-            return False
-        if "code" in received_json["result"] and received_json["result"]["code"] != 1:
-            print(received_json["result"].keys())
-            print("command %s failed" % command)
-            print(received_json)
-            return False
-        return received_json["result"]
+    if sync1 != 0xA5 or sync2 != 0x5A:
+        raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
 
-    def get_known_area(self):
-        # {"args":{"kind":0,"partially":false,"type":0},"command":"getknownarea","request_id":726532096}
-        response = self._send_request(command="getknownarea", args={"kind": 0, "partially": False, "type": 0})
-        return response
+    # Extract checksum
+    checksum_high = (packet[2] >> 4) & 0x0F
+    checksum_low = packet[2] & 0x0F
+    checksum = (checksum_high << 4) | checksum_low
 
-    def get_pose(self):
-        response = self._send_request(command="getpose")
-        return response
+    # Validate checksum (simple example, real checksum might be more complex)
+    computed_checksum = sum(packet[3:]) & 0xFF
+    if checksum != (computed_checksum & 0x0F):
+        raise ValueError(f"Checksum validation failed: expected={checksum:#04x}, computed={computed_checksum & 0x0F:#04x}")
 
-    def get_map_data(self):
-        # {"args":{"area":{"height":3.750,"width":10.55000019073486,"x":-2.899999856948853,"y":-2.599999904632568},"kind":0,"partially":false,"type":0},"command":"getmapdata","request_id":3539992577}
-        known_area = self.get_known_area()
-        args = {
-            "area": {"height": known_area["max_y"] - known_area["min_y"],
-                     "width": known_area["max_x"] - known_area["min_x"],
-                     "x": known_area["min_x"],
-                     "y": known_area["min_y"]},
-            "kind": 0,
-            "partially": False,
-            "type": 0
-        }
-        response = self._send_request(command="getmapdata", args=args)
-        decompressed = self._decompress_rle(response["map_data"])
+    # Extract start angle
+    start_angle_q6 = ((packet[3] & 0xFF) << 8) | (packet[4] & 0xFF)
+    start_angle = start_angle_q6 / 64.0  # Convert Q6.4 to float
 
-        pos = 0
-        line = 1
-        data_2d = {}
-        while pos < len(decompressed):
-            if line not in data_2d:
-                data_2d[line] = []
-            data_2d[line].append(decompressed[pos])
+    # Extract cabin data (distance measurements)
+    distances = []
+    for i in range(40):
+        index = 5 + i * 2
+        distance = (packet[index] & 0xFF) | ((packet[index + 1] & 0xFF) << 8)
+        distances.append(distance)
 
-            if (pos + 1) % response['dimension_x'] == 0:
-                # print(line, data_2d[line])
-                line += 1
-            pos += 1
-        # print(line, data_2d[line])
-        response["map_data"] = data_2d
-        return response
+    # Calculate angles for each distance measurement
+    angles = []
+    angle_diff = 360 / 40  # Assuming 40 measurements cover 360 degrees
+    for i in range(40):
+        angle = start_angle + (i * angle_diff)
+        if angle >= 360:
+            angle -= 360
+        angles.append(angle)
 
-    def _decompress_rle(self, b64_encoded):
-        rle = base64.b64decode(b64_encoded)
-        if rle[0:3] != b"RLE":
-            print("wrong header %s" % str(rle[0:3]))
-            return
-        sentinel_list = [rle[3], rle[4]]
+    return {
+        "start_angle": start_angle,
+        "distances": distances,
+        "angles": angles
+    }
 
-        # print("Sentinel list: %s" % sentinel_list)
-        pos = 9
-        decompressed = []
-        while pos < len(rle):
-            b = rle[pos]
-            # print(b, end=", ")
-            if b == sentinel_list[0]:
-                # print("sentinel %i, next %i -> %i" % (sentinel_list[0], rle[pos+1], rle[pos+2] ), end=" - ")
-                if rle[pos + 1] == 0 and rle[pos + 2] == sentinel_list[1]:
-                    sentinel_list.reverse()
-                    # print("new sentinel %s" % sentinel_list[0])
-                    pos += 2
-                else:
-                    more = [rle[pos + 2] for i in range(rle[pos + 1])]
-                    # print("adding %i" % len(more), end=" - ")
-                    decompressed.extend(more)
-                    pos += 2
-                # break
-                # print("")
-            else:
-                decompressed.append(b)
-            pos += 1
-        return decompressed
+def initialize(sock):
+    pass
 
-    def get_laser_scan(self, valid_only=False):
-        response = self._send_request(command="getlaserscan")
-        decompressed = bytearray(self._decompress_rle(response["laser_points"]))
+def main():
+    IP_ADDRESS = '192.168.11.2'  # Replace with your LIDAR's IP address
+    PORT = 8089
 
-        pos = 0
-        bytes_per_row = 12
-        data = []
-        while pos < len(decompressed):
-            parts = struct.unpack("f f h h", decompressed[pos:pos + bytes_per_row])
-            pos += bytes_per_row
-            distance = parts[0]
-            angle_radian = parts[1]
-            # todo: decode the remaining bytes
-            if distance == 100000.0:
-                if valid_only:
-                    continue
-                valid = False
-            else:
-                valid = True
-            # print(f"distance: {distance:.4f}m, angle {math.degrees(angle_radian):.2f}°, valid {valid}")
-            data.append((angle_radian, distance, valid))
-            pos += bytes_per_row
+    sock = connect_lidar(IP_ADDRESS, PORT)
+    try:
+        print('Initializing LIDAR...')
+        initialize(sock)
+        print('Initialization complete.')
 
-        return data
+        print('Getting LIDAR info...')
+        info = get_info(sock)
+        print('LIDAR Info:', info)
 
-    def get_update(self):
-        request = {"args": {"kind": 0}, "command": "getupdate", "request_id": 1651574155}
+        print('Getting LIDAR health...')
+        health = get_health(sock)
+        print('LIDAR Health:', health)
 
-    def get_localization(self):
-        return self._send_request(command="getlocalization")
-
-    def get_current_action(self):
-        return self._send_request(command="getcurrentaction")
-
-    def get_robot_config(self):
-        return self._send_request(command="getrobotconfig")
-
-    def get_binary_config(self):
-        return self._send_request(command="getbinaryconfig")
-
-    def get_robot_features_info(self):
-        return self._send_request(command="getrobotfeaturesinfo")
-
-    def get_sdp_version(self):
-        return self._send_request(command="getsdpversion")
-
-    def get_device_info(self):
-        return self._send_request(command="getdeviceinfo")
-
-    def set_localization(self, state):
-        # True: localization on
-        # False: localization off
-        response = self._send_request(command="setlocalization", args={"value": state})
-        # -> {"command":"setlocalization","request_id":1722096331,"result":{"code":1,"timestamp":4925591}}
-
-    def set_update(self, state):
-        response = self._send_request(command="setupdate", args={"kind": 0, "value": state})
-        # -> {"command":"setupdate","request_id":1722207937,"result":{"code":1,"timestamp":5751061}}
-
-    def clear_map(self):
-        response = self._send_request(command="clearmap", args=0)
-        # -> {"command":"clearmap","request_id":1722209408,"result":{"code":1,"timestamp":5761982}}
-
-    def get_all(self):
-        self.get_known_area()
-        self.get_pose()
-        self.get_map_data()
-        self.get_laser_scan()
-        self.get_localization()
-        self.get_current_action()
-        self.get_robot_config()
-        self.get_binary_config()
-        self.get_robot_features_info()
-        self.get_sdp_version()
-        self.get_device_info()
-
-
-def show_summary(st):
-    print("Fetching Map Info...")
-    known_area = st.get_known_area()
-    map_data = st.get_map_data()
-    print(
-        f"> Map Area: ({known_area['min_x']:.4f},{known_area['min_y']:.4f},{known_area['max_x']:.4f},{known_area['max_y']:.4f})")
-    print(f"> Cell Dimension: ({map_data['dimension_x']}, {map_data['dimension_y']})")
-    print(f"> Cell Resolution: ({map_data['resolution']:.4f}, {map_data['resolution']:.4f})")
-    print(
-        f"> Cell Dimension: ({map_data['dimension_x'] * map_data['resolution']:.2f}m, {map_data['dimension_y'] * map_data['resolution']:.2f}m)")
-
-    print("Fetching Localization Info...")
-    pose = st.get_pose()
-    print(f"> Position: (x {pose['x']:.4f},y {pose['y']:.4f}, z{pose['z']:.4f})")
-    print(f"> Heading: {pose['yaw'] * 180.0 / math.pi:.4f}°")
-
-
-def show_map(map_data):
-    from PIL import Image
-    scale = 4
-    img = Image.new('L', (map_data['dimension_x'], map_data['dimension_y']), "black")
-    pixels = img.load()
-    for x in range(img.size[1]):
-        for y in range(img.size[0]):
-            value = map_data["map_data"][map_data['dimension_y'] - x][y]
-            pixels[y, x] = value  # 0-255
-
-    scaled_img = img.resize((map_data['dimension_x'] * scale, map_data['dimension_y'] * scale), Image.ANTIALIAS)
-    scaled_img.show()
-
+        print('Starting scan...')
+        start_scan(sock)
+        try:
+            while True:
+                data = receive_full_data(sock, 84)
+                print(f"Received data: {data}")
+                decoded_data = decode_dense_mode_packet(data)
+                print(f"Start Angle: {decoded_data['start_angle']}")
+                print(f"Distances: {decoded_data['distances']}")
+                print(f"Angles: {decoded_data['angles']}")
+        except KeyboardInterrupt:
+            pass
+        finally:
+            print('Stopping scan...')
+            stop_scan(sock)
+    finally:
+        sock.close()
 
 if __name__ == '__main__':
-    host = "192.168.11.2"
-    st = SlamtecMapper(host=host, port=1445, dump=True)
-    show_summary(st)
-
-    data = st.get_laser_scan(valid_only=False)
-    csv = []
-    for angle, distance, valid in data:
-        csv.append(f"{angle},{distance},{math.degrees(angle)}")
-    p = Path("../../laser-full.csv")
-    p.write_text("\n".join(csv))
-
-    # st.get_all()
-    map_data = st.get_map_data()
-    show_map(map_data)
-
-    if "--clear-map" in sys.argv:
-        st.clear_map()
-    if "--stop-update" in sys.argv:
-        st.set_update(False)
-    if "--start-update" in sys.argv:
-        st.set_update(True)
-
-    st.disconnect()
+    main()
