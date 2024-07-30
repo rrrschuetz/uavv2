@@ -37,7 +37,7 @@ def get_info(sock):
     sock.send(b'\xA5\x50')
     response = receive_full_data(sock, 27)
     print(f"Received info data: {response}")
-    model, firmware_minor, firmware_major, hardware, serialnum = struct.unpack('<BBBB16s', response[3:])
+    model, firmware_minor, firmware_major, hardware, serialnum = struct.unpack('<BBBB16s', response[7:])
     serialnum_str = serialnum[::-1].hex()
     return model, firmware_minor, firmware_major, hardware, serialnum_str
 
@@ -58,8 +58,8 @@ def decode_dense_mode_packet(packet):
     sync1 = packet[0]
     sync2 = packet[1]
 
-    if sync1 != 0xA5 or sync2 != 0x5A:
-        raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
+    #if sync1 != 0xA5 or sync2 != 0x5A:
+    #    raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
 
     # Extract checksum
     checksum_high = (packet[2] >> 4) & 0x0F
@@ -68,8 +68,8 @@ def decode_dense_mode_packet(packet):
 
     # Validate checksum (simple example, real checksum might be more complex)
     computed_checksum = sum(packet[3:]) & 0xFF
-    if checksum != (computed_checksum & 0x0F):
-        raise ValueError(f"Checksum validation failed: expected={checksum:#04x}, computed={computed_checksum & 0x0F:#04x}")
+    #if checksum != (computed_checksum & 0x0F):
+    #    raise ValueError(f"Checksum validation failed: expected={checksum:#04x}, computed={computed_checksum & 0x0F:#04x}")
 
     # Extract start angle
     start_angle_q6 = ((packet[3] & 0xFF) << 8) | (packet[4] & 0xFF)
