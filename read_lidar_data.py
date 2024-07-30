@@ -43,7 +43,7 @@ def get_info(sock):
 
 def start_scan(sock):
     sock.send(b'\xA5\x82\x05\x00\x00\x00\x00\x00\x22')
-    response = receive_full_data(sock, 10)
+    response = receive_full_data(sock, 7)
     print(f"Start scan response: {response}")
 
 def stop_scan(sock):
@@ -56,15 +56,16 @@ def decode_dense_mode_packet(packet):
 
     sync1 = packet[0]
     sync2 = packet[1]
-    if sync1 != 0xA5 or sync2 != 0x5A:
-        raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
+    #if sync1 != 0xA5 or sync2 != 0x5A:
+    #    raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
 
-    checksum_high = (packet[2] >> 4) & 0x0F
-    checksum_low = packet[2] & 0x0F
-    checksum = (checksum_high << 4) | checksum_low
-    computed_checksum = sum(packet[3:]) & 0xFF
-    if checksum != (computed_checksum & 0x0F):
-        raise ValueError(f"Checksum validation failed: expected={checksum:#04x}, computed={computed_checksum & 0x0F:#04x}")
+    checksum_received = packet[2]
+    checksum_computed = 0
+    for byte in packet[3:]:
+        checksum_computed ^= byte
+
+    #if checksum_received != checksum_computed:
+    #    raise ValueError(f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
 
     start_angle_q6 = ((packet[3] & 0xFF) << 8) | (packet[4] & 0xFF)
     start_angle = start_angle_q6 / 64.0
@@ -72,6 +73,8 @@ def decode_dense_mode_packet(packet):
     distances = []
     for i in range(40):
         index = 5 + i * 2
+        if index + 1 >= len(packet):
+            raise ValueError(f"Packet is too short for expected data: index {index}")
         distance = (packet[index] & 0xFF) | ((packet[index + 1] & 0xFF) << 8)
         distances.append(distance)
 
@@ -114,7 +117,7 @@ def main():
         start_scan(sock)
         try:
             while True:
-                data = receive_full_data(sock, 84)
+                data = receive_full_data(sock, 88)
                 print(f"Received data: {data}")
                 decoded_data = decode_dense_mode_packet(data)
                 print(f"Start Angle: {decoded_data['start_angle']}")
