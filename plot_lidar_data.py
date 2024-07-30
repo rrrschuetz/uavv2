@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 def connect_lidar(ip, port=8089):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Use UDP
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect((ip, port))
     return sock
 
@@ -58,23 +58,24 @@ def decode_dense_mode_packet(packet):
     if checksum_received != checksum_computed:
         raise ValueError(f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
 
-    start_angle_q6 = ((packet[2] & 0xFF) << 8) | (packet[3] & 0xFF)
+    start_angle_q6 = ((packet[2] & 0xFF) | ((packet[3] & 0xFF) << 8)) >> 1
     start_angle = start_angle_q6 / 64.0
 
+    angle_diff_q3 = ((packet[3] & 0x01) << 8) | (packet[4] & 0xFF)
+    angle_diff = angle_diff_q3 / 8.0
+
     distances = []
+    angles = []
+
     for i in range(40):
-        index = 4 + i * 2
+        index = 4 + i * 2  # Corrected to index + 4
         if index + 1 >= len(packet):
             raise ValueError(f"Packet is too short for expected data: index {index}")
         distance = (packet[index] & 0xFF) | ((packet[index + 1] & 0xFF) << 8)
         distances.append(distance)
-
-    angles = []
-    angle_diff = 360 / 40
-    for i in range(40):
-        angle = start_angle + (i * angle_diff)
-        if angle >= 360:
-            angle -= 360
+        angle = start_angle + i * angle_diff
+        if angle >= 360.0:
+            angle -= 360.0
         angles.append(angle)
 
     return {
@@ -87,11 +88,11 @@ def initialize(sock):
     pass
 
 def main():
-    IP_ADDRESS = '192.168.11.2'  # Replace with your LIDAR's IP address
+    IP_ADDRESS = '192.168.11.2'
     PORT = 8089
 
     fig, ax = plt.subplots()
-    scatter = ax.scatter([], [], s=1)  # Smaller dots
+    scatter = ax.scatter([], [], s=1)
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
 
@@ -121,7 +122,7 @@ def main():
             x_coords = []
             y_coords = []
             for angle, distance in zip(decoded_data['angles'], decoded_data['distances']):
-                angle_rad = angle * (3.14159 / 180.0)
+                angle_rad = np.radians(angle)
                 x = distance * 0.001 * np.cos(angle_rad)  # Convert mm to meters
                 y = distance * 0.001 * np.sin(angle_rad)
                 x_coords.append(x)
