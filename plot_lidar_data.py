@@ -92,8 +92,8 @@ def main():
 
     fig, ax = plt.subplots()
     scatter = ax.scatter([], [], s=1)  # Smaller dots
-    ax.set_xlim(-10, 10)
-    ax.set_ylim(-10, 10)
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
 
     all_x_coords = []
     all_y_coords = []
