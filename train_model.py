@@ -79,15 +79,17 @@ print("After standardization, train color shape:", train_color.shape)
 print("After standardization, test color shape:", test_color.shape)
 
 # Convert data to PyTorch tensors
-train_lidar = torch.tensor(train_lidar)
-test_lidar = torch.tensor(test_lidar)
-train_color = torch.tensor(train_color)
-test_color = torch.tensor(test_color)
-y_train = torch.tensor(y_train, dtype=torch.float32)
-y_test = torch.tensor(y_test, dtype=torch.float32)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+train_lidar = torch.tensor(train_lidar).to(device)
+test_lidar = torch.tensor(test_lidar).to(device)
+train_color = torch.tensor(train_color).to(device)
+test_color = torch.tensor(test_color).to(device)
+y_train = torch.tensor(y_train, dtype=torch.float32).to(device)
+y_test = torch.tensor(y_test, dtype=torch.float32).to(device)
 
 # Create DataLoader
-batch_size = 32
+batch_size = 128
 train_dataset = TensorDataset(train_lidar, train_color, y_train)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
@@ -122,8 +124,7 @@ class CNNModel(nn.Module):
 
         self.weighted_concat = WeightedConcatenate(weight_lidar=0.1, weight_color=0.9)
 
-        # Temporarily set the input size of the first fully connected layer to 1
-        self.fc1 = nn.Linear(1, 64)
+        self.fc1 = nn.Linear(51584, 64)
         self.fc2 = nn.Linear(64, 64)
         self.fc3 = nn.Linear(64, 64)
         self.fc4 = nn.Linear(64, 64)
@@ -143,7 +144,6 @@ class CNNModel(nn.Module):
         color = self.color_flatten(color)
 
         concatenated = self.weighted_concat(lidar, color)
-        print(f"Concatenated shape: {concatenated.shape}")
 
         combined = torch.relu(self.fc1(concatenated))
         combined = torch.relu(self.fc2(combined))
@@ -157,7 +157,7 @@ class CNNModel(nn.Module):
 # Create the model
 lidar_input_shape = train_lidar.shape[2]
 color_input_shape = train_color.shape[2]
-model = CNNModel(lidar_input_shape, color_input_shape)
+model = CNNModel(lidar_input_shape, color_input_shape).to(device)
 
 # 3. Train the model
 criterion = nn.MSELoss()
