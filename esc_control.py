@@ -62,7 +62,7 @@ def arm_esc(channel):
 
 try:
     # Calibrate the ESC
-    calibrate_esc(1)
+    #calibrate_esc(1)
 
     # Arm the ESC
     arm_esc(1)
