@@ -7,6 +7,54 @@ import cv2
 from picamera2 import Picamera2
 from collections import deque
 import threading
+from adafruit_pca9685 import PCA9685
+from board import SCL, SDA
+import busio
+
+# Servo functions
+def set_servo_angle(channel, angle):
+    """
+    Sets the angle of the servo connected to the specified channel.
+
+    :param channel: The channel number on the PCA9685 where the servo is connected (0-15).
+    :param angle: The desired angle to set the servo to (0-180 degrees).
+    """
+    # Convert the angle to the corresponding pulse width
+    pulse_min = 260  # Pulse width for 0 degrees
+    pulse_max = 380  # Pulse width for 180 degrees
+    pulse_width = pulse_min + (angle / 180.0) * (pulse_max - pulse_min)
+
+    # Set the pulse width for the specified channel
+    pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
+
+
+# ESC functions
+def set_motor_speed(channel, speed):
+    """
+    Sets the speed of the motor connected to the specified channel.
+
+    :param channel: The channel number on the PCA9685 where the ESC is connected (0-15).
+    :param speed: The desired speed of the motor (0-100%).
+    """
+    # Convert the speed to the corresponding pulse width
+    pulse_min = 310  # Pulse width for 0% speed
+    pulse_max = 409  # Pulse width for 100% speed
+    pulse_width = pulse_min + (speed / 100.0) * (pulse_max - pulse_min)
+
+    # Set the pulse width for the specified channel
+    pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
+
+def arm_esc(channel):
+    """
+    Arms the ESC by setting it to minimum throttle for a short period.
+
+    :param channel: The channel number on the PCA9685 where the ESC is connected (0-15).
+    """
+    print("Arming ESC...")
+    set_motor_speed(channel, 0)
+    time.sleep(1)
+    print("ESC armed")
+
 
 # LIDAR functions
 def connect_lidar(ip, port=8089):
@@ -271,6 +319,10 @@ def xbox_controller_thread():
                 print("QUIT event")
                 return
 
+        # Handle joystick events
+        #print(f"Setting servo angle to {angle} degrees")
+        #set_servo_angle(0, angle)
+
         # Limit the loop to 30 times per second
         time.sleep(1/30)
 
@@ -295,6 +347,14 @@ def main():
     print(f"Number of axes: {joystick.get_numaxes()}")
     print(f"Number of buttons: {joystick.get_numbuttons()}")
     print(f"Number of hats: {joystick.get_numhats()}")
+
+    # Initialize the I2C bus
+    i2c = busio.I2C(SCL, SDA)
+
+    # Create a simple PCA9685 class instance
+    pca = PCA9685(i2c)
+    pca.frequency = 50  # Standard servo frequency
+    arm_esc(1)
 
     # LIDAR setup
     IP_ADDRESS = '192.168.11.2'
