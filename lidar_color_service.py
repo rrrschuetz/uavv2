@@ -238,31 +238,7 @@ def main():
     print('Starting scan...')
     start_scan(sock)
 
-    fps_window = deque(maxlen=10)
-    total_frames = 0
-    total_time = 0.0
-
-    try:
-        while True:
-            start_time = time.time()
-            angles, distances = full_scan(sock)
-            end_time = time.time()
-
-            frame_time = end_time - start_time
-            total_time += frame_time
-            total_frames += 1
-            fps_window.append(1.0 / frame_time)
-
-            if len(fps_window) == fps_window.maxlen:
-                moving_avg_fps = sum(fps_window) / len(fps_window)
-                print(f'Moving Average FPS: {moving_avg_fps:.2f}')
-
-    except KeyboardInterrupt:
-        print('Stopping scan...')
-        stop_scan(sock)
-        sock.close()
-
-    # Camera setup
+       # Camera setup
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
     config = {"format": 'RGB888', "size": (640, 400)}
