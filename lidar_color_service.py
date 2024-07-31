@@ -95,6 +95,7 @@ def full_scan(sock):
     all_distances = []
     all_angles = []
 
+    i=0
     while True:
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data, old_start_angle)
@@ -103,8 +104,10 @@ def full_scan(sock):
             break
         else:
             old_start_angle = start_angle
+        i+=1
         all_distances.extend(decoded_data['distances'])
         all_angles.extend(decoded_data['angles'])
+    print(i, old_start_angle)
 
     return all_angles, all_distances
 
@@ -223,7 +226,41 @@ def main():
     IP_ADDRESS = '192.168.11.2'
     PORT = 8089
     sock = connect_lidar(IP_ADDRESS, PORT)
+
+    print('Getting LIDAR info...')
+    info = get_info(sock)
+    print('LIDAR Info:', info)
+
+    print('Getting LIDAR health...')
+    health = get_health(sock)
+    print('LIDAR Health:', health)
+
+    print('Starting scan...')
     start_scan(sock)
+
+    fps_window = deque(maxlen=10)
+    total_frames = 0
+    total_time = 0.0
+
+    try:
+        while True:
+            start_time = time.time()
+            angles, distances = full_scan(sock)
+            end_time = time.time()
+
+            frame_time = end_time - start_time
+            total_time += frame_time
+            total_frames += 1
+            fps_window.append(1.0 / frame_time)
+
+            if len(fps_window) == fps_window.maxlen:
+                moving_avg_fps = sum(fps_window) / len(fps_window)
+                print(f'Moving Average FPS: {moving_avg_fps:.2f}')
+
+    except KeyboardInterrupt:
+        print('Stopping scan...')
+        stop_scan(sock)
+        sock.close()
 
     # Camera setup
     picam0 = Picamera2(camera_num=0)
@@ -264,10 +301,10 @@ def main():
                 print(f'Moving Average FPS: {moving_avg_fps:.2f}')
 
             # Output data (for debugging purposes, replace with actual data handling logic)
-            print(f"Angles: {angles}")
-            print(f"Distances: {distances}")
-            print(f"Red X Coordinates: {red_x_coords}")
-            print(f"Green X Coordinates: {green_x_coords}")
+            #print(f"Angles: {angles}")
+            #print(f"Distances: {distances}")
+            #print(f"Red X Coordinates: {red_x_coords}")
+            #print(f"Green X Coordinates: {green_x_coords}")
 
             # Ensure the loop runs at a controlled rate, e.g., 10 FPS
             time.sleep(max(0, (1 / 10) - frame_time))
