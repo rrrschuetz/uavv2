@@ -150,7 +150,7 @@ def lidar_process(sock):
         fps_list.append(1.0 / frame_time)
 
         moving_avg_fps = sum(fps_list) / len(fps_list)
-        print(f'LIDAR Moving Average FPS: {moving_avg_fps:.2f}')
+        print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
 
 
 def camera_thread(picam0, picam1):
@@ -175,7 +175,7 @@ def camera_thread(picam0, picam1):
         fps_list.append(1.0 / frame_time)
 
         moving_avg_fps = sum(fps_list) / len(fps_list)
-        print(f'Camera Moving Average FPS: {moving_avg_fps:.2f}')
+        print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
 
 
 def xbox_controller_process(pca):
