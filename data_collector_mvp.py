@@ -338,6 +338,7 @@ def main():
         lidar_thread_instance.join()
         camera_thread_instance.join()
         xbox_controller_thread_instance.join()
+
     except KeyboardInterrupt:
         print('Stopping scan...')
         stop_scan(sock)
