@@ -24,7 +24,7 @@ def set_servo_angle(pca, channel, angle):
 def set_motor_speed(pca, channel, speed):
     pulse_min = 310  # Pulse width for 0% speed
     pulse_max = 409  # Pulse width for 100% speed
-    pulse_width = pulse_min + (speed / 100.0) * (pulse_max - pulse_min)
+    pulse_width = pulse_min + speed * (pulse_max - pulse_min)
     pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
 
 
@@ -299,6 +299,10 @@ def xbox_controller_process(pca):
         for event in pygame.event.get():
             if event.type == pygame.JOYAXISMOTION:
                 print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
+                if event.axis == 1:
+                    set_motor_speed(pca, 1, abs(event.value))
+                elif event.axis == 1:
+                    set_servo_angle(pca, 0, (event.value + 1) * 90)
             elif event.type == pygame.JOYBALLMOTION:
                 print(f"JOYBALLMOTION: ball={event.ball}, rel={event.rel}")
             elif event.type == pygame.JOYBUTTONDOWN:
@@ -314,9 +318,6 @@ def xbox_controller_process(pca):
             elif event.type == pygame.QUIT:
                 print("QUIT event")
                 return
-
-        #set_servo_angle(pca, 0, angle)
-        #set_motor_speed(pca, 1, speed)
 
         time.sleep(1 / 30)
 

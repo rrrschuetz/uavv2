@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_collector_mvp.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_collector_mvp.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -121,22 +120,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00032" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722078526835</created>
-      <option name="number" value="00032" />
-      <option name="presentableId" value="LOCAL-00032" />
-      <option name="project" value="LOCAL" />
-      <updated>1722078526835</updated>
-    </task>
-    <task id="LOCAL-00033" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722079274218</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1722079274218</updated>
     </task>
     <task id="LOCAL-00034" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -514,7 +497,23 @@
       <option name="project" value="LOCAL" />
       <updated>1722457595792</updated>
     </task>
-    <option name="localTasksCounter" value="81" />
+    <task id="LOCAL-00081" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1722458144911</created>
+      <option name="number" value="00081" />
+      <option name="presentableId" value="LOCAL-00081" />
+      <option name="project" value="LOCAL" />
+      <updated>1722458144911</updated>
+    </task>
+    <task id="LOCAL-00082" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1722458202458</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1722458202458</updated>
+    </task>
+    <option name="localTasksCounter" value="83" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
