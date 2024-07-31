@@ -11,6 +11,8 @@ from adafruit_pca9685 import PCA9685
 from board import SCL, SDA
 import busio
 
+pca = None  # Global variable for the PCA9685 instance
+
 # Servo functions
 def set_servo_angle(channel, angle):
     """
@@ -19,6 +21,7 @@ def set_servo_angle(channel, angle):
     :param channel: The channel number on the PCA9685 where the servo is connected (0-15).
     :param angle: The desired angle to set the servo to (0-180 degrees).
     """
+    global pca
     # Convert the angle to the corresponding pulse width
     pulse_min = 260  # Pulse width for 0 degrees
     pulse_max = 380  # Pulse width for 180 degrees
@@ -36,6 +39,7 @@ def set_motor_speed(channel, speed):
     :param channel: The channel number on the PCA9685 where the ESC is connected (0-15).
     :param speed: The desired speed of the motor (0-100%).
     """
+    global pca
     # Convert the speed to the corresponding pulse width
     pulse_min = 310  # Pulse width for 0% speed
     pulse_max = 409  # Pulse width for 100% speed
@@ -265,7 +269,7 @@ def lidar_thread(sock, lidar_fps_window):
 
         if len(lidar_fps_window) == lidar_fps_window.maxlen:
             moving_avg_fps = sum(lidar_fps_window) / len(lidar_fps_window)
-            print(f'LIDAR Moving Average FPS: {moving_avg_fps:.2f}')
+            #print(f'LIDAR Moving Average FPS: {moving_avg_fps:.2f}')
 
         # Output data (for debugging purposes, replace with actual data handling logic)
         #print(f"Angles: {angles}")
@@ -291,7 +295,7 @@ def camera_thread(picam0, picam1, camera_fps_window):
 
         if len(camera_fps_window) == camera_fps_window.maxlen:
             moving_avg_fps = sum(camera_fps_window) / len(camera_fps_window)
-            print(f'Camera Moving Average FPS: {moving_avg_fps:.2f}')
+            #print(f'Camera Moving Average FPS: {moving_avg_fps:.2f}')
 
         # Output data (for debugging purposes, replace with actual data handling logic)
         #print(f"Red X Coordinates: {red_x_coords}")
@@ -331,6 +335,8 @@ def xbox_controller_thread():
 
 # Combined main function
 def main():
+    global pca
+
     # Initialize pygame and the joystick
     pygame.init()
     pygame.joystick.init()
