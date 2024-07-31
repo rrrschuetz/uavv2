@@ -5,14 +5,13 @@ import numpy as np
 import cv2
 from picamera2 import Picamera2
 from collections import deque
-
+import threading
 
 # LIDAR functions
 def connect_lidar(ip, port=8089):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect((ip, port))
     return sock
-
 
 def receive_full_data(sock, expected_length):
     data = b''
@@ -21,13 +20,11 @@ def receive_full_data(sock, expected_length):
         data += packet
     return data
 
-
 def get_health(sock):
     sock.send(b'\xA5\x52')
     response = receive_full_data(sock, 10)
     status, error_code = struct.unpack('<BH', response[3:6])
     return status, error_code
-
 
 def get_info(sock):
     sock.send(b'\xA5\x50')
@@ -36,16 +33,13 @@ def get_info(sock):
     serialnum_str = serialnum[::-1].hex()
     return model, firmware_minor, firmware_major, hardware, serialnum_str
 
-
 def start_scan(sock):
     sock.send(b'\xA5\x82\x05\x00\x00\x00\x00\x00\x22')
     response = receive_full_data(sock, 10)
 
-
 def stop_scan(sock):
     sock.send(b'\xA5\x25')
     time.sleep(0.1)
-
 
 def decode_dense_mode_packet(packet, old_start_angle=0.0):
     if len(packet) != 84:
@@ -62,8 +56,7 @@ def decode_dense_mode_packet(packet, old_start_angle=0.0):
         checksum_computed ^= byte
 
     if checksum_received != checksum_computed:
-        raise ValueError(
-            f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
+        raise ValueError(f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
 
     start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
     start_angle = start_angle_q6 / 64.0
@@ -77,7 +70,7 @@ def decode_dense_mode_packet(packet, old_start_angle=0.0):
         index = 4 + i * 2
         if index + 1 >= len(packet):
             raise ValueError(f"Packet is too short for expected data: index {index}")
-        distance = (packet[index] | (packet[index + 1] << 8))
+        distance = (packet[index] | (packet[index+1] << 8))
         distance /= 1000.0  # Convert from millimeters to meters
 
         distances.append(distance)
@@ -95,7 +88,7 @@ def full_scan(sock):
     all_distances = []
     all_angles = []
 
-    i=0
+    i = 0
     while True:
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data, old_start_angle)
@@ -104,20 +97,18 @@ def full_scan(sock):
             break
         else:
             old_start_angle = start_angle
-        i+=1
+        i += 1
         all_distances.extend(decoded_data['distances'])
         all_angles.extend(decoded_data['angles'])
     print(i, old_start_angle)
 
     return all_angles, all_distances
 
-
 # Camera functions
 def gamma_correction(image, gamma=1.5):
     inv_gamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
     return cv2.LUT(image, table)
-
 
 def enhance_lighting(image):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -128,13 +119,11 @@ def enhance_lighting(image):
     enhanced = cv2.cvtColor(hsv_enhanced, cv2.COLOR_HSV2BGR)
     return enhanced
 
-
 def preprocess_image(image):
     gamma_corrected = gamma_correction(image)
     enhanced = enhance_lighting(gamma_corrected)
     hsv = cv2.cvtColor(enhanced, cv2.COLOR_BGR2HSV)
     return hsv
-
 
 def apply_morphological_operations(mask):
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
@@ -142,14 +131,12 @@ def apply_morphological_operations(mask):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
     return mask
 
-
 def remove_small_contours(mask, min_area=2000):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         if cv2.contourArea(contour) < min_area:
             cv2.drawContours(mask, [contour], -1, 0, -1)
     return mask
-
 
 def filter_contours(contours, min_area=2000, aspect_ratio_range=(1.5, 3.0), angle_range=(80, 100)):
     filtered_contours = []
@@ -168,7 +155,6 @@ def filter_contours(contours, min_area=2000, aspect_ratio_range=(1.5, 3.0), angl
         if aspect_ratio_range[0] <= aspect_ratio <= aspect_ratio_range[1] and angle_range[0] <= angle <= angle_range[1]:
             filtered_contours.append(box)
     return filtered_contours
-
 
 def detect_and_label_blobs(image):
     hsv = preprocess_image(image)
@@ -219,6 +205,48 @@ def detect_and_label_blobs(image):
 
     return red_x_coords, green_x_coords
 
+# Thread functions
+def lidar_thread(sock, lidar_fps_window):
+    while True:
+        start_time = time.time()
+        angles, distances = full_scan(sock)
+        end_time = time.time()
+        frame_time = end_time - start_time
+        lidar_fps_window.append(1.0 / frame_time)
+
+        if len(lidar_fps_window) == lidar_fps_window.maxlen:
+            moving_avg_fps = sum(lidar_fps_window) / len(lidar_fps_window)
+            print(f'LIDAR Moving Average FPS: {moving_avg_fps:.2f}')
+
+        # Output data (for debugging purposes, replace with actual data handling logic)
+        #print(f"Angles: {angles}")
+        #print(f"Distances: {distances}")
+
+def camera_thread(picam0, picam1, camera_fps_window):
+    while True:
+        start_time = time.time()
+        image0 = picam0.capture_array()
+        image1 = picam1.capture_array()
+        image0_flipped = cv2.flip(image0, 0)
+        image1_flipped = cv2.flip(image1, 0)
+        combined_image = np.hstack((image1_flipped, image0_flipped))
+
+        height = combined_image.shape[0]
+        cropped_image = combined_image[height // 3:, :]
+
+        red_x_coords, green_x_coords = detect_and_label_blobs(cropped_image)
+
+        end_time = time.time()
+        frame_time = end_time - start_time
+        camera_fps_window.append(1.0 / frame_time)
+
+        if len(camera_fps_window) == camera_fps_window.maxlen:
+            moving_avg_fps = sum(camera_fps_window) / len(camera_fps_window)
+            print(f'Camera Moving Average FPS: {moving_avg_fps:.2f}')
+
+        # Output data (for debugging purposes, replace with actual data handling logic)
+        #print(f"Red X Coordinates: {red_x_coords}")
+        #print(f"Green X Coordinates: {green_x_coords}")
 
 # Combined main function
 def main():
@@ -238,7 +266,7 @@ def main():
     print('Starting scan...')
     start_scan(sock)
 
-       # Camera setup
+    # Camera setup
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
     config = {"format": 'RGB888', "size": (640, 400)}
@@ -247,51 +275,26 @@ def main():
     picam0.start()
     picam1.start()
 
-    fps_window = deque(maxlen=10)
+    # FPS windows
+    lidar_fps_window = deque(maxlen=10)
+    camera_fps_window = deque(maxlen=10)
+
+    # Start threads
+    lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock, lidar_fps_window))
+    camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1, camera_fps_window))
+
+    lidar_thread_instance.start()
+    camera_thread_instance.start()
 
     try:
-        while True:
-            start_time = time.time()
-
-            # LIDAR scan
-            angles, distances = full_scan(sock)
-
-            # Camera capture and processing
-            image0 = picam0.capture_array()
-            image1 = picam1.capture_array()
-            image0_flipped = cv2.flip(image0, 0)
-            image1_flipped = cv2.flip(image1, 0)
-            combined_image = np.hstack((image1_flipped, image0_flipped))
-
-            height = combined_image.shape[0]
-            cropped_image = combined_image[height // 3:, :]
-
-            red_x_coords, green_x_coords = detect_and_label_blobs(cropped_image)
-
-            end_time = time.time()
-            frame_time = end_time - start_time
-            fps_window.append(1.0 / frame_time)
-
-            if len(fps_window) == fps_window.maxlen:
-                moving_avg_fps = sum(fps_window) / len(fps_window)
-                print(f'Moving Average FPS: {moving_avg_fps:.2f}')
-
-            # Output data (for debugging purposes, replace with actual data handling logic)
-            #print(f"Angles: {angles}")
-            #print(f"Distances: {distances}")
-            #print(f"Red X Coordinates: {red_x_coords}")
-            #print(f"Green X Coordinates: {green_x_coords}")
-
-            # Ensure the loop runs at a controlled rate, e.g., 10 FPS
-            time.sleep(max(0, (1 / 10) - frame_time))
-
+        lidar_thread_instance.join()
+        camera_thread_instance.join()
     except KeyboardInterrupt:
         print('Stopping scan...')
         stop_scan(sock)
         picam0.stop()
         picam1.stop()
         sock.close()
-
 
 if __name__ == '__main__':
     main()
