@@ -62,10 +62,10 @@ def arm_esc(channel):
 
 try:
     # Calibrate the ESC
-    calibrate_esc(0)
+    calibrate_esc(1)
 
     # Arm the ESC
-    arm_esc(0)
+    arm_esc(1)
 
     while True:
         # Example usage: gradually increase speed from 0% to 100%
@@ -76,12 +76,12 @@ try:
 
         # Gradually decrease speed from 100% to 0%
         for speed in range(100, -1, -10):
-            set_motor_speed(0, speed)
+            set_motor_speed(1,speed)
             print(f"Speed: {speed}%")
             time.sleep(1)
 except KeyboardInterrupt:
     # Stop the motor on exit
-    set_motor_speed(0, 0)
+    set_motor_speed(1,0)
     print("Program stopped by User")
 finally:
     pca.deinit()
