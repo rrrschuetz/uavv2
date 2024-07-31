@@ -19,8 +19,8 @@ def set_motor_speed(channel, speed):
     :param speed: The desired speed of the motor (0-100%).
     """
     # Convert the speed to the corresponding pulse width
-    pulse_min = 150  # Pulse width for 0% speed
-    pulse_max = 600  # Pulse width for 100% speed
+    pulse_min = 310 Pulse width for 0% speed
+    pulse_max = 409 Pulse width for 100% speed
     pulse_width = pulse_min + (speed / 100.0) * (pulse_max - pulse_min)
 
     # Set the pulse width for the specified channel
