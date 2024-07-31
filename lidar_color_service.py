@@ -100,7 +100,7 @@ def full_scan(sock):
         i += 1
         all_distances.extend(decoded_data['distances'])
         all_angles.extend(decoded_data['angles'])
-    print(i, old_start_angle)
+    #print(i, old_start_angle)
 
     return all_angles, all_distances
 
