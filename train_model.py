@@ -1,3 +1,4 @@
+import datetime
 import numpy as np
 import pandas as pd
 import torch
@@ -6,6 +7,7 @@ import torch.optim as optim
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import pickle
+from torch.utils.data import DataLoader, TensorDataset
 
 
 def make_column_names_unique(df):
@@ -36,7 +38,7 @@ def apply_dropout(data, dropout_rate=0.1):
 
 
 # 1. Preprocess data
-data_raw = pd.read_csv("./file.txt")
+data_raw = pd.read_csv("~/test/file.txt")
 make_column_names_unique(data_raw)
 data_raw = apply_reciprocal_to_scan(data_raw)
 lidar_cols = data_raw.filter(regex='^SCAN').columns
@@ -84,6 +86,14 @@ test_color = torch.tensor(test_color)
 y_train = torch.tensor(y_train, dtype=torch.float32)
 y_test = torch.tensor(y_test, dtype=torch.float32)
 
+# Create DataLoader
+batch_size = 32
+train_dataset = TensorDataset(train_lidar, train_color, y_train)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+test_dataset = TensorDataset(test_lidar, test_color, y_test)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
 
 # 2. Define the 1D CNN model
 class WeightedConcatenate(nn.Module):
@@ -99,13 +109,13 @@ class WeightedConcatenate(nn.Module):
 class CNNModel(nn.Module):
     def __init__(self, lidar_input_shape, color_input_shape):
         super(CNNModel, self).__init__()
-        self.lidar_conv1 = nn.Conv1d(1, 64, kernel_size=5, activation='relu')
+        self.lidar_conv1 = nn.Conv1d(1, 64, kernel_size=5)
         self.lidar_pool1 = nn.MaxPool1d(2)
-        self.lidar_conv2 = nn.Conv1d(64, 128, kernel_size=5, activation='relu')
+        self.lidar_conv2 = nn.Conv1d(64, 128, kernel_size=5)
         self.lidar_pool2 = nn.MaxPool1d(2)
         self.lidar_flatten = nn.Flatten()
 
-        self.color_dense1 = nn.Linear(color_input_shape[0], 64)
+        self.color_dense1 = nn.Linear(color_input_shape, 64)
         self.color_dropout = nn.Dropout(0.3)
         self.color_dense2 = nn.Linear(64, 128)
         self.color_flatten = nn.Flatten()
@@ -120,15 +130,15 @@ class CNNModel(nn.Module):
         self.output = nn.Linear(32, 2)
 
     def forward(self, lidar, color):
-        lidar = self.lidar_conv1(lidar)
+        lidar = torch.relu(self.lidar_conv1(lidar))
         lidar = self.lidar_pool1(lidar)
-        lidar = self.lidar_conv2(lidar)
+        lidar = torch.relu(self.lidar_conv2(lidar))
         lidar = self.lidar_pool2(lidar)
         lidar = self.lidar_flatten(lidar)
 
-        color = self.color_dense1(color)
+        color = torch.relu(self.color_dense1(color))
         color = self.color_dropout(color)
-        color = self.color_dense2(color)
+        color = torch.relu(self.color_dense2(color))
         color = self.color_flatten(color)
 
         concatenated = self.weighted_concat(lidar, color)
@@ -156,18 +166,22 @@ epochs_no_improve = 0
 
 for epoch in range(45):
     model.train()
-    optimizer.zero_grad()
-    output = model(train_lidar, train_color)
-    loss = criterion(output, y_train)
-    loss.backward()
-    optimizer.step()
+    for batch_lidar, batch_color, batch_labels in train_loader:
+        optimizer.zero_grad()
+        output = model(batch_lidar, batch_color)
+        loss = criterion(output, batch_labels)
+        loss.backward()
+        optimizer.step()
 
     model.eval()
+    val_loss = 0
     with torch.no_grad():
-        val_output = model(test_lidar, test_color)
-        val_loss = criterion(val_output, y_test)
+        for batch_lidar, batch_color, batch_labels in test_loader:
+            val_output = model(batch_lidar, batch_color)
+            val_loss += criterion(val_output, batch_labels).item()
 
-    print(f"Epoch {epoch + 1}, Loss: {loss.item()}, Val Loss: {val_loss.item()}")
+    val_loss /= len(test_loader)
+    print(f"Epoch {epoch + 1}, Loss: {loss.item()}, Val Loss: {val_loss}")
 
     if val_loss < best_loss:
         best_loss = val_loss
@@ -182,15 +196,20 @@ for epoch in range(45):
 # 4. Evaluate the model
 model.load_state_dict(torch.load('best_model.pt'))
 model.eval()
+test_loss = 0
+accuracy = 0
 with torch.no_grad():
-    test_output = model(test_lidar, test_color)
-    test_loss = criterion(test_output, y_test)
-    accuracy = ((test_output.argmax(dim=1) == y_test.argmax(dim=1)).float().mean()).item()
+    for batch_lidar, batch_color, batch_labels in test_loader:
+        test_output = model(batch_lidar, batch_color)
+        test_loss += criterion(test_output, batch_labels).item()
+        accuracy += ((test_output.argmax(dim=1) == batch_labels.argmax(dim=1)).float().mean()).item()
 
-print(f"Test Loss: {test_loss.item()}")
+test_loss /= len(test_loader)
+accuracy /= len(test_loader)
+print(f"Test Loss: {test_loss}")
 print(f"Test Accuracy: {accuracy}")
 
 # 5. Save the model and the scaler for standardization
-torch.save(model.state_dict(), './model.pth')
-with open('./scaler.pkl', 'wb') as f:
+torch.save(model.state_dict(), '/home/rrrschuetz/test/model.pth')
+with open('/home/rrrschuetz/test/scaler.pkl', 'wb') as f:
     pickle.dump(scaler_lidar, f)
