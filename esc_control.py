@@ -70,7 +70,7 @@ try:
     while True:
         # Example usage: gradually increase speed from 0% to 100%
         for speed in range(0, 101, 10):
-            set_motor_speed(0, speed)
+            set_motor_speed(1, speed)
             print(f"Speed: {speed}%")
             time.sleep(1)
 
