@@ -36,7 +36,7 @@ def apply_dropout(data, dropout_rate=0.1):
 
 
 # 1. Preprocess data
-data_raw = pd.read_csv("~/test/file.txt")
+data_raw = pd.read_csv("./file.txt")
 make_column_names_unique(data_raw)
 data_raw = apply_reciprocal_to_scan(data_raw)
 lidar_cols = data_raw.filter(regex='^SCAN').columns
@@ -191,6 +191,6 @@ print(f"Test Loss: {test_loss.item()}")
 print(f"Test Accuracy: {accuracy}")
 
 # 5. Save the model and the scaler for standardization
-torch.save(model.state_dict(), '/home/rrrschuetz/test/model.pth')
-with open('/home/rrrschuetz/test/scaler.pkl', 'wb') as f:
+torch.save(model.state_dict(), './model.pth')
+with open('./scaler.pkl', 'wb') as f:
     pickle.dump(scaler_lidar, f)
