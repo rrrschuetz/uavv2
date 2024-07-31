@@ -122,22 +122,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00030" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722077295723</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1722077295723</updated>
-    </task>
-    <task id="LOCAL-00031" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722077312971</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1722077312971</updated>
-    </task>
     <task id="LOCAL-00032" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
       <created>1722078526835</created>
@@ -514,7 +498,23 @@
       <option name="project" value="LOCAL" />
       <updated>1722452332904</updated>
     </task>
-    <option name="localTasksCounter" value="79" />
+    <task id="LOCAL-00079" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1722457123070</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1722457123070</updated>
+    </task>
+    <task id="LOCAL-00080" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1722457595792</created>
+      <option name="number" value="00080" />
+      <option name="presentableId" value="LOCAL-00080" />
+      <option name="project" value="LOCAL" />
+      <updated>1722457595792</updated>
+    </task>
+    <option name="localTasksCounter" value="81" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">

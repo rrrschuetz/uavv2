@@ -5,7 +5,8 @@ import time
 import numpy as np
 import cv2
 from picamera2 import Picamera2
-from multiprocessing import Process, Thread
+from multiprocessing import Process
+import threading
 from collections import deque
 from adafruit_pca9685 import PCA9685
 from board import SCL, SDA
@@ -153,23 +154,121 @@ def lidar_process(sock):
         print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
 
 
+# Camera functions
+def gamma_correction(image, gamma=1.5):
+    inv_gamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    return cv2.LUT(image, table)
+
+def enhance_lighting(image):
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    h, s, v = cv2.split(hsv)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    v = clahe.apply(v)
+    hsv_enhanced = cv2.merge([h, s, v])
+    enhanced = cv2.cvtColor(hsv_enhanced, cv2.COLOR_HSV2BGR)
+    return enhanced
+
+def preprocess_image(image):
+    gamma_corrected = gamma_correction(image)
+    enhanced = enhance_lighting(gamma_corrected)
+    hsv = cv2.cvtColor(enhanced, cv2.COLOR_BGR2HSV)
+    return hsv
+
+def apply_morphological_operations(mask):
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=4)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
+    return mask
+
+def remove_small_contours(mask, min_area=2000):
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        if cv2.contourArea(contour) < min_area:
+            cv2.drawContours(mask, [contour], -1, 0, -1)
+    return mask
+
+def filter_contours(contours, min_area=2000, aspect_ratio_range=(1.5, 3.0), angle_range=(80, 100)):
+    filtered_contours = []
+    for contour in contours:
+        if cv2.contourArea(contour) < min_area:
+            continue
+        rect = cv2.minAreaRect(contour)
+        box = cv2.boxPoints(rect)
+        box = np.int32(box)
+        width, height = rect[1]
+        angle = rect[2]
+        if width < height:
+            width, height = height, width
+            angle += 90
+        aspect_ratio = width / height
+        if aspect_ratio_range[0] <= aspect_ratio <= aspect_ratio_range[1] and angle_range[0] <= angle <= angle_range[1]:
+            filtered_contours.append(box)
+    return filtered_contours
+
+def detect_and_label_blobs(image):
+    hsv = preprocess_image(image)
+
+    # Adaptive color ranges for red and green detection
+    red_lower1 = np.array([0, 50, 50])
+    red_upper1 = np.array([10, 255, 255])
+    red_lower2 = np.array([160, 50, 50])
+    red_upper2 = np.array([180, 255, 255])
+    green_lower1 = np.array([35, 40, 40])
+    green_upper1 = np.array([70, 255, 255])
+    green_lower2 = np.array([70, 40, 40])
+    green_upper2 = np.array([90, 255, 255])
+
+    # Create masks
+    red_mask1 = cv2.inRange(hsv, red_lower1, red_upper1)
+    red_mask2 = cv2.inRange(hsv, red_lower2, red_upper2)
+    red_mask = cv2.bitwise_or(red_mask1, red_mask2)
+
+    green_mask1 = cv2.inRange(hsv, green_lower1, green_upper1)
+    green_mask2 = cv2.inRange(hsv, green_lower2, green_upper2)
+    green_mask = cv2.bitwise_or(green_mask1, green_mask2)
+
+    # Apply morphological operations and remove small contours
+    red_mask = remove_small_contours(apply_morphological_operations(red_mask))
+    green_mask = remove_small_contours(apply_morphological_operations(green_mask))
+
+    # Combine masks
+    combined_mask = cv2.bitwise_or(red_mask, green_mask)
+
+    # Find and filter contours
+    contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    filtered_contours = filter_contours(contours)
+
+    red_x_coords = np.zeros(image.shape[1], dtype=float)
+    green_x_coords = np.zeros(image.shape[1], dtype=float)
+
+    for box in filtered_contours:
+        rect = cv2.minAreaRect(box)
+        center = (int(rect[0][0]), int(rect[0][1]))
+        label = "R" if np.any(red_mask[center[1], center[0]]) else "G"
+        left_end = min(box[:, 0])
+        right_end = max(box[:, 0])
+        if label == "R":
+            red_x_coords[left_end:right_end] = 1.0
+        else:
+            green_x_coords[left_end:right_end] = 1.0
+
+    return red_x_coords, green_x_coords
+
+
 def camera_thread(picam0, picam1):
     fps_list = deque(maxlen=10)
     while True:
-        print('Capturing images...1')
         start_time = time.time()
         image0 = picam0.capture_array()
         image1 = picam1.capture_array()
-        print('Capturing images...2')
         image0_flipped = cv2.flip(image0, 0)
         image1_flipped = cv2.flip(image1, 0)
         combined_image = np.hstack((image1_flipped, image0_flipped))
         height = combined_image.shape[0]
         cropped_image = combined_image[height // 3:, :]
-        print('Capturing images...3')
         red_x_coords, green_x_coords = detect_and_label_blobs(cropped_image)
         end_time = time.time()
-        print('Capturing images...4')
 
         frame_time = end_time - start_time
         fps_list.append(1.0 / frame_time)
@@ -258,7 +357,7 @@ def main():
 
     # Start processes
     lidar_process_instance = Process(target=lidar_process, args=(sock,))
-    camera_thread_instance = Thread(target=camera_process, args=(picam0, picam1))
+    camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1))
     xbox_controller_process_instance = Process(target=xbox_controller_process,args=(pca,))
 
     lidar_process_instance.start()
