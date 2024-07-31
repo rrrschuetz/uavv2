@@ -249,7 +249,7 @@ def camera_thread(picam0, picam1, camera_fps_window):
         #print(f"Red X Coordinates: {red_x_coords}")
         #print(f"Green X Coordinates: {green_x_coords}")
 
-def process_events():
+def xbox_controller_thread():
     while True:
         # Handle events
         for event in pygame.event.get():
@@ -276,7 +276,6 @@ def process_events():
 
 # Combined main function
 def main():
-
     # Initialize pygame and the joystick
     pygame.init()
     pygame.joystick.init()
@@ -329,15 +328,16 @@ def main():
     # Start threads
     lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock, lidar_fps_window))
     camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1, camera_fps_window))
+    xbox_controller_thread_instance = threading.Thread(target=xbox_controller_thread)
 
     lidar_thread_instance.start()
     camera_thread_instance.start()
+    xbox_controller_thread_instance.start()
 
     try:
         lidar_thread_instance.join()
         camera_thread_instance.join()
-        process_events()
-
+        xbox_controller_thread_instance.join()
     except KeyboardInterrupt:
         print('Stopping scan...')
         stop_scan(sock)
