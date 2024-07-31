@@ -323,6 +323,9 @@ def xbox_controller_thread():
         #print(f"Setting servo angle to {angle} degrees")
         #set_servo_angle(0, angle)
 
+        #set_motor_speed(1, speed)
+        #print(f"Speed: {speed}%")
+
         # Limit the loop to 30 times per second
         time.sleep(1/30)
 
