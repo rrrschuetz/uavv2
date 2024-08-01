@@ -11,6 +11,7 @@ from collections import deque
 from adafruit_pca9685 import PCA9685
 from board import SCL, SDA
 import busio
+import matplotlib.pyplot as plt
 
 # Servo functions
 def set_servo_angle(pca, channel, angle):
@@ -140,12 +141,30 @@ def full_scan(sock):
     #print(i,old_start_angle)
     return all_distances, all_angles
 
+def draw_radar_chart(distances, angles, filename='radar_chart.jpg'):
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+    ax.set_theta_direction(-1)
+    ax.set_theta_offset(np.pi / 2.0)
+
+    ax.scatter(angles, distances, s=2)
+    ax.set_ylim(0, max(distances) * 1.1)
+
+    ax.set_xlabel('Angle (radians)')
+    ax.set_ylabel('Distance (meters)')
+    ax.set_title('LIDAR Data')
+
+    plt.savefig(filename, format='jpg')
+    plt.close()
+
 def lidar_process(sock):
     fps_list = deque(maxlen=10)
     while True:
         start_time = time.time()
         distances, angles = full_scan(sock)
         end_time = time.time()
+
+        # Save the radar chart
+        draw_radar_chart(distances, angles)
 
         frame_time = end_time - start_time
         fps_list.append(1.0 / frame_time)
@@ -253,7 +272,12 @@ def detect_and_label_blobs(image):
         else:
             green_x_coords[left_end:right_end] = 1.0
 
-    return red_x_coords, green_x_coords
+        # Draw and label the contours
+        cv2.drawContours(image, [box], -1, (0, 255, 255), 2)
+        cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+            (0, 255, 255), 2)
+
+    return red_x_coords, green_x_coords, image
 
 
 def camera_thread(picam0, picam1):
@@ -267,8 +291,12 @@ def camera_thread(picam0, picam1):
         combined_image = np.hstack((image1_flipped, image0_flipped))
         height = combined_image.shape[0]
         cropped_image = combined_image[height // 3:, :]
-        red_x_coords, green_x_coords = detect_and_label_blobs(cropped_image)
+        red_x_coords, green_x_coords, image = detect_and_label_blobs(cropped_image)
         end_time = time.time()
+
+        # Save the image with labeled contours
+        filename = "labeled_image.jpg"
+        cv2.imwrite(filename, image)
 
         frame_time = end_time - start_time
         fps_list.append(1.0 / frame_time)
@@ -300,9 +328,12 @@ def xbox_controller_process(pca):
             if event.type == pygame.JOYAXISMOTION:
                 #print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
-                    set_motor_speed(pca, 1, abs(event.value))
+                    set_motor_speed(pca, 1, abs(event.value * 0.5))
                 elif event.axis == 0:
-                    set_servo_angle(pca, 0, event.value + 1.0)
+                    set_servo_angle(pca, 0, event.value * 0.5 + 0.6)
+                if event.axis == 2:
+                    set_servo_angle(pca, 2, event.value * 0.5 + 0.5)
+            
             elif event.type == pygame.JOYBALLMOTION:
                 print(f"JOYBALLMOTION: ball={event.ball}, rel={event.rel}")
             elif event.type == pygame.JOYBUTTONDOWN:
