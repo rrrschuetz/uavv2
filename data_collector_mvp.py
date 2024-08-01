@@ -77,6 +77,8 @@ def stop_scan(sock):
 
 
 def decode_dense_mode_packet(packet, old_start_angle=0.0):
+    print("old_start_angle",old_start_angle
+          )
     if len(packet) != 84:
         raise ValueError(f"Invalid packet length: {len(packet)}")
 
@@ -156,7 +158,7 @@ def draw_radar_chart(distances, angles, filename='radar_chart.jpg'):
     plt.savefig(filename, format='jpg')
     plt.close()
 
-def lidar_process(sock):
+def lidar_thread(sock):
     fps_list = deque(maxlen=10)
     while True:
         start_time = time.time()
@@ -388,16 +390,16 @@ def main():
     picam1.start()
 
     # Start processes
-    lidar_process_instance = Process(target=lidar_process, args=(sock,))
+    lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,))
     camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1))
     xbox_controller_process_instance = Process(target=xbox_controller_process,args=(pca,))
 
-    lidar_process_instance.start()
+    lidar_thread_instance.start()
     camera_thread_instance.start()
     xbox_controller_process_instance.start()
 
     try:
-        lidar_process_instance.join()
+        lidar_thread_instance.join()
         camera_thread_instance.join()
         xbox_controller_process_instance.join()
 
