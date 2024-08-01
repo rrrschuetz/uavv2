@@ -77,8 +77,6 @@ def stop_scan(sock):
 
 
 def decode_dense_mode_packet(packet, old_start_angle=0.0):
-    print("old_start_angle",old_start_angle
-          )
     if len(packet) != 84:
         raise ValueError(f"Invalid packet length: {len(packet)}")
 
@@ -96,26 +94,30 @@ def decode_dense_mode_packet(packet, old_start_angle=0.0):
         raise ValueError(
             f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
 
-    start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
-    start_angle = start_angle_q6 / 64.0
-    angle_diff = start_angle - old_start_angle
-    if angle_diff < 0: angle_diff += 360.0
-
     distances = []
     angles = []
 
-    for i in range(40):
-        index = 4 + i * 2
-        if index + 1 >= len(packet):
-            raise ValueError(f"Packet is too short for expected data: index {index}")
-        distance = (packet[index] | (packet[index + 1] << 8))
-        distance /= 1000.0  # Convert from millimeters to meters
+    start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
+    start_angle = start_angle_q6 / 64.0
+    angle_diff = start_angle - old_start_angle
 
-        distances.append(distance)
-        angle = start_angle + i * angle_diff / 40.0
-        angles.append(angle)
+    if angle_diff > 0:
+        valid_flag = True
+        for i in range(40):
+            index = 4 + i * 2
+            if index + 1 >= len(packet):
+                raise ValueError(f"Packet is too short for expected data: index {index}")
+            distance = (packet[index] | (packet[index + 1] << 8))
+            distance /= 1000.0  # Convert from millimeters to meters
+
+            distances.append(distance)
+            angle = start_angle + i * angle_diff / 40.0
+            angles.append(angle)
+    else:
+        valid_flag = False
 
     return {
+        "valid": valid_flag,
         "start_angle": start_angle,
         "distances": distances,
         "angles": angles
@@ -131,14 +133,12 @@ def full_scan(sock):
     while True:
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data, old_start_angle)
-        start_angle = decoded_data['start_angle']
-        if start_angle < old_start_angle:
+        if decoded_data['valid'] == False:
             break
-        else:
-            old_start_angle = start_angle
-        i += 1
+        old_start_angle = decoded_data['start_angle']
         all_distances.extend(decoded_data['distances'])
         all_angles.extend(decoded_data['angles'])
+        i += 1
 
     #print(i,old_start_angle)
     return all_distances, all_angles
@@ -166,13 +166,13 @@ def lidar_thread(sock):
         end_time = time.time()
 
         # Save the radar chart
-        draw_radar_chart(distances, angles)
+        #draw_radar_chart(distances, angles)
 
         frame_time = end_time - start_time
         fps_list.append(1.0 / frame_time)
 
         moving_avg_fps = sum(fps_list) / len(fps_list)
-        #print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
+        print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
 
 
 # Camera functions
