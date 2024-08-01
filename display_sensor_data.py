@@ -1,23 +1,42 @@
 import cv2
 import time
+import numpy as np
 
-def display_images(image_path1, image_path2, delay=1):
+def load_arrays_from_file(filename):
+    data = np.loadtxt(filename, skiprows=1)
+    distances = data[:, 0]
+    angles = data[:, 1]
+    return distances, angles
+
+def draw_radar_chart(distances, angles):
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+    ax.set_theta_direction(-1)
+    ax.set_theta_offset(np.pi / 2.0)
+
+    ax.scatter(angles, distances, s=2)
+    ax.set_ylim(0, max(distances) * 1.1)
+
+    ax.set_xlabel('Angle (radians)')
+    ax.set_ylabel('Distance (meters)')
+    ax.set_title('LIDAR Data')
+    plt.show()
+
+def display_images(image_path, radar_path, delay=1):
     while True:
         # Read the images
-        image1 = cv2.imread(image_path1)
-        image2 = cv2.imread(image_path2)
+        #image = cv2.imread(image_path)
+        image = None
 
-        if image1 is None:
-            print(f"Failed to load image: {image_path1}")
+        if image is None:
+            print(f"Failed to load image: {image_path}")
         else:
             # Display the first image in a window
-            cv2.imshow('Image 1', image1)
+            cv2.imshow('Image', image)
 
-        if image2 is None:
-            print(f"Failed to load image: {image_path2}")
-        else:
-            # Display the second image in a separate window
-            cv2.imshow('Image 2', image2)
+        # Read the radar data
+        distances, angles = load_arrays_from_file(radar_path)
+        draw_radar_chart(distances, angles)
 
         # Wait for the specified delay time in milliseconds
         key = cv2.waitKey(delay)
@@ -30,8 +49,5 @@ def display_images(image_path1, image_path2, delay=1):
     # Close all OpenCV windows
     cv2.destroyAllWindows()
 
-
-# Example usage
-image_path1 = '/mnt/uavv2/radar_chart.jpg'
-image_path2 = '/mnt/uavv2/labeled_image.jpg'
-display_images(image_path1, image_path2)
+image_path = '/mnt/uavv2/labeled_image.jpg'
+display_images(image_path, 'radar.txt')

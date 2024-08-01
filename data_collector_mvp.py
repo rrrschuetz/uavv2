@@ -143,20 +143,6 @@ def full_scan(sock):
     #print(i,old_start_angle)
     return all_distances, all_angles
 
-def draw_radar_chart(distances, angles, filename='radar_chart.jpg'):
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-    ax.set_theta_direction(-1)
-    ax.set_theta_offset(np.pi / 2.0)
-
-    ax.scatter(angles, distances, s=2)
-    ax.set_ylim(0, max(distances) * 1.1)
-
-    ax.set_xlabel('Angle (radians)')
-    ax.set_ylabel('Distance (meters)')
-    ax.set_title('LIDAR Data')
-
-    plt.savefig(filename, format='jpg')
-    plt.close()
 
 def lidar_thread(sock):
     fps_list = deque(maxlen=10)
@@ -165,8 +151,8 @@ def lidar_thread(sock):
         distances, angles = full_scan(sock)
         end_time = time.time()
 
-        # Save the radar chart
-        #draw_radar_chart(distances, angles)
+        data = np.column_stack((distances, angles))
+        np.savetxt("radar.txt", data, header="Distances, Angles", comments='', fmt='%f')
 
         frame_time = end_time - start_time
         fps_list.append(1.0 / frame_time)
