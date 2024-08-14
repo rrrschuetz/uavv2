@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 
 Glidar_string = ""
 Gcolor_string = ""
+GX = 0
+GY = 0
 
 # Servo functions
 def set_servo_angle(pca, channel, angle):
@@ -148,7 +150,7 @@ def full_scan(sock):
 
 
 def lidar_thread(sock):
-    global Glidar_string, Gcolor_string
+    global GX, GY, Glidar_string, Gcolor_string
 
     fps_list = deque(maxlen=10)
     while True:
@@ -156,16 +158,20 @@ def lidar_thread(sock):
         distances, angles = full_scan(sock)
         end_time = time.time()
 
-        data = np.column_stack((distances, angles))
+        distances[distances == np.inf] = np.nan
+        x = np.arange(len(distances))
+        finite_vals = np.isfinite(distances)
+        interpolated_distances = np.interp(x, x[finite_vals], distances[finite_vals])
+
+        data = np.column_stack((interpolated_distances, angles))
         np.savetxt("radar.txt", data[1620:], header="Distances, Angles", comments='', fmt='%f')
 
-        # Convert distances to a formatted string with 4 decimal places
-        Glidar_string = ",".join(f"{d:.4f}" for d in distances[1620:])
+        Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[1620:])
         #with open("lidar_distances.txt", "a") as file:
         #    file.write(Glidar_string + "\n")
 
         with open("data_file.txt", "a") as file:
-            file.write(Glidar_string + "," + Gcolor_string + "\n")
+            file.write(str(GX) + "," + str(GY) + "," + Glidar_string + "," + Gcolor_string + "\n")
 
         frame_time = end_time - start_time
         fps_list.append(1.0 / frame_time)
@@ -282,7 +288,7 @@ def detect_and_label_blobs(image):
 
 
 def camera_thread(picam0, picam1):
-    global Glidar_string, Gcolor_string
+    global GX, GY, Glidar_string, Gcolor_string
 
     fps_list = deque(maxlen=10)
     while True:
@@ -318,6 +324,8 @@ def camera_thread(picam0, picam1):
 
 
 def xbox_controller_process(pca):
+    global GX, GY
+
     pygame.init()
     pygame.joystick.init()
 
@@ -340,8 +348,10 @@ def xbox_controller_process(pca):
             if event.type == pygame.JOYAXISMOTION:
                 print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
+                    GY = event.value
                     set_motor_speed(pca, 13, abs(event.value * 0.3))
                 elif event.axis == 2:
+                    GX = event.value
                     set_servo_angle(pca, 12, event.value * 0.4 + 0.5)
                 if event.axis == 2:
                     set_servo_angle(pca, 2, event.value * 0.5 + 0.5)
