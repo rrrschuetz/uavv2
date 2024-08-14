@@ -3,20 +3,24 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import torch
+import torch.nn as nn
+import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+import pickle
 
 def apply_reciprocal(data):
     """Applies reciprocal transformation to the data, handling zeros."""
-    return np.where(data != 0, 1.0 / data, 0.0)
+    with np.errstate(divide='ignore'):
+        return np.where(data != 0.0, 1.0 / data, 0.0)
 
 # Load data without headers
 data_raw = pd.read_csv("./data_file.txt", header=None)
 
 # Extract x, y, lidar, red, and green values
 x_y = data_raw.iloc[:, :2].values
-lidar_data = data_raw.iloc[:, 2:1622].values
-red_values = data_raw.iloc[:, 1622:2902].values
-green_values = data_raw.iloc[:, 2902:4182].values
+lidar_data = data_raw.iloc[:, 2:1502].values  # Adjust this based on your actual data range
+red_values = data_raw.iloc[:, 1502:2782].values  # Adjust based on actual data range
+green_values = data_raw.iloc[:, 2782:4062].values  # Adjust based on actual data range
 
 # Apply reciprocal transformation to LIDAR data
 lidar_data = apply_reciprocal(lidar_data)
@@ -55,8 +59,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_dataset = TensorDataset(test_lidar, test_color, y_test)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-
-# 2. Define the 1D CNN model
+# Define the 1D CNN model
 class WeightedConcatenate(nn.Module):
     def __init__(self, weight_lidar=0.5, weight_color=0.5):
         super(WeightedConcatenate, self).__init__()
@@ -66,7 +69,6 @@ class WeightedConcatenate(nn.Module):
     def forward(self, lidar, color):
         return torch.cat([self.weight_lidar * lidar, self.weight_color * color], dim=-1)
 
-
 class CNNModel(nn.Module):
     def __init__(self, lidar_input_shape, color_input_shape):
         super(CNNModel, self).__init__()
@@ -74,6 +76,10 @@ class CNNModel(nn.Module):
         self.lidar_pool1 = nn.MaxPool1d(2)
         self.lidar_conv2 = nn.Conv1d(64, 128, kernel_size=5)
         self.lidar_pool2 = nn.MaxPool1d(2)
+
+        # Calculate the output size after convolutions and pooling
+        conv_output_size = self.calculate_conv_output_size(lidar_input_shape)
+
         self.lidar_flatten = nn.Flatten()
 
         self.color_dense1 = nn.Linear(color_input_shape, 64)
@@ -83,12 +89,18 @@ class CNNModel(nn.Module):
 
         self.weighted_concat = WeightedConcatenate(weight_lidar=0.1, weight_color=0.9)
 
-        self.fc1 = nn.Linear(51584, 64)
+        # Update the input size of the first fully connected layer
+        self.fc1 = nn.Linear(conv_output_size + 128, 64)
         self.fc2 = nn.Linear(64, 64)
         self.fc3 = nn.Linear(64, 64)
         self.fc4 = nn.Linear(64, 64)
         self.fc5 = nn.Linear(64, 32)
         self.output = nn.Linear(32, 2)
+
+    def calculate_conv_output_size(self, input_size):
+        size = (input_size - 4) // 2  # After first conv and pool
+        size = (size - 4) // 2  # After second conv and pool
+        return size * 128
 
     def forward(self, lidar, color):
         lidar = torch.relu(self.lidar_conv1(lidar))
@@ -112,13 +124,12 @@ class CNNModel(nn.Module):
         output = self.output(combined)
         return output
 
-
 # Create the model
 lidar_input_shape = train_lidar.shape[2]
 color_input_shape = train_color.shape[2]
 model = CNNModel(lidar_input_shape, color_input_shape).to(device)
 
-# 3. Train the model
+# Train the model
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 early_stopping_patience = 2
@@ -154,7 +165,7 @@ for epoch in range(45):
             print("Early stopping")
             break
 
-# 4. Evaluate the model
+# Evaluate the model
 model.load_state_dict(torch.load('best_model.pt'))
 model.eval()
 test_loss = 0
@@ -170,7 +181,7 @@ accuracy /= len(test_loader)
 print(f"Test Loss: {test_loss}")
 print(f"Test Accuracy: {accuracy}")
 
-# 5. Save the model and the scaler for standardization
-torch.save(model.state_dict(), '/home/rrrschuetz/test/model.pth')
-with open('/home/rrrschuetz/test/scaler.pkl', 'wb') as f:
+# Save the model and the scaler for standardization
+torch.save(model.state_dict(), './model.pth')
+with open('./scaler.pkl', 'wb') as f:
     pickle.dump(scaler_lidar, f)

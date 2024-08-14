@@ -145,7 +145,7 @@ def full_scan(sock):
         all_angles.extend(decoded_data['angles'])
         i += 1
 
-    print(i,old_start_angle)
+    #print(i,old_start_angle)
     return all_distances, all_angles
 
 
@@ -314,7 +314,7 @@ def camera_thread(picam0, picam1):
         red_str = ",".join(map(str, red_x_coords.astype(int)))
         green_str = ",".join(map(str, green_x_coords.astype(int)))
         Gcolor_string = f"{red_str},{green_str}"
-        print(f"#color values {len(Gcolor_string.strip().split(','))}")
+        #print(f"#color values {len(Gcolor_string.strip().split(','))}")
 
         #with open("object_coords.txt", "a") as f:
         #    f.write(Gcolor_string + "\n")
