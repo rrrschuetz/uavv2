@@ -314,9 +314,9 @@ def xbox_controller_process(pca):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.JOYAXISMOTION:
-                print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
+                #print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
-                    set_motor_speed(pca, 13, abs(event.value * 0.5))
+                    set_motor_speed(pca, 13, abs(event.value * 0.3))
                 elif event.axis == 2:
                     set_servo_angle(pca, 12, event.value * 0.4 + 0.5)
                 if event.axis == 2:
@@ -380,18 +380,18 @@ def main():
     picam1.start()
 
     # Start processes
-    #lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,))
-    #camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1))
+    lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,))
+    camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1))
     xbox_controller_process_instance = Process(target=xbox_controller_process,args=(pca,))
 
-    #lidar_thread_instance.start()
-    #camera_thread_instance.start()
+    lidar_thread_instance.start()
+    camera_thread_instance.start()
     xbox_controller_process_instance.start()
 
     try:
-        pass
-        #lidar_thread_instance.join()
-        #camera_thread_instance.join()
+        #pass
+        lidar_thread_instance.join()
+        camera_thread_instance.join()
         xbox_controller_process_instance.join()
 
     except KeyboardInterrupt:
