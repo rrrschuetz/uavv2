@@ -23,6 +23,7 @@ def draw_radar_chart(ax, distances, angles):
     ax.set_theta_direction(-1)
     ax.set_theta_offset(np.pi / 2.0)
     ax.scatter(angles, distances, s=2)
+    #ax.plot(angles, distances, linestyle='-', marker='o', markersize=2)
     ax.set_ylim(0, max(distances) * 1.1)
     ax.set_xlabel('Angle (radians)')
     ax.set_ylabel('Distance (meters)')

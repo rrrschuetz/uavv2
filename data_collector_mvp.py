@@ -158,10 +158,15 @@ def lidar_thread(sock):
         distances, angles = full_scan(sock)
         end_time = time.time()
 
-        distances[distances == np.inf] = np.nan
-        x = np.arange(len(distances))
+        # Check for finite values in the distances array
+        distances = np.array(distances)
         finite_vals = np.isfinite(distances)
-        interpolated_distances = np.interp(x, x[finite_vals], distances[finite_vals])
+        x = np.arange(len(distances))
+        try:
+            interpolated_distances = np.interp(x, x[finite_vals], distances[finite_vals])
+        except Exception as e:
+            print(f"Error during interpolation: {e}")
+            continue  # Skip this iteration if interpolation fails
 
         data = np.column_stack((interpolated_distances, angles))
         np.savetxt("radar.txt", data[1620:], header="Distances, Angles", comments='', fmt='%f')
