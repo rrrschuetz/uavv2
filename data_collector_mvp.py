@@ -107,11 +107,11 @@ def decode_dense_mode_packet(packet, old_start_angle=0.0):
             index = 4 + i * 2
             if index + 1 >= len(packet):
                 raise ValueError(f"Packet is too short for expected data: index {index}")
-            distance = (packet[index] | (packet[index + 1] << 8))
+            distance = (packet[index] | (packet[index+1] << 8))
             distance /= 1000.0  # Convert from millimeters to meters
+            angle = start_angle + i * 4.6 / 40.0
 
             distances.append(distance)
-            angle = start_angle + i * angle_diff / 40.0
             angles.append(angle)
     else:
         valid_flag = False
@@ -140,7 +140,7 @@ def full_scan(sock):
         all_angles.extend(decoded_data['angles'])
         i += 1
 
-    #print(i,old_start_angle)
+    print(i,old_start_angle)
     return all_distances, all_angles
 
 
@@ -314,11 +314,11 @@ def xbox_controller_process(pca):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.JOYAXISMOTION:
-                #print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
+                print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
-                    set_motor_speed(pca, 1, abs(event.value * 0.5))
-                elif event.axis == 0:
-                    set_servo_angle(pca, 0, event.value * 0.5 + 0.6)
+                    set_motor_speed(pca, 13, abs(event.value * 0.5))
+                elif event.axis == 2:
+                    set_servo_angle(pca, 12, event.value * 0.4 + 0.5)
                 if event.axis == 2:
                     set_servo_angle(pca, 2, event.value * 0.5 + 0.5)
             
@@ -366,6 +366,10 @@ def main():
     print('Starting scan...')
     start_scan(sock)
 
+    distances, angles = full_scan(sock)
+    data = np.column_stack((distances, angles))
+    np.savetxt("radar.txt", data, header="Distances, Angles", comments='', fmt='%f')
+
     # Camera setup
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
@@ -376,26 +380,26 @@ def main():
     picam1.start()
 
     # Start processes
-    lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,))
-    camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1))
+    #lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,))
+    #camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1))
     xbox_controller_process_instance = Process(target=xbox_controller_process,args=(pca,))
 
-    lidar_thread_instance.start()
-    camera_thread_instance.start()
+    #lidar_thread_instance.start()
+    #camera_thread_instance.start()
     xbox_controller_process_instance.start()
 
     try:
-        lidar_thread_instance.join()
-        camera_thread_instance.join()
+        pass
+        #lidar_thread_instance.join()
+        #camera_thread_instance.join()
         xbox_controller_process_instance.join()
 
     except KeyboardInterrupt:
-        stop_scan(sock)
         picam0.stop()
         picam1.stop()
+        stop_scan(sock)
         sock.close()
         pygame.quit()
-
 
 if __name__ == '__main__':
     main()
