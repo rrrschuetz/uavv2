@@ -1,86 +1,45 @@
-import datetime
-import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
-import torch.optim as optim
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import pickle
+import torch
 from torch.utils.data import DataLoader, TensorDataset
 
+def apply_reciprocal(data):
+    """Applies reciprocal transformation to the data, handling zeros."""
+    return np.where(data != 0, 1.0 / data, 0.0)
 
-def make_column_names_unique(df):
-    cols = pd.Series(df.columns)
-    for dup in cols[cols.duplicated()].unique():
-        cols[cols[cols == dup].index.values.tolist()] = [dup + '_' + str(i) if i != 0 else dup for i in
-                                                         range(sum(cols == dup))]
-    df.columns = cols
+# Load data without headers
+data_raw = pd.read_csv("./data_file.txt", header=None)
 
+# Extract x, y, lidar, red, and green values
+x_y = data_raw.iloc[:, :2].values
+lidar_data = data_raw.iloc[:, 2:1622].values
+red_values = data_raw.iloc[:, 1622:2902].values
+green_values = data_raw.iloc[:, 2902:4182].values
 
-def apply_reciprocal_to_scan(df):
-    scan_cols = df.filter(regex='^SCAN').columns
-    for col in scan_cols:
-        df[col] = df[col].apply(lambda x: 1 / x if x != 0 else 0)
-    return df
+# Apply reciprocal transformation to LIDAR data
+lidar_data = apply_reciprocal(lidar_data)
 
+# Standardize LIDAR data
+scaler_lidar = StandardScaler().fit(lidar_data)
+lidar_data = scaler_lidar.transform(lidar_data).astype(np.float32)
 
-def add_gaussian_noise(data, mean=0.0, stddev=1.0):
-    noise = np.random.normal(mean, stddev, size=data.shape)
-    noisy_data = data + noise
-    return noisy_data
+# Reshape data for model input
+lidar_data = lidar_data.reshape(lidar_data.shape[0], 1, lidar_data.shape[1])
+red_values = red_values.astype(np.float32).reshape(red_values.shape[0], 1, red_values.shape[1])
+green_values = green_values.astype(np.float32).reshape(green_values.shape[0], 1, green_values.shape[1])
 
-
-def apply_dropout(data, dropout_rate=0.1):
-    mask = np.random.binomial(1, 1 - dropout_rate, size=data.shape)
-    data_with_dropout = data * mask
-    return data_with_dropout
-
-
-# 1. Preprocess data
-data_raw = pd.read_csv("~/test/file.txt")
-make_column_names_unique(data_raw)
-data_raw = apply_reciprocal_to_scan(data_raw)
-lidar_cols = data_raw.filter(regex='^SCAN').columns
-noisy_data = data_raw.copy()
-for col in lidar_cols:
-    noisy_data[col] = add_gaussian_noise(data_raw[col], mean=0.0, stddev=0.01)
-data_raw = pd.concat([data_raw, noisy_data], axis=0).reset_index(drop=True)
-print("Raw data columns:", data_raw.columns)
-print("Raw data shape:", data_raw.shape)
+# Concatenate red and green values
+color_data = np.concatenate((red_values, green_values), axis=2)
 
 # Split data into train and test sets
-train, test = train_test_split(data_raw, test_size=0.2)
-print("Train data shape:", train.shape)
-print("Test data shape:", test.shape)
-
-train_lidar = train.iloc[:, 2:1622]
-test_lidar = test.iloc[:, 2:1622]
-train_color = train.iloc[:, -1280:]
-test_color = test.iloc[:, -1280:]
-y_train = train.iloc[:, 0:2].values
-y_test = test.iloc[:, 0:2].values
-
-# Standardization
-scaler_lidar = StandardScaler().fit(train_lidar.values)
-print("Scaler fitted on x_train")
-train_lidar = scaler_lidar.transform(train_lidar.values).astype(np.float32)
-test_lidar = scaler_lidar.transform(test_lidar.values).astype(np.float32)
-
-# Convert to numpy arrays and reshape as needed for LIDAR data
-train_lidar = train_lidar.reshape(train_lidar.shape[0], 1, train_lidar.shape[1])
-test_lidar = test_lidar.reshape(test_lidar.shape[0], 1, test_lidar.shape[1])
-train_color = train_color.values.astype(np.float32).reshape(train_color.shape[0], 1, train_color.shape[1])
-test_color = test_color.values.astype(np.float32).reshape(test_color.shape[0], 1, test_color.shape[1])
-
-print("After standardization, train lidar shape:", train_lidar.shape)
-print("After standardization, test lidar shape:", test_lidar.shape)
-print("After standardization, train color shape:", train_color.shape)
-print("After standardization, test color shape:", test_color.shape)
+train_lidar, test_lidar, train_color, test_color, y_train, y_test = train_test_split(
+    lidar_data, color_data, x_y, test_size=0.2, random_state=42
+)
 
 # Convert data to PyTorch tensors
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 train_lidar = torch.tensor(train_lidar).to(device)
 test_lidar = torch.tensor(test_lidar).to(device)
 train_color = torch.tensor(train_color).to(device)
