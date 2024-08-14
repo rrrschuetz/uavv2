@@ -152,7 +152,12 @@ def lidar_thread(sock):
         end_time = time.time()
 
         data = np.column_stack((distances, angles))
-        np.savetxt("radar.txt", data, header="Distances, Angles", comments='', fmt='%f')
+        np.savetxt("radar.txt", data[1620:], header="Distances, Angles", comments='', fmt='%f')
+
+        # Convert distances to a formatted string with 4 decimal places
+        formatted_distances = ",".join(f"{d:.4f}" for d in distances[1620:])
+        with open("lidar_distances.txt", "a") as file:
+            file.write(formatted_distances + "\n")
 
         frame_time = end_time - start_time
         fps_list.append(1.0 / frame_time)

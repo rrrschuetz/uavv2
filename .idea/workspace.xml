@@ -7,6 +7,7 @@
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_collector_mvp.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_collector_mvp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/display_sensor_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/display_sensor_data.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -121,14 +122,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00042" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722323417124</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1722323417124</updated>
     </task>
     <task id="LOCAL-00043" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -514,7 +507,15 @@
       <option name="project" value="LOCAL" />
       <updated>1723650953905</updated>
     </task>
-    <option name="localTasksCounter" value="91" />
+    <task id="LOCAL-00091" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1723655374084</created>
+      <option name="number" value="00091" />
+      <option name="presentableId" value="LOCAL-00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1723655374084</updated>
+    </task>
+    <option name="localTasksCounter" value="92" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">

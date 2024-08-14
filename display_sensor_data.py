@@ -9,21 +9,20 @@ def load_arrays_from_file(filename):
     angles = data[:, 1]
     return distances, angles
 
-def draw_radar_chart(distances, angles):
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+def draw_radar_chart(ax, distances, angles):
+    ax.clear()
     ax.set_theta_direction(-1)
     ax.set_theta_offset(np.pi / 2.0)
-
     ax.scatter(angles, distances, s=2)
     ax.set_ylim(0, max(distances) * 1.1)
-
     ax.set_xlabel('Angle (radians)')
     ax.set_ylabel('Distance (meters)')
     ax.set_title('LIDAR Data')
 
-    plt.show()
-
 def display_images(image_path, radar_path, delay=1):
+    # Initialize the radar chart plot
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+
     while True:
         # Read the images
         #image = cv2.imread(image_path)
@@ -36,9 +35,16 @@ def display_images(image_path, radar_path, delay=1):
             cv2.imshow('Image', image)
 
         # Read the radar data
-        distances, angles = load_arrays_from_file(radar_path)
-        print('Distances:', distances)
-        draw_radar_chart(distances, angles)
+        try:
+            distances, angles = load_arrays_from_file(radar_path)
+            distances = np.array(distances)
+            angles = np.radians(angles)
+            # Update the radar chart
+            draw_radar_chart(ax, distances, angles)
+            plt.pause(0.001)  # Update the plot
+
+        except Exception as e:
+            print(f"Failed to load radar data: {radar_path} {e}")
 
         # Wait for the specified delay time in milliseconds
         key = cv2.waitKey(delay)
@@ -51,4 +57,4 @@ def display_images(image_path, radar_path, delay=1):
     # Close all OpenCV windows
     cv2.destroyAllWindows()
 
-display_images('/mnt/uavv2/labeled_image.jpg', '/mnt/uavv2/radar.txt')
+display_images('/mnt/uavv2/labeled_image.jpg', '/mnt/uavv2/radar.txt',1000)
