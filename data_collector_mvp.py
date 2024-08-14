@@ -169,9 +169,11 @@ def lidar_thread(sock):
             continue  # Skip this iteration if interpolation fails
 
         data = np.column_stack((interpolated_distances, angles))
-        np.savetxt("radar.txt", data[1620:], header="Distances, Angles", comments='', fmt='%f')
+        np.savetxt("radar.txt", data[-1500:], header="Distances, Angles", comments='', fmt='%f')
 
-        Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[1620:])
+        Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[-1500:])
+        #print(f"#lidar values {len(Glidar_string.strip().split(','))}")
+
         #with open("lidar_distances.txt", "a") as file:
         #    file.write(Glidar_string + "\n")
 
@@ -303,7 +305,7 @@ def camera_thread(picam0, picam1):
         image0_flipped = cv2.flip(image0, 0)
         image1_flipped = cv2.flip(image1, 0)
         combined_image = np.hstack((image1_flipped, image0_flipped))
-        height = combined_image.shape[0]
+        height, width, _ = combined_image.shape
         cropped_image = combined_image[height // 3:, :]
         red_x_coords, green_x_coords, image = detect_and_label_blobs(cropped_image)
         end_time = time.time()
@@ -312,6 +314,8 @@ def camera_thread(picam0, picam1):
         red_str = ",".join(map(str, red_x_coords.astype(int)))
         green_str = ",".join(map(str, green_x_coords.astype(int)))
         Gcolor_string = f"{red_str},{green_str}"
+        print(f"#color values {len(Gcolor_string.strip().split(','))}")
+
         #with open("object_coords.txt", "a") as f:
         #    f.write(Gcolor_string + "\n")
 
