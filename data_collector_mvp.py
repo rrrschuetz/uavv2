@@ -288,8 +288,9 @@ def camera_thread(picam0, picam1):
         end_time = time.time()
 
         # Save the image with labeled contours
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"labeled_image_{timestamp}.jpg"
+        #timestamp = time.strftime("%Y%m%d-%H%M%S")
+        #filename = f"labeled_image_{timestamp}.jpg"
+        filename = "labeled_image.jpg"
         cv2.imwrite(filename, image)
 
         frame_time = end_time - start_time
@@ -371,10 +372,6 @@ def main():
 
     print('Starting scan...')
     start_scan(sock)
-
-    #distances, angles = full_scan(sock)
-    #data = np.column_stack((distances, angles))
-    #np.savetxt("radar.txt", data, header="Distances, Angles", comments='', fmt='%f')
 
     # Camera setup
     picam0 = Picamera2(camera_num=0)
