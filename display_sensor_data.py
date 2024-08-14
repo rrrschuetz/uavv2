@@ -3,6 +3,15 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+def display_image_with_matplotlib(image, ax):
+    # Convert the image from BGR (OpenCV format) to RGB (Matplotlib format)
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    # Update the image display
+    ax.clear()
+    ax.imshow(image_rgb)
+    ax.axis('off')  # Hide the axis
+
 def load_arrays_from_file(filename):
     data = np.loadtxt(filename, skiprows=1)
     distances = data[:, 0]
@@ -20,41 +29,39 @@ def draw_radar_chart(ax, distances, angles):
     ax.set_title('LIDAR Data')
 
 def display_images(image_path, radar_path, delay=1):
-    # Initialize the radar chart plot
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+    # Create a figure and two axes: one for the image, one for the radar chart
+    fig = plt.figure(figsize=(12, 6))
+    ax_image = fig.add_subplot(1, 2, 1)  # Regular axis for image
+    ax_radar = fig.add_subplot(1, 2, 2, projection='polar')  # Polar axis for radar
 
     while True:
-        # Read the images
-        #image = cv2.imread(image_path)
-        image = None
+        # Read the image
+        image = cv2.imread(image_path)
+        print(f"Image loaded: {image is not None}")  # Debug print
 
         if image is None:
             print(f"Failed to load image: {image_path}")
         else:
-            # Display the first image in a window
-            cv2.imshow('Image', image)
+            # Display the image using matplotlib
+            display_image_with_matplotlib(image, ax_image)
 
-        # Read the radar data
+        # Read and plot the radar data
         try:
             distances, angles = load_arrays_from_file(radar_path)
             distances = np.array(distances)
             angles = np.radians(angles)
-            # Update the radar chart
-            draw_radar_chart(ax, distances, angles)
-            plt.pause(0.001)  # Update the plot
+            # Display the radar chart using matplotlib
+            draw_radar_chart(ax_radar, distances, angles)
 
         except Exception as e:
             print(f"Failed to load radar data: {radar_path} {e}")
 
-        # Wait for the specified delay time in milliseconds
-        key = cv2.waitKey(delay)
-        if key == ord('q'):
-            break
+        # Refresh the plot
+        plt.pause(0.001)
 
         # Add a sleep time to control the reading interval
         time.sleep(delay / 1000.0)
 
-    # Close all OpenCV windows
-    cv2.destroyAllWindows()
+# Example usage
+display_images('/mnt/uavv2/labeled_image.jpg', '/mnt/uavv2/radar.txt', 1000)
 
-display_images('/mnt/uavv2/labeled_image.jpg', '/mnt/uavv2/radar.txt',1000)
