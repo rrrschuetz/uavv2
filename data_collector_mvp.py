@@ -13,6 +13,9 @@ from board import SCL, SDA
 import busio
 import matplotlib.pyplot as plt
 
+Glidar_string = ""
+Gcolor_string = ""
+
 # Servo functions
 def set_servo_angle(pca, channel, angle):
     pulse_min = 260  # Pulse width for 0 degrees
@@ -145,6 +148,8 @@ def full_scan(sock):
 
 
 def lidar_thread(sock):
+    global Glidar_string, Gcolor_string
+
     fps_list = deque(maxlen=10)
     while True:
         start_time = time.time()
@@ -155,9 +160,12 @@ def lidar_thread(sock):
         np.savetxt("radar.txt", data[1620:], header="Distances, Angles", comments='', fmt='%f')
 
         # Convert distances to a formatted string with 4 decimal places
-        formatted_distances = ",".join(f"{d:.4f}" for d in distances[1620:])
-        with open("lidar_distances.txt", "a") as file:
-            file.write(formatted_distances + "\n")
+        Glidar_string = ",".join(f"{d:.4f}" for d in distances[1620:])
+        #with open("lidar_distances.txt", "a") as file:
+        #    file.write(Glidar_string + "\n")
+
+        with open("data_file.txt", "a") as file:
+            file.write(Glidar_string + "," + Gcolor_string + "\n")
 
         frame_time = end_time - start_time
         fps_list.append(1.0 / frame_time)
@@ -274,6 +282,8 @@ def detect_and_label_blobs(image):
 
 
 def camera_thread(picam0, picam1):
+    global Glidar_string, Gcolor_string
+
     fps_list = deque(maxlen=10)
     while True:
         start_time = time.time()
@@ -286,6 +296,13 @@ def camera_thread(picam0, picam1):
         cropped_image = combined_image[height // 3:, :]
         red_x_coords, green_x_coords, image = detect_and_label_blobs(cropped_image)
         end_time = time.time()
+
+        # Convert arrays to lists of strings and join them into one string per array
+        red_str = ",".join(map(str, red_x_coords.astype(int)))
+        green_str = ",".join(map(str, green_x_coords.astype(int)))
+        Gcolor_string = f"{red_str},{green_str}"
+        #with open("object_coords.txt", "a") as f:
+        #    f.write(Gcolor_string + "\n")
 
         # Save the image with labeled contours
         #timestamp = time.strftime("%Y%m%d-%H%M%S")
