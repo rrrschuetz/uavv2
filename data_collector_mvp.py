@@ -321,7 +321,7 @@ def xbox_controller_process(pca):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.JOYAXISMOTION:
-                #print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
+                print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
                     set_motor_speed(pca, 13, abs(event.value * 0.3))
                 elif event.axis == 2:
