@@ -210,7 +210,7 @@ def lidar_thread(sock, pca):
             X = steering_commands[0, 0]  # Extract GX (first element of the output)
             Y = steering_commands[0, 1]  # Extract GY (second element of the output)
             set_servo_angle(pca, 12, X * 0.4 + 0.5)
-            set_motor_speed(pca, 13, abs(Y * 0.3))
+            set_motor_speed(pca, 13, Y * 0.2 + 0.1)
 
 # Camera functions
 def gamma_correction(image, gamma=1.5):
@@ -389,7 +389,7 @@ def xbox_controller_process(pca):
                 print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
                     GY = event.value
-                    set_motor_speed(pca, 13, abs(event.value * 0.3))
+                    set_motor_speed(pca, 13, event.value * 0.2 + 0.1)
                 elif event.axis == 2:
                     GX = event.value
                     set_servo_angle(pca, 12, event.value * 0.4 + 0.5)
