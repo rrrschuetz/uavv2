@@ -9,6 +9,7 @@ def apply_reciprocal(data):
 
 def preprocess_input(lidar_raw, red_raw, green_raw, scaler_lidar, device):
     # Apply reciprocal transformation to LIDAR data
+    lidar_raw = lidar_raw.reshape(1, -1)
     lidar_data = apply_reciprocal(lidar_raw)
 
     # Standardize LIDAR data
