@@ -5,7 +5,7 @@ import time
 import numpy as np
 import cv2
 from picamera2 import Picamera2
-from multiprocessing import Process
+from multiprocessing import Process, Value
 import threading
 from collections import deque
 from adafruit_pca9685 import PCA9685
@@ -16,15 +16,13 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gtraining_mode = False
+Gtraining_mode = True
 #########################################
 
 Glidar_string = ""
 Gcolor_string = ""
 Gred_x_coords = np.zeros(1280, dtype=float)
 Ggreen_x_coords = np.zeros(1280, dtype=float)
-GX = 0
-GY = 0
 Gmodel = None
 Gscaler_lidar = None
 Gdevice = None
@@ -158,9 +156,9 @@ def full_scan(sock):
     # print(i,old_start_angle)
     return all_distances, all_angles
 
-def lidar_thread(sock, pca):
+def lidar_thread(sock, pca, shared_GX, shared_GY):
     global Gtraining_mode
-    global GX, GY, Glidar_string, Gcolor_string
+    global Glidar_string, Gcolor_string
     global Gred_x_coords, Ggreen_x_coords
     global Gmodel, Gscaler_lidar, Gdevice
 
@@ -190,8 +188,10 @@ def lidar_thread(sock, pca):
             # with open("lidar_distances.txt", "a") as file:
             #    file.write(Glidar_string + "\n")
 
+            # Access the shared values GX and GY
+            print(f"GX: {shared_GX.value}, GY: {shared_GY.value}")
             with open("data_file.txt", "a") as file:
-                file.write(str(GX) + "," + str(GY) + "," + Glidar_string + "," + Gcolor_string + "\n")
+                file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
             frame_time = end_time - start_time
             fps_list.append(1.0 / frame_time)
@@ -367,9 +367,7 @@ def camera_thread(picam0, picam1):
         # print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
 
 
-def xbox_controller_process(pca):
-    global GX, GY
-
+def xbox_controller_process(pca, shared_X, shared_Y):
     pygame.init()
     pygame.joystick.init()
 
@@ -392,10 +390,10 @@ def xbox_controller_process(pca):
             if event.type == pygame.JOYAXISMOTION:
                 #print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
-                    GY = event.value
+                    shared_GY.value = event.value
                     set_motor_speed(pca, 13, event.value * 0.3 + 0.1)
                 elif event.axis == 2:
-                    GX = event.value
+                    shared_GX.value = event.value
                     set_servo_angle(pca, 12, event.value * 0.4 + 0.5)
                 elif event.axis == 3:
                     pass
@@ -423,6 +421,10 @@ def xbox_controller_process(pca):
 
 def main():
     global Gtraining_mode, Gmodel, Gscaler_lidar, Gdevice
+
+    # Create shared variables for GX and GY
+    shared_GX = Value('d', 0.0)  # 'd' for double precision float
+    shared_GY = Value('d', 0.0)
 
     # Initialize the I2C bus
     i2c = busio.I2C(SCL, SDA)
@@ -483,8 +485,9 @@ def main():
 
     # Start processes
     lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,pca))
+    lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock, pca, shared_GX, shared_GY))
     camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1))
-    xbox_controller_process_instance = Process(target=xbox_controller_process, args=(pca,))
+    xbox_controller_process_instance = Process(target=xbox_controller_process, args=(pca, shared_GX, shared_GY))
 
     lidar_thread_instance.start()
     camera_thread_instance.start()
