@@ -201,19 +201,20 @@ def lidar_thread(sock, pca):
 
         else:
             lidar_tensor, color_tensor = preprocess_input(
-                interpolated_distances, Gred_x_coords, Ggreen_x_coords, Gscaler_lidar, Gdevice)
+                interpolated_distances[-1500:], Gred_x_coords, Ggreen_x_coords, Gscaler_lidar, Gdevice)
 
-            # Perform inference
-            with torch.no_grad():
-                output = Gmodel(lidar_tensor, color_tensor)
+            if lidar_tensor is not None and color_tensor is not None:
+                # Perform inference
+                with torch.no_grad():
+                    output = Gmodel(lidar_tensor, color_tensor)
 
-            # Convert the model's output to steering commands or other UAV controls
-            steering_commands = output.cpu().numpy()
-            print("Steering Commands:", steering_commands)
-            X = steering_commands[0, 0]  # Extract GX (first element of the output)
-            Y = steering_commands[0, 1]  # Extract GY (second element of the output)
-            set_servo_angle(pca, 12, X * 0.4 + 0.5)
-            set_motor_speed(pca, 13, Y * 0.3 + 0.1)
+                # Convert the model's output to steering commands or other UAV controls
+                steering_commands = output.cpu().numpy()
+                print("Steering Commands:", steering_commands)
+                X = steering_commands[0, 0]  # Extract GX (first element of the output)
+                Y = steering_commands[0, 1]  # Extract GY (second element of the output)
+                set_servo_angle(pca, 12, X * 0.4 + 0.5)
+                set_motor_speed(pca, 13, Y * 0.3 + 0.1)
 
 # Camera functions
 def gamma_correction(image, gamma=1.5):
