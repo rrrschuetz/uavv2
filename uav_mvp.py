@@ -201,7 +201,7 @@ def lidar_thread(sock, pca):
 
         else:
             lidar_tensor, color_tensor = preprocess_input(
-                interpolated_distances, Gred_x_coords, Ggreen_x_coords, Gscaler_lidar, device)
+                interpolated_distances, Gred_x_coords, Ggreen_x_coords, Gscaler_lidar, Gdevice)
 
             # Perform inference
             with torch.no_grad():
@@ -452,13 +452,20 @@ def main():
         Gdevice = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         lidar_input_shape = 1500  # Update based on your data
-        color_input_shape = 1280  # Update based on your data
+        color_input_shape = 2560  # Update based on your data
 
         # Initialize the model
         Gmodel = CNNModel(lidar_input_shape, color_input_shape).to(Gdevice)
 
         # Load the trained weights into the model
-        Gmodel.load_state_dict(torch.load('./model.pth'))
+        state_dict = torch.load('./model.pth', map_location=torch.device('cpu'))
+        # Convert all weights to float32 if they are in float64
+        for key, value in state_dict.items():
+            if value.dtype == torch.float64:  # Check if the parameter is in double precision
+                state_dict[key] = value.float()  # Convert to single precision (float32)
+        # Load the state dict into the model
+        Gmodel.load_state_dict(state_dict)
+
         Gmodel.eval()
 
         # Load the scaler for LIDAR data
