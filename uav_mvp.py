@@ -189,7 +189,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
             #    file.write(Glidar_string + "\n")
 
             # Access the shared values GX and GY
-            print(f"GX: {shared_GX.value}, GY: {shared_GY.value}")
+            #print(f"GX: {shared_GX.value}, GY: {shared_GY.value}")
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
@@ -367,7 +367,7 @@ def camera_thread(picam0, picam1):
         # print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
 
 
-def xbox_controller_process(pca, shared_X, shared_Y):
+def xbox_controller_process(pca, shared_GX, shared_GY):
     pygame.init()
     pygame.joystick.init()
 
