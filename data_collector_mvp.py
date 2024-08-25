@@ -358,12 +358,13 @@ def xbox_controller_process(pca):
                 print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
                     GY = event.value
-                    set_motor_speed(pca, 13, event.value * 0.2 + 0.1)
+                    set_motor_speed(pca, 13, event.value * 0.4 + 0.1)
                 elif event.axis == 2:
                     GX = event.value
                     set_servo_angle(pca, 12, event.value * 0.4 + 0.5)
                 elif event.axis == 3:
-                    set_servo_angle(pca, 2, abs(event.value) * 0.1 + 0.5)
+                    pass
+                    #set_servo_angle(pca, 11, abs(event.value) * 1.5 + 0.0)
             
             elif event.type == pygame.JOYBALLMOTION:
                 print(f"JOYBALLMOTION: ball={event.ball}, rel={event.rel}")

@@ -15,7 +15,10 @@ import torch
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
+#########################################
 Gtraining_mode = True
+#########################################
+
 Glidar_string = ""
 Gcolor_string = ""
 Gred_x_coords = np.zeros(1280, dtype=float)
@@ -394,8 +397,9 @@ def xbox_controller_process(pca):
                     GX = event.value
                     set_servo_angle(pca, 12, event.value * 0.4 + 0.5)
                 elif event.axis == 3:
-                    #set_servo_angle(pca, 2, abs(event.value) * 0.1 + 0.5)
-                    print("Servo 2")
+                    pass
+                    #set_servo_angle(pca, 11, abs(event.value) * 1.5 + 0.0)
+
 
             elif event.type == pygame.JOYBALLMOTION:
                 print(f"JOYBALLMOTION: ball={event.ball}, rel={event.rel}")
