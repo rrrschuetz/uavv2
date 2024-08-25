@@ -394,7 +394,7 @@ def xbox_controller_process(pca):
                     GX = event.value
                     set_servo_angle(pca, 12, event.value * 0.4 + 0.5)
                 elif event.axis == 3:
-                    #set_servo_angle(pca, 2, event.value * 0.5 + 0.5)
+                    #set_servo_angle(pca, 2, abs(event.value) * 0.1 + 0.5)
                     print("Servo 2")
 
             elif event.type == pygame.JOYBALLMOTION:
