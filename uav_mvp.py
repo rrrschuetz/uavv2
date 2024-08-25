@@ -16,7 +16,7 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gtraining_mode = True
+Gtraining_mode = False
 #########################################
 
 Glidar_string = ""
