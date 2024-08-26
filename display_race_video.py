@@ -37,4 +37,4 @@ def display_video(video_filename):
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    display_video("output_video.avi")  # Path to your video file
+    display_video("output_video_000.avi")  # Path to your video file

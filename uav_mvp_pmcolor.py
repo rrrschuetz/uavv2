@@ -333,42 +333,62 @@ def detect_and_label_blobs(image):
 
 def camera_thread(picam0, picam1):
     global Gcolor_string, Gx_coords
+    fps_list = deque(maxlen=10)
 
     # VideoWriter setup
-    frame_width, frame_height, _ = picam0.capture_array().shape
+    frame_height, frame_width, _ = picam0.capture_array().shape
     frame_width *= 2
     fps = 20  # Set frames per second for the output video
-    video_filename = "output_video.avi"  # Output video file name
+    video_filename = "output_video_000.avi"  # Output video file name
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
     video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
 
-    fps_list = deque(maxlen=10)
-    while True:
-        start_time = time.time()
-        image0 = picam0.capture_array()
-        image1 = picam1.capture_array()
-        image0_flipped = cv2.flip(image0, 0)
-        image1_flipped = cv2.flip(image1, 0)
-        combined_image = np.hstack((image1_flipped, image0_flipped))
-        cropped_image = combined_image[frame_height // 3:, :]
-        Gx_coords, image = detect_and_label_blobs(cropped_image)
-        end_time = time.time()
+    frame_count = 0
+    file_index = 0
+    max_frame_count = 2000  # Maximum number of frames per video file
 
-        # Convert arrays to lists of strings and join them into one string per array
-        Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
-        # print(f"#color values {len(Gcolor_string.strip().split(','))}")
+    try:
+        while True:
+            start_time = time.time()
+            image0 = picam0.capture_array()
+            image1 = picam1.capture_array()
+            image0_flipped = cv2.flip(image0, 0)
+            image1_flipped = cv2.flip(image1, 0)
+            combined_image = np.hstack((image1_flipped, image0_flipped))
+            #cropped_image = combined_image[frame_height // 3:, :]
+            Gx_coords, image = detect_and_label_blobs(combined_image)
+            end_time = time.time()
 
-        # with open("object_coords.txt", "a") as f:
-        #    f.write(Gcolor_string + "\n")
+            # Convert arrays to lists of strings and join them into one string per array
+            Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
+            # print(f"#color values {len(Gcolor_string.strip().split(','))}")
 
-        # Save the image with labeled contours
-        video_writer.write(image)
+            # with open("object_coords.txt", "a") as f:
+            #    f.write(Gcolor_string + "\n")
 
-        frame_time = end_time - start_time
-        fps_list.append(1.0 / frame_time)
+            # Save the image with labeled contours
+            video_writer.write(image)
+            frame_count += 1
 
-        moving_avg_fps = sum(fps_list) / len(fps_list)
-        # print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
+            if frame_count > max_frame_count:
+                video_writer.release()
+                file_index += 1
+                frame_count = 0
+                video_filename = f"output_video_{file_index:03d}.avi"
+                video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
+
+            frame_time = end_time - start_time
+            fps_list.append(1.0 / frame_time)
+
+            moving_avg_fps = sum(fps_list) / len(fps_list)
+            # print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
+
+    except KeyboardInterrupt:
+        print("Keyboard Interrupt detected, stopping video capture and saving...")
+
+    finally:
+        if video_writer.isOpened():
+            video_writer.release()
 
 
 def xbox_controller_process(pca, shared_GX, shared_GY):
