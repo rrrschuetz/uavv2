@@ -246,7 +246,7 @@ def apply_morphological_operations(mask):
     return mask
 
 
-def remove_small_contours(mask, min_area=2000):
+def remove_small_contours(mask, min_area=500):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         if cv2.contourArea(contour) < min_area:
@@ -304,7 +304,7 @@ def detect_and_label_blobs(image):
 
     # Find and filter contours
     contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    filtered_contours = filter_contours(contours, min_area = 500)
+    filtered_contours = filter_contours(contours)
 
     x_coords = np.zeros(image.shape[1], dtype=float)
 
@@ -501,12 +501,17 @@ def main():
     # Camera setup
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
-    #config = {"format": 'RGB888', "size": (640, 400)}
-    config = {"format": 'RGB888', "size": (640, 400), "controls": {"ExposureTime": 1000, "AnalogueGain": 2.0}}
+    config = {"format": 'RGB888', "size": (640, 400)}
     picam0.configure(picam0.create_preview_configuration(main=config))
     picam1.configure(picam1.create_preview_configuration(main=config))
     picam0.start()
     picam1.start()
+
+    # Set camera controls to adjust exposure time and gain
+    picam0.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
+    picam1.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
+
+
 
     # Start processes
     lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,pca))
