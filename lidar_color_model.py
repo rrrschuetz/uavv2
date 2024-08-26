@@ -30,8 +30,7 @@ class CNNModel(nn.Module):
 
         self.weighted_concat = WeightedConcatenate(weight_lidar=0.1, weight_color=0.9)
         self.fc1 = nn.Linear(conv_output_size + 128, 64)
-
-        self.fc1 = nn.Linear(conv_output_size, 64)
+        #self.fc1 = nn.Linear(conv_output_size, 64)
         self.fc2 = nn.Linear(64, 64)
         self.fc3 = nn.Linear(64, 64)
         self.fc4 = nn.Linear(64, 64)
