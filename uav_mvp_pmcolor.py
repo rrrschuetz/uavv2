@@ -350,8 +350,7 @@ def camera_thread(picam0, picam1):
         image0_flipped = cv2.flip(image0, 0)
         image1_flipped = cv2.flip(image1, 0)
         combined_image = np.hstack((image1_flipped, image0_flipped))
-        height, width, _ = combined_image.shape
-        cropped_image = combined_image[height // 3:, :]
+        cropped_image = combined_image[frame_height // 3:, :]
         Gx_coords, image = detect_and_label_blobs(cropped_image)
         end_time = time.time()
 
