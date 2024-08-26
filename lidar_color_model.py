@@ -28,8 +28,8 @@ class CNNModel(nn.Module):
         self.color_dense2 = nn.Linear(64, 128)
         self.color_flatten = nn.Flatten()
 
-        #self.weighted_concat = WeightedConcatenate(weight_lidar=0.1, weight_color=0.9)
-        #self.fc1 = nn.Linear(conv_output_size + 128, 64)
+        self.weighted_concat = WeightedConcatenate(weight_lidar=0.1, weight_color=0.9)
+        self.fc1 = nn.Linear(conv_output_size + 128, 64)
 
         self.fc1 = nn.Linear(conv_output_size, 64)
         self.fc2 = nn.Linear(64, 64)
@@ -55,10 +55,9 @@ class CNNModel(nn.Module):
         color = torch.relu(self.color_dense2(color))
         color = self.color_flatten(color)
 
-        #concatenated = self.weighted_concat(lidar, color)
-        #combined = torch.relu(self.fc1(concatenated))
-
-        combined = torch.relu(self.fc1(lidar))
+        concatenated = self.weighted_concat(lidar, color)
+        combined = torch.relu(self.fc1(concatenated))
+        #combined = torch.relu(self.fc1(lidar))
         combined = torch.relu(self.fc2(combined))
         combined = torch.relu(self.fc3(combined))
         combined = torch.relu(self.fc4(combined))

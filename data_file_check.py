@@ -7,8 +7,10 @@ def count_values_per_line(file_path):
                 values = line.strip().split(',')
                 # Count the number of values
                 num_values = len(values)
-                print(f"Line {line_number}: {num_values} values")
+                if num_values != 4062:
+                    print(f"Line {line_number}: {num_values} values")
                 line_number += 1
+            print("Total number of lines checked:", line_number - 1)
     except FileNotFoundError:
         print(f"The file {file_path} does not exist.")
     except Exception as e:

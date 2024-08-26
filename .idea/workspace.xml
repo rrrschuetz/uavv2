@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data" />
+    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_file_check.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_file_check.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uav_mvp.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_mvp.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -46,6 +50,7 @@
     "Python.blob_color_detect.executor": "Run",
     "Python.blobdetect.executor": "Run",
     "Python.camera_display.executor": "Run",
+    "Python.data_file_check.executor": "Run",
     "Python.double_cam_blob_detector.executor": "Run",
     "Python.double_cam_blob_detector_adv.executor": "Run",
     "Python.lidar_color_model.executor": "Run",
@@ -108,7 +113,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-ce3d9afa04ac-ba05f1cad1b1-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.20224.347" />
+        <option value="bundled-python-sdk-abccbe9d933a-ba05f1cad1b1-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.20224.428" />
       </set>
     </attachedChunks>
   </component>
@@ -120,14 +125,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00067" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722436510424</created>
-      <option name="number" value="00067" />
-      <option name="presentableId" value="LOCAL-00067" />
-      <option name="project" value="LOCAL" />
-      <updated>1722436510424</updated>
     </task>
     <task id="LOCAL-00068" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -513,7 +510,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724626601343</updated>
     </task>
-    <option name="localTasksCounter" value="116" />
+    <task id="LOCAL-00116" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1724627066455</created>
+      <option name="number" value="00116" />
+      <option name="presentableId" value="LOCAL-00116" />
+      <option name="project" value="LOCAL" />
+      <updated>1724627066455</updated>
+    </task>
+    <option name="localTasksCounter" value="117" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
