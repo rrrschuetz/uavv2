@@ -335,7 +335,7 @@ def camera_thread(picam0, picam1):
     global Gcolor_string, Gx_coords
 
     # VideoWriter setup
-    frame_width, frame_hight, _ = picam0.capture_array().shape
+    frame_width, frame_height, _ = picam0.capture_array().shape
     frame_width *= 2
     fps = 20  # Set frames per second for the output video
     video_filename = "output_video.avi"  # Output video file name
