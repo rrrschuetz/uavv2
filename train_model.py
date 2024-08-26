@@ -16,12 +16,10 @@ data_raw = pd.read_csv("./data_file.txt", header=None)
 # Extract x, y, lidar, red, and green values
 x_y = data_raw.iloc[:, :2].values
 lidar_data = data_raw.iloc[:, 2:1502].values  # Adjust this based on your actual data range
-red_values = data_raw.iloc[:, 1502:2782].values  # Adjust based on actual data range
-green_values = data_raw.iloc[:, 2782:4062].values  # Adjust based on actual data range
+color_data = data_raw.iloc[:, 1502:2782].values  # Adjust based on actual data range
 
 # Apply reciprocal transformation to LIDAR data
 lidar_data = apply_reciprocal(lidar_data)
-
 # Standardize LIDAR data
 scaler_lidar = StandardScaler().fit(lidar_data)
 lidar_data = scaler_lidar.transform(lidar_data).astype(np.float32)
@@ -32,11 +30,7 @@ with open('./scaler.pkl', 'wb') as f:
 
 # Reshape data for model input
 lidar_data = lidar_data.reshape(lidar_data.shape[0], 1, lidar_data.shape[1])
-red_values = red_values.astype(np.float32).reshape(red_values.shape[0], 1, red_values.shape[1])
-green_values = green_values.astype(np.float32).reshape(green_values.shape[0], 1, green_values.shape[1])
-
-# Concatenate red and green values
-color_data = np.concatenate((red_values, green_values), axis=2)
+color_data = color_data.astype(np.float32).reshape(color_data.shape[0], 1, color_data.shape[1])
 
 # Split data into train and test sets
 train_lidar, test_lidar, train_color, test_color, y_train, y_test = train_test_split(
