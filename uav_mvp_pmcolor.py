@@ -254,7 +254,7 @@ def remove_small_contours(mask, min_area=2000):
     return mask
 
 
-def filter_contours(contours, min_area=2000, aspect_ratio_range=(1.5, 3.0), angle_range=(80, 100)):
+def filter_contours(contours, min_area=500, aspect_ratio_range=(1.5, 3.0), angle_range=(80, 100)):
     filtered_contours = []
     for contour in contours:
         if cv2.contourArea(contour) < min_area:
@@ -304,7 +304,7 @@ def detect_and_label_blobs(image):
 
     # Find and filter contours
     contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    filtered_contours = filter_contours(contours)
+    filtered_contours = filter_contours(contours, min_area = 500)
 
     x_coords = np.zeros(image.shape[1], dtype=float)
 
@@ -326,7 +326,7 @@ def detect_and_label_blobs(image):
 
     # Add timestamp in the lower left corner
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
-    cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
+    cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
     return x_coords, image
 
@@ -352,9 +352,9 @@ def camera_thread(picam0, picam1):
             start_time = time.time()
             image0 = picam0.capture_array()
             image1 = picam1.capture_array()
-            image0_flipped = cv2.flip(image0, 0)
-            image1_flipped = cv2.flip(image1, 0)
-            combined_image = np.hstack((image1_flipped, image0_flipped))
+            image0_flipped = cv2.flip(image0, -1)
+            image1_flipped = cv2.flip(image1, -1)
+            combined_image = np.hstack((image0_flipped, image1_flipped))
             #cropped_image = combined_image[frame_height // 3:, :]
             Gx_coords, image = detect_and_label_blobs(combined_image)
             end_time = time.time()
@@ -501,7 +501,8 @@ def main():
     # Camera setup
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
-    config = {"format": 'RGB888', "size": (640, 400)}
+    #config = {"format": 'RGB888', "size": (640, 400)}
+    config = {"format": 'RGB888', "size": (640, 400), "controls": {"ExposureTime": 1000, "AnalogueGain": 2.0}}
     picam0.configure(picam0.create_preview_configuration(main=config))
     picam1.configure(picam1.create_preview_configuration(main=config))
     picam0.start()
