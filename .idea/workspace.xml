@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/display_race_video.py" beforeDir="false" afterPath="$PROJECT_DIR$/display_race_video.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uav_mvp_pmcolor.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_mvp_pmcolor.py" afterDir="false" />
-    </list>
+    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -126,14 +122,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00075" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722439070207</created>
-      <option name="number" value="00075" />
-      <option name="presentableId" value="LOCAL-00075" />
-      <option name="project" value="LOCAL" />
-      <updated>1722439070207</updated>
     </task>
     <task id="LOCAL-00076" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -519,7 +507,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724704955191</updated>
     </task>
-    <option name="localTasksCounter" value="124" />
+    <task id="LOCAL-00124" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1724708657368</created>
+      <option name="number" value="00124" />
+      <option name="presentableId" value="LOCAL-00124" />
+      <option name="project" value="LOCAL" />
+      <updated>1724708657368</updated>
+    </task>
+    <option name="localTasksCounter" value="125" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
