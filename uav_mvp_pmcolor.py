@@ -324,11 +324,23 @@ def detect_and_label_blobs(image):
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
 
+    # Add timestamp in the lower left corner
+    timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
+    cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
     return x_coords, image
 
 
 def camera_thread(picam0, picam1):
     global Gcolor_string, Gx_coords
+
+    # VideoWriter setup
+    frame_width, frame_hight, _ = picam0.capture_array().shape
+    frame_width *= 2
+    fps = 20  # Set frames per second for the output video
+    video_filename = "output_video.avi"  # Output video file name
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
+    video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
 
     fps_list = deque(maxlen=10)
     while True:
@@ -351,10 +363,7 @@ def camera_thread(picam0, picam1):
         #    f.write(Gcolor_string + "\n")
 
         # Save the image with labeled contours
-        # timestamp = time.strftime("%Y%m%d-%H%M%S")
-        # filename = f"labeled_image_{timestamp}.jpg"
-        filename = "labeled_image.jpg"
-        cv2.imwrite(filename, image)
+        video_writer.write(image)
 
         frame_time = end_time - start_time
         fps_list.append(1.0 / frame_time)
