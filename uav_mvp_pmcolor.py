@@ -19,7 +19,7 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gtraining_mode = False
+Gtraining_mode = True
 Gclock_wise = False
 #########################################
 
@@ -192,7 +192,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
             front_dist = np.min(non_zero_front_distances)
         else:
             front_dist = float('inf')  # If all values are zero, set to infinity or some large value
-        print(f"Front distance: {front_dist:.2f} meters")
+        #print(f"Front distance: {front_dist:.2f} meters")
 
         if Gtraining_mode:
             data = np.column_stack((interpolated_distances, angles))
@@ -375,11 +375,27 @@ def detect_and_label_blobs(image):
     cv2.imwrite('blue_mask.jpg', blue_mask)
 
     contours, _ = cv2.findContours(blue_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        # Draw each contour in blue
-        for contour in contours:
-            cv2.drawContours(image, [contour], -1, (0, 255, 255), 2)  # Draw contours in blue color
-        blue_line = True  # Set the flag to True when any contour is detected
+
+    # Filter contours to detect lines
+    line_contours = []
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area < 100:  # Skip small contours that could be noise
+            continue
+        # Approximate the contour to a polygon with fewer vertices
+        epsilon = 0.4 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+        # Check if the approximated contour is a line (2 vertices)
+        if len(approx) == 2:
+            line_contours.append(contour)
+            continue
+
+    # Draw the filtered line contours
+    if line_contours:
+        for line_contour in line_contours:
+            cv2.drawContours(image, [line_contour], -1, (0,255, 255), 2)  # Draw contours in blue
+        blue_line_detected = True
+        print(f"Detected {len(line_contours)} straight blue line(s)")
 
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
@@ -390,7 +406,8 @@ def detect_and_label_blobs(image):
     contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         magenta_rectangle = True
-        cv2.drawContours(image, [contour], -1, (0, 255, 255), 2)  # Draw the magenta rectangle
+        cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
+        print(contour)
 
     # Add timestamp in the lower left corner
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
