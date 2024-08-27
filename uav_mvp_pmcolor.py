@@ -13,12 +13,13 @@ from board import SCL, SDA
 import busio
 import torch
 from pygments.styles.gh_dark import BLUE_1
+from sympy import print_rcode
 
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gtraining_mode = True
+Gtraining_mode = False
 Gclock_wise = False
 #########################################
 
@@ -373,17 +374,12 @@ def detect_and_label_blobs(image):
     blue_mask = remove_small_contours(blue_mask)
     cv2.imwrite('blue_mask.jpg', blue_mask)
 
-    largest_contour = None
-    max_area = 0
     contours, _ = cv2.findContours(blue_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area > max_area:
-            max_area = area
-            largest_contour = contour
-    if largest_contour is not None:
-        blue_line = True
-        cv2.drawContours(image, [contour], -1, (0, 255, 255), 2)  # Draw each contour in blue
+    if contours:
+        # Draw each contour in blue
+        for contour in contours:
+            cv2.drawContours(image, [contour], -1, (0, 255, 255), 2)  # Draw contours in blue color
+        blue_line = True  # Set the flag to True when any contour is detected
 
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
@@ -393,18 +389,8 @@ def detect_and_label_blobs(image):
     # Find and filter contours for magenta blobs
     contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
-        # Calculate bounding rectangle and aspect ratio
-        rect = cv2.minAreaRect(contour)
-        box = cv2.boxPoints(rect)
-        box = np.int32(box)
-        width, height = rect[1]
-        aspect_ratio = width / height
-        # Filter based on aspect ratio to identify rectangles
-        if aspect_ratio > 1.5:  # Adjust threshold for detecting rectangular shapes
-            magenta_rectangle = True
-            cv2.drawContours(image, [box], -1, (255, 0, 255), 2)  # Draw the magenta rectangle
-            cv2.putText(image, "M", (int(rect[0][0]), int(rect[0][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
-            print("Magenta rectangle detected")
+        magenta_rectangle = True
+        cv2.drawContours(image, [contour], -1, (0, 255, 255), 2)  # Draw the magenta rectangle
 
     # Add timestamp in the lower left corner
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
@@ -420,7 +406,8 @@ def camera_thread(picam0, picam1):
     # VideoWriter setup
     frame_height, frame_width, _ = picam0.capture_array().shape
     frame_width *= 2
-    frame_height /= 2
+    frame_height //= 2
+    print(f"Frame width: {frame_width}, Frame height: {frame_height}")
     fps = 20  # Set frames per second for the output video
     video_filename = "output_video_000.avi"  # Output video file name
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
@@ -430,6 +417,8 @@ def camera_thread(picam0, picam1):
     file_index = 0
     max_frame_count = 2000  # Maximum number of frames per video file
 
+    last_blue_line_time = time.time()
+
     try:
         while True:
             start_time = time.time()
@@ -438,7 +427,7 @@ def camera_thread(picam0, picam1):
             image0_flipped = cv2.flip(image0, -1)
             image1_flipped = cv2.flip(image1, -1)
             combined_image = np.hstack((image0_flipped, image1_flipped))
-            cropped_image = combined_image[frame_height // 2:, :]
+            cropped_image = combined_image[frame_height:, :]
             Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(cropped_image)
 
             if Gclock_wise:

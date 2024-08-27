@@ -126,22 +126,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00089" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722499578207</created>
-      <option name="number" value="00089" />
-      <option name="presentableId" value="LOCAL-00089" />
-      <option name="project" value="LOCAL" />
-      <updated>1722499578207</updated>
-    </task>
-    <task id="LOCAL-00090" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1723650953905</created>
-      <option name="number" value="00090" />
-      <option name="presentableId" value="LOCAL-00090" />
-      <option name="project" value="LOCAL" />
-      <updated>1723650953905</updated>
-    </task>
     <task id="LOCAL-00091" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
       <created>1723655374084</created>
@@ -518,7 +502,23 @@
       <option name="project" value="LOCAL" />
       <updated>1724766895788</updated>
     </task>
-    <option name="localTasksCounter" value="138" />
+    <task id="LOCAL-00138" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1724766958847</created>
+      <option name="number" value="00138" />
+      <option name="presentableId" value="LOCAL-00138" />
+      <option name="project" value="LOCAL" />
+      <updated>1724766958847</updated>
+    </task>
+    <task id="LOCAL-00139" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1724767109646</created>
+      <option name="number" value="00139" />
+      <option name="presentableId" value="LOCAL-00139" />
+      <option name="project" value="LOCAL" />
+      <updated>1724767109646</updated>
+    </task>
+    <option name="localTasksCounter" value="140" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -536,7 +536,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_mvp_pmcolor.py</url>
-          <line>352</line>
+          <line>353</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
