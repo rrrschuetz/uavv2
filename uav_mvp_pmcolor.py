@@ -12,6 +12,8 @@ from adafruit_pca9685 import PCA9685
 from board import SCL, SDA
 import busio
 import torch
+from pygments.styles.gh_dark import BLUE_1
+
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
@@ -296,6 +298,9 @@ def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle
 
 
 def detect_and_label_blobs(image):
+    blue_line = False
+    magenta_rectangle = False
+
     hsv = preprocess_image(image)
     #cv2.imwrite('hsv.jpg', hsv)
 
@@ -304,14 +309,19 @@ def detect_and_label_blobs(image):
     red_upper1 = np.array([10, 255, 255])
     red_lower2 = np.array([160, 50, 50])
     red_upper2 = np.array([180, 255, 255])
+
     green_lower1 = np.array([35, 40, 40])
     green_upper1 = np.array([70, 255, 255])
     green_lower2 = np.array([70, 40, 40])
     green_upper2 = np.array([90, 255, 255])
-    blue_lower = np.array([100, 50, 50])  # Broader range for blue detection
+
+    blue_lower = np.array([100, 50, 50])  # HSV range for blue detection
     blue_upper = np.array([140, 255, 255])
 
-    # Create masks
+    magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
+    magenta_upper = np.array([170, 255, 255])
+
+    # Detect red and green blocks
     red_mask1 = cv2.inRange(hsv, red_lower1, red_upper1)
     red_mask2 = cv2.inRange(hsv, red_lower2, red_upper2)
     red_mask = cv2.bitwise_or(red_mask1, red_mask2)
@@ -325,11 +335,7 @@ def detect_and_label_blobs(image):
     green_mask = remove_small_contours(apply_morphological_operations(green_mask))
 
     #cv2.imwrite('red_mask.jpg', red_mask)
-    #cv2.imwrite('red_mask1.jpg', red_mask)
-    #cv2.imwrite('red_mask2.jpg', red_mask)
     #cv2.imwrite('green_mask.jpg', green_mask)
-    #cv2.imwrite('green_mask1.jpg', green_mask)
-    #cv2.imwrite('green_mask2.jpg', green_mask)
 
     # Combine masks
     combined_mask = cv2.bitwise_or(red_mask, green_mask)
@@ -356,12 +362,13 @@ def detect_and_label_blobs(image):
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
 
-    # detect blue lines
-    largest_contour = None
-    max_area = 0
+    # Detect blue lines
     blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
     blue_mask = remove_small_contours(blue_mask)
     cv2.imwrite('blue_mask.jpg', blue_mask)
+
+    largest_contour = None
+    max_area = 0
     contours, _ = cv2.findContours(blue_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         area = cv2.contourArea(contour)
@@ -369,13 +376,35 @@ def detect_and_label_blobs(image):
             max_area = area
             largest_contour = contour
     if largest_contour is not None:
+        blue_line = True
         cv2.drawContours(image, [contour], -1, (0, 255, 255), 2)  # Draw each contour in blue
+
+    # Detect magenta parking lot
+    magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
+    magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
+    cv2.imwrite('magenta_mask.jpg', magenta_mask)
+
+    # Find and filter contours for magenta blobs
+    contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        # Calculate bounding rectangle and aspect ratio
+        rect = cv2.minAreaRect(contour)
+        box = cv2.boxPoints(rect)
+        box = np.int32(box)
+        width, height = rect[1]
+        aspect_ratio = width / height
+        # Filter based on aspect ratio to identify rectangles
+        if aspect_ratio > 1.5:  # Adjust threshold for detecting rectangular shapes
+            magenta_rectangle = True
+            cv2.drawContours(image, [box], -1, (255, 0, 255), 2)  # Draw the magenta rectangle
+            cv2.putText(image, "M", (int(rect[0][0]), int(rect[0][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
+            print("Magenta rectangle detected")
 
     # Add timestamp in the lower left corner
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
     cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
-    return x_coords, largest_contour is not None, image
+    return x_coords, blue_line, magenta_rectangle, image
 
 
 def camera_thread(picam0, picam1):
@@ -403,7 +432,7 @@ def camera_thread(picam0, picam1):
             image1_flipped = cv2.flip(image1, -1)
             combined_image = np.hstack((image0_flipped, image1_flipped))
             #cropped_image = combined_image[frame_height // 3:, :]
-            Gx_coords, blue_line, image = detect_and_label_blobs(combined_image)
+            Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(combined_image)
             end_time = time.time()
 
             # Convert arrays to lists of strings and join them into one string per array
@@ -418,6 +447,9 @@ def camera_thread(picam0, picam1):
                     Gblue_line_count += 1
                     last_blue_line_time = current_time
                     print(f"Blue line detected: Count {Gblue_line_count}")
+
+            if parking_lot:
+                print("Magenta parking lot detected")
 
             # Save the image with labeled contours
             cv2.imwrite("labeled_image.jpg", image)
