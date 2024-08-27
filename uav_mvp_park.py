@@ -220,7 +220,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 print(f"Blue line count: {shared_blue_line_count.value}")
                 if shared_blue_line_count.value >= 4:
                     print("Race completed, parking initiated")
-                    if Gparking_lot
+                    if Gparking_lot:
+                        print("Parking lot detected, stopping the vehicle")
+                        set_motor_speed(pca, 13, 0.1)
+                        set_servo_angle(pca, 12, 0.5)
 
                 if 0.0 < front_dist < 0.1:
                     print(f"Obstacle detected: Distance {front_dist:.2f} meters")
