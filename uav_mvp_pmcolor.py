@@ -177,6 +177,17 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
             print(f"Error during interpolation: {e}")
             continue  # Skip this iteration if interpolation fails
 
+        num_sections = 150
+        section_data = np.array_split(interpolated_distances[-1500:], num_sections)
+        section_means = [np.mean(section) for section in section_data]
+        section_means = np.array(section_means)
+        non_zero_front_distances = section_means[40:60][section_means[40:60] > 0]
+        if non_zero_front_distances.size > 0:  # Check if there are any non-zero distances
+            front_dist = np.min(non_zero_front_distances)
+        else:
+            front_dist = float('inf')  # If all values are zero, set to infinity or some large value
+        print(f"Front distance: {front_dist:.2f} meters")
+
         if Gtraining_mode:
             data = np.column_stack((interpolated_distances, angles))
             np.savetxt("radar.txt", data[-1500:], header="Distances, Angles", comments='', fmt='%f')
@@ -199,16 +210,6 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
             #print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
 
         else:
-            num_sections = 150
-            section_data = np.array_split(interpolated_distances[-1500:], num_sections)
-            section_means = [np.mean(section) for section in section_data]
-            section_means = np.array(section_means)
-            non_zero_front_distances = section_means[40:60][section_means[40:60] > 0]
-            if non_zero_front_distances.size > 0:  # Check if there are any non-zero distances
-                front_dist = np.min(non_zero_front_distances)
-            else:
-                front_dist = float('inf')  # If all values are zero, set to infinity or some large value
-            print(f"Front distance: {front_dist:.2f} meters")
 
             if 0.0 < front_dist < 0.1:
                 print(f"Obstacle detected: Distance {front_dist:.2f} meters")
