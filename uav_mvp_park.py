@@ -19,13 +19,14 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gtraining_mode = True
+Gtraining_mode = False
 Gclock_wise = False
 #########################################
 
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * 1280)
 Gx_coords = np.zeros(1280, dtype=float)
+Gparking_lot = False
 
 Gmodel = None
 Gscaler_lidar = None
@@ -161,7 +162,7 @@ def full_scan(sock):
 def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     global Gtraining_mode
     global Glidar_string, Gcolor_string
-    global Gx_coords
+    global Gx_coords, Gparking_lot
     global Gmodel, Gscaler_lidar, Gdevice
 
     fps_list = deque(maxlen=10)
@@ -219,7 +220,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 print(f"Blue line count: {shared_blue_line_count.value}")
                 if shared_blue_line_count.value >= 4:
                     print("Race completed, parking initiated")
-                    if Gmage
+                    if Gparking_lot
 
                 if 0.0 < front_dist < 0.1:
                     print(f"Obstacle detected: Distance {front_dist:.2f} meters")
@@ -426,7 +427,7 @@ def detect_and_label_blobs(image):
 
 
 def camera_thread(picam0, picam1, shared_blue_line_count):
-    global Gcolor_string, Gx_coords,
+    global Gcolor_string, Gx_coords, Gparking_lot
     fps_list = deque(maxlen=10)
 
     # VideoWriter setup
@@ -454,7 +455,7 @@ def camera_thread(picam0, picam1, shared_blue_line_count):
             image1_flipped = cv2.flip(image1, -1)
             combined_image = np.hstack((image0_flipped, image1_flipped))
             cropped_image = combined_image[frame_height:, :]
-            Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(cropped_image)
+            Gx_coords, blue_line, Gparking_lot, image = detect_and_label_blobs(cropped_image)
 
             if Gclock_wise:
                 Gx_coords = Gx_coords * -1.0
@@ -465,9 +466,6 @@ def camera_thread(picam0, picam1, shared_blue_line_count):
                 if current_time - last_blue_line_time >= 3:  # Check if 3 seconds have passed
                     shared_blue_line_count.value += 1
                     last_blue_line_time = current_time
-
-            if parking_lot:
-                print("Magenta parking lot detected")
 
             # Save the image with labeled contours
             cv2.imwrite("labeled_image.jpg", image)
