@@ -420,6 +420,7 @@ def camera_thread(picam0, picam1):
     # VideoWriter setup
     frame_height, frame_width, _ = picam0.capture_array().shape
     frame_width *= 2
+    frame_height /= 2
     fps = 20  # Set frames per second for the output video
     video_filename = "output_video_000.avi"  # Output video file name
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
@@ -437,8 +438,8 @@ def camera_thread(picam0, picam1):
             image0_flipped = cv2.flip(image0, -1)
             image1_flipped = cv2.flip(image1, -1)
             combined_image = np.hstack((image0_flipped, image1_flipped))
-            #cropped_image = combined_image[frame_height // 3:, :]
-            Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(combined_image)
+            cropped_image = combined_image[frame_height // 2:, :]
+            Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(cropped_image)
 
             if Gclock_wise:
                 Gx_coords = Gx_coords[::-1]
