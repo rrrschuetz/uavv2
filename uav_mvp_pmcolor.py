@@ -199,6 +199,21 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
             print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
 
         else:
+            num_sections = 150
+            section_data = np.array_split(interpolated_distances[-1500:], num_sections)
+            section_means = [np.mean(section) for section in section_data]
+            front_dist = min(section_means[45:55])
+            side_dist_left = min(section_means[0:10])
+            side_dist_right = min(section_means[90:100])
+
+            if front_dist < 0.2:
+                print("Obstacle detected in front")
+                set_motor_speed(pca, 13, 0.1)
+                set_servo_angle(pca, 12, 0.5)
+                set_motor_speed(pca, 13, -0.2)
+                time.sleep(2)
+                set_motor_speed(pca, 13, 0.1)
+
             lidar_tensor, color_tensor = preprocess_input(
                 interpolated_distances[-1500:], Gx_coords, Gscaler_lidar, Gdevice)
 
@@ -254,7 +269,7 @@ def remove_small_contours(mask, min_area=500):
     return mask
 
 
-def filter_contours(contours, min_area=500, aspect_ratio_range=(1.5, 3.0), angle_range=(80, 100)):
+def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle_range=(80, 100)):
     filtered_contours = []
     for contour in contours:
         if cv2.contourArea(contour) < min_area:
@@ -275,6 +290,7 @@ def filter_contours(contours, min_area=500, aspect_ratio_range=(1.5, 3.0), angle
 
 def detect_and_label_blobs(image):
     hsv = preprocess_image(image)
+    #cv2.imwrite('hsv.jpg', hsv)
 
     # Adaptive color ranges for red and green detection
     red_lower1 = np.array([0, 50, 50])
@@ -298,6 +314,13 @@ def detect_and_label_blobs(image):
     # Apply morphological operations and remove small contours
     red_mask = remove_small_contours(apply_morphological_operations(red_mask))
     green_mask = remove_small_contours(apply_morphological_operations(green_mask))
+
+    #cv2.imwrite('red_mask.jpg', red_mask)
+    #cv2.imwrite('red_mask1.jpg', red_mask)
+    #cv2.imwrite('red_mask2.jpg', red_mask)
+    #cv2.imwrite('green_mask.jpg', green_mask)
+    #cv2.imwrite('green_mask1.jpg', green_mask)
+    #cv2.imwrite('green_mask2.jpg', green_mask)
 
     # Combine masks
     combined_mask = cv2.bitwise_or(red_mask, green_mask)
@@ -367,6 +390,7 @@ def camera_thread(picam0, picam1):
             #    f.write(Gcolor_string + "\n")
 
             # Save the image with labeled contours
+            #cv2.imwrite("labeled_image.jpg", image)
             video_writer.write(image)
             frame_count += 1
 
@@ -381,7 +405,7 @@ def camera_thread(picam0, picam1):
             fps_list.append(1.0 / frame_time)
 
             moving_avg_fps = sum(fps_list) / len(fps_list)
-            # print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
+            print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
 
     except KeyboardInterrupt:
         print("Keyboard Interrupt detected, stopping video capture and saving...")
