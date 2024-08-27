@@ -448,7 +448,7 @@ def camera_thread(picam0, picam1):
             Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(cropped_image)
 
             if Gclock_wise:
-                Gx_coords = Gx_coords[::-1]
+                Gx_coords = Gx_coords * -1.0
             Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
             if blue_line:
