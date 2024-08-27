@@ -26,7 +26,6 @@ Gclock_wise = False
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * 1280)
 Gx_coords = np.zeros(1280, dtype=float)
-Gblue_line_count = 0
 
 Gmodel = None
 Gscaler_lidar = None
@@ -39,14 +38,12 @@ def set_servo_angle(pca, channel, angle):
     pulse_width = pulse_min + angle * (pulse_max - pulse_min)
     pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
 
-
 # ESC functions
 def set_motor_speed(pca, channel, speed):
     pulse_min = 310  # Pulse width for 0% speed
     pulse_max = 409  # Pulse width for 100% speed
     pulse_width = pulse_min + speed * (pulse_max - pulse_min)
     pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
-
 
 def arm_esc(pca, channel):
     print("Arming ESC...")
@@ -161,7 +158,7 @@ def full_scan(sock):
     # print(i,old_start_angle)
     return all_distances, all_angles
 
-def lidar_thread(sock, pca, shared_GX, shared_GY):
+def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     global Gtraining_mode
     global Glidar_string, Gcolor_string
     global Gx_coords
@@ -217,34 +214,46 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
 
         else:
 
-            if 0.0 < front_dist < 0.1:
-                print(f"Obstacle detected: Distance {front_dist:.2f} meters")
-                #set_motor_speed(pca, 13, 0.1)
-                #set_servo_angle(pca, 12, 0.5)
-                #set_motor_speed(pca, 13, 0.3)
-                #time.sleep(2)
-                #set_motor_speed(pca, 13, 0.1)
+            if shared_race_mode.value:
 
-            ld = interpolated_distances[-1500:]
-            if Gclock_wise:
-                ld = ld[::-1]
-            lidar_tensor, color_tensor = preprocess_input(
-                ld, Gx_coords, Gscaler_lidar, Gdevice)
+                print(f"Blue line count: {shared_blue_line_count.value}")
+                if shared_blue_line_count.value >= 4:
+                    print("Race completed, parking initiated")
+                    if Gmage
 
-            if lidar_tensor is not None and color_tensor is not None:
-                # Perform inference
-                with torch.no_grad():
-                    output = Gmodel(lidar_tensor, color_tensor)
+                if 0.0 < front_dist < 0.1:
+                    print(f"Obstacle detected: Distance {front_dist:.2f} meters")
+                    #set_motor_speed(pca, 13, 0.1)
+                    #set_servo_angle(pca, 12, 0.5)
+                    #set_motor_speed(pca, 13, 0.3)
+                    #time.sleep(2)
+                    #set_motor_speed(pca, 13, 0.1)
 
-                # Convert the model's output to steering commands or other UAV controls
-                steering_commands = output.cpu().numpy()
-                #print("Steering Commands:", steering_commands)
-                X = steering_commands[0, 0]  # Extract GX (first element of the output)
-                Y = steering_commands[0, 1]  # Extract GY (second element of the output)
+                ld = interpolated_distances[-1500:]
                 if Gclock_wise:
-                    X = -X
-                set_servo_angle(pca, 12, X * 0.4 + 0.5)
-                set_motor_speed(pca, 13, Y * 0.3 + 0.1)
+                    ld = ld[::-1]
+                lidar_tensor, color_tensor = preprocess_input(
+                    ld, Gx_coords, Gscaler_lidar, Gdevice)
+
+                if lidar_tensor is not None and color_tensor is not None:
+                    # Perform inference
+                    with torch.no_grad():
+                        output = Gmodel(lidar_tensor, color_tensor)
+
+                    # Convert the model's output to steering commands or other UAV controls
+                    steering_commands = output.cpu().numpy()
+                    #print("Steering Commands:", steering_commands)
+                    X = steering_commands[0, 0]  # Extract GX (first element of the output)
+                    Y = steering_commands[0, 1]  # Extract GY (second element of the output)
+                    if Gclock_wise:
+                        X = -X
+                    set_servo_angle(pca, 12, X * 0.4 + 0.5)
+                    set_motor_speed(pca, 13, Y * 0.3 + 0.1)
+
+            else:
+                set_servo_angle(pca, 12, 0.5)
+                set_motor_speed(pca, 13, 0.1)
+
 
 # Camera functions
 def gamma_correction(image, gamma=1.5):
@@ -394,7 +403,7 @@ def detect_and_label_blobs(image):
     if line_contours:
         for line_contour in line_contours:
             cv2.drawContours(image, [line_contour], -1, (0,255, 255), 2)  # Draw contours in blue
-        blue_line_detected = True
+        blue_line = True
         print(f"Detected {len(line_contours)} straight blue line(s)")
 
     # Detect magenta parking lot
@@ -416,8 +425,8 @@ def detect_and_label_blobs(image):
     return x_coords, blue_line, magenta_rectangle, image
 
 
-def camera_thread(picam0, picam1):
-    global Gcolor_string, Gx_coords, Gblue_line_count
+def camera_thread(picam0, picam1, shared_blue_line_count):
+    global Gcolor_string, Gx_coords,
     fps_list = deque(maxlen=10)
 
     # VideoWriter setup
@@ -454,9 +463,8 @@ def camera_thread(picam0, picam1):
             if blue_line:
                 current_time = time.time()
                 if current_time - last_blue_line_time >= 3:  # Check if 3 seconds have passed
-                    Gblue_line_count += 1
+                    shared_blue_line_count.value += 1
                     last_blue_line_time = current_time
-                    print(f"Blue line detected: Count {Gblue_line_count}")
 
             if parking_lot:
                 print("Magenta parking lot detected")
@@ -487,7 +495,7 @@ def camera_thread(picam0, picam1):
             video_writer.release()
 
 
-def xbox_controller_process(pca, shared_GX, shared_GY):
+def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count):
     pygame.init()
     pygame.joystick.init()
 
@@ -521,8 +529,17 @@ def xbox_controller_process(pca, shared_GX, shared_GY):
 
             elif event.type == pygame.JOYBALLMOTION:
                 print(f"JOYBALLMOTION: ball={event.ball}, rel={event.rel}")
+
             elif event.type == pygame.JOYBUTTONDOWN:
                 print(f"JOYBUTTONDOWN: button={event.button}")
+                if event.button == 0:   # A button
+                    print("Race started")
+                    shared_race_mode.value = True
+                    shared_blue_line_count.value = 0
+                elif event.button == 3:  # X button
+                    print("Race stopped")
+                    shared_race_mode.value = False
+
             elif event.type == pygame.JOYBUTTONUP:
                 print(f"JOYBUTTONUP: button={event.button}")
             elif event.type == pygame.JOYHATMOTION:
@@ -541,9 +558,11 @@ def xbox_controller_process(pca, shared_GX, shared_GY):
 def main():
     global Gtraining_mode, Gmodel, Gscaler_lidar, Gdevice
 
-    # Create shared variables for GX and GY
+    # Create shared variables
     shared_GX = Value('d', 0.0)  # 'd' for double precision float
     shared_GY = Value('d', 0.0)
+    shared_race_mode = Value('b', False)  # 'b' for boolean
+    shared_blue_line_count = Value('i', 0)  # 'i' for integer
 
     # Initialize the I2C bus
     i2c = busio.I2C(SCL, SDA)
@@ -607,10 +626,11 @@ def main():
     picam1.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
 
     # Start processes
-    lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,pca))
-    lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock, pca, shared_GX, shared_GY))
-    camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1))
-    xbox_controller_process_instance = Process(target=xbox_controller_process, args=(pca, shared_GX, shared_GY))
+    lidar_thread_instance = threading.Thread(target=lidar_thread,
+        args=(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count))
+    camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1, shared_blue_line_count))
+    xbox_controller_process_instance = Process(target=xbox_controller_process,
+        args=(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count))
 
     lidar_thread_instance.start()
     camera_thread_instance.start()

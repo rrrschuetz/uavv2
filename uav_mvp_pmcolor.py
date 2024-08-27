@@ -607,7 +607,6 @@ def main():
     picam1.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
 
     # Start processes
-    lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,pca))
     lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock, pca, shared_GX, shared_GY))
     camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1))
     xbox_controller_process_instance = Process(target=xbox_controller_process, args=(pca, shared_GX, shared_GY))
