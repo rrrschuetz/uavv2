@@ -19,6 +19,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 
 #########################################
 Gtraining_mode = True
+Gclock_wise = False
 #########################################
 
 Glidar_string = ""
@@ -223,8 +224,11 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
                 #time.sleep(2)
                 #set_motor_speed(pca, 13, 0.1)
 
+            ld = interpolated_distances[-1500:]
+            if Gclock_wise:
+                ld = ld[::-1]
             lidar_tensor, color_tensor = preprocess_input(
-                interpolated_distances[-1500:], Gx_coords, Gscaler_lidar, Gdevice)
+                ld, Gx_coords, Gscaler_lidar, Gdevice)
 
             if lidar_tensor is not None and color_tensor is not None:
                 # Perform inference
@@ -236,6 +240,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
                 #print("Steering Commands:", steering_commands)
                 X = steering_commands[0, 0]  # Extract GX (first element of the output)
                 Y = steering_commands[0, 1]  # Extract GY (second element of the output)
+                if Gclock_wise:
+                    X = -X
                 set_servo_angle(pca, 12, X * 0.4 + 0.5)
                 set_motor_speed(pca, 13, Y * 0.3 + 0.1)
 
@@ -433,13 +439,10 @@ def camera_thread(picam0, picam1):
             combined_image = np.hstack((image0_flipped, image1_flipped))
             #cropped_image = combined_image[frame_height // 3:, :]
             Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(combined_image)
-            end_time = time.time()
 
-            # Convert arrays to lists of strings and join them into one string per array
+            if Gclock_wise:
+                Gx_coords = Gx_coords[::-1]
             Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
-            # print(f"#color values {len(Gcolor_string.strip().split(','))}")
-            # with open("object_coords.txt", "a") as f:
-            #    f.write(Gcolor_string + "\n")
 
             if blue_line:
                 current_time = time.time()
@@ -463,7 +466,7 @@ def camera_thread(picam0, picam1):
                 video_filename = f"output_video_{file_index:03d}.avi"
                 video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
 
-            frame_time = end_time - start_time
+            frame_time = time.time() - start_time
             fps_list.append(1.0 / frame_time)
 
             moving_avg_fps = sum(fps_list) / len(fps_list)
