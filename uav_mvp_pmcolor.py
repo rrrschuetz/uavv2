@@ -20,7 +20,7 @@ Gtraining_mode = True
 #########################################
 
 Glidar_string = ""
-Gcolor_string = ""
+Gcolor_string = ",".join(["0"] * 1280)
 Gx_coords = np.zeros(1280, dtype=float)
 Gmodel = None
 Gscaler_lidar = None
@@ -355,12 +355,18 @@ def detect_and_label_blobs(image):
                     (0, 255, 255), 2)
 
     # detect blue lines
+    largest_contour = None
     blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
     blue_mask = remove_small_contours(blue_mask)
     cv2.imwrite('blue_mask.jpg', blue_mask)
     contours, _ = cv2.findContours(blue_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
-        cv2.drawContours(image, [contour], -1, (255, 0, 0), 2)  # Draw each contour in blue
+        area = cv2.contourArea(contour)
+        if area > max_area:
+            max_area = area
+            largest_contour = contour
+    if largest_contour is not None:
+        cv2.drawContours(image, [contour], -1, (0, 255, 255), 2)  # Draw each contour in blue
         print("Blue blob detected")
 
     # Add timestamp in the lower left corner
