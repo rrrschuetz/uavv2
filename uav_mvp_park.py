@@ -159,7 +159,7 @@ def full_scan(sock):
     # print(i,old_start_angle)
     return all_distances, all_angles
 
-def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
+def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count):
     global Gtraining_mode
     global Glidar_string, Gcolor_string
     global Gx_coords, Gparking_lot
