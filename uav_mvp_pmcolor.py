@@ -16,7 +16,7 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gtraining_mode = True
+Gtraining_mode = False
 #########################################
 
 Glidar_string = ""
@@ -196,23 +196,27 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
             fps_list.append(1.0 / frame_time)
 
             moving_avg_fps = sum(fps_list) / len(fps_list)
-            print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
+            #print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
 
         else:
             num_sections = 150
             section_data = np.array_split(interpolated_distances[-1500:], num_sections)
             section_means = [np.mean(section) for section in section_data]
-            front_dist = min(section_means[45:55])
-            side_dist_left = min(section_means[0:10])
-            side_dist_right = min(section_means[90:100])
+            section_means = np.array(section_means)
+            non_zero_front_distances = section_means[40:60][section_means[40:60] > 0]
+            if non_zero_front_distances.size > 0:  # Check if there are any non-zero distances
+                front_dist = np.min(non_zero_front_distances)
+            else:
+                front_dist = float('inf')  # If all values are zero, set to infinity or some large value
+            print(f"Front distance: {front_dist:.2f} meters")
 
-            if front_dist < 0.2:
-                print("Obstacle detected in front")
-                set_motor_speed(pca, 13, 0.1)
-                set_servo_angle(pca, 12, 0.5)
-                set_motor_speed(pca, 13, -0.2)
-                time.sleep(2)
-                set_motor_speed(pca, 13, 0.1)
+            if 0.0 < front_dist < 0.1:
+                print(f"Obstacle detected: Distance {front_dist:.2f} meters")
+                #set_motor_speed(pca, 13, 0.1)
+                #set_servo_angle(pca, 12, 0.5)
+                #set_motor_speed(pca, 13, 0.3)
+                #time.sleep(2)
+                #set_motor_speed(pca, 13, 0.1)
 
             lidar_tensor, color_tensor = preprocess_input(
                 interpolated_distances[-1500:], Gx_coords, Gscaler_lidar, Gdevice)
@@ -224,7 +228,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
 
                 # Convert the model's output to steering commands or other UAV controls
                 steering_commands = output.cpu().numpy()
-                print("Steering Commands:", steering_commands)
+                #print("Steering Commands:", steering_commands)
                 X = steering_commands[0, 0]  # Extract GX (first element of the output)
                 Y = steering_commands[0, 1]  # Extract GY (second element of the output)
                 set_servo_angle(pca, 12, X * 0.4 + 0.5)
@@ -302,6 +306,9 @@ def detect_and_label_blobs(image):
     green_lower2 = np.array([70, 40, 40])
     green_upper2 = np.array([90, 255, 255])
 
+    blue_lower = np.array([100, 50, 50])  # Broader range for blue detection
+    blue_upper = np.array([140, 255, 255])
+
     # Create masks
     red_mask1 = cv2.inRange(hsv, red_lower1, red_upper1)
     red_mask2 = cv2.inRange(hsv, red_lower2, red_upper2)
@@ -311,9 +318,14 @@ def detect_and_label_blobs(image):
     green_mask2 = cv2.inRange(hsv, green_lower2, green_upper2)
     green_mask = cv2.bitwise_or(green_mask1, green_mask2)
 
+    blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
+
     # Apply morphological operations and remove small contours
     red_mask = remove_small_contours(apply_morphological_operations(red_mask))
     green_mask = remove_small_contours(apply_morphological_operations(green_mask))
+
+    blue_mask = remove_small_contours(apply_morphological_operations(blue_mask))
+    cv2.imwrite('blue_mask.jpg', blue_mask)
 
     #cv2.imwrite('red_mask.jpg', red_mask)
     #cv2.imwrite('red_mask1.jpg', red_mask)
@@ -405,7 +417,7 @@ def camera_thread(picam0, picam1):
             fps_list.append(1.0 / frame_time)
 
             moving_avg_fps = sum(fps_list) / len(fps_list)
-            print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
+            #print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
 
     except KeyboardInterrupt:
         print("Keyboard Interrupt detected, stopping video capture and saving...")
@@ -446,7 +458,6 @@ def xbox_controller_process(pca, shared_GX, shared_GY):
                 elif event.axis == 3:
                     pass
                     #set_servo_angle(pca, 11, abs(event.value) * 1.5 + 0.0)
-
 
             elif event.type == pygame.JOYBALLMOTION:
                 print(f"JOYBALLMOTION: ball={event.ball}, rel={event.rel}")
@@ -534,8 +545,6 @@ def main():
     # Set camera controls to adjust exposure time and gain
     picam0.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
     picam1.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
-
-
 
     # Start processes
     lidar_thread_instance = threading.Thread(target=lidar_thread, args=(sock,pca))
