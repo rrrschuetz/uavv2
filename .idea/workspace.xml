@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uav_mvp_pmcolor.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_mvp_pmcolor.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -124,14 +125,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00088" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722499515182</created>
-      <option name="number" value="00088" />
-      <option name="presentableId" value="LOCAL-00088" />
-      <option name="project" value="LOCAL" />
-      <updated>1722499515182</updated>
     </task>
     <task id="LOCAL-00089" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -517,7 +510,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724765370183</updated>
     </task>
-    <option name="localTasksCounter" value="137" />
+    <task id="LOCAL-00137" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1724766895788</created>
+      <option name="number" value="00137" />
+      <option name="presentableId" value="LOCAL-00137" />
+      <option name="project" value="LOCAL" />
+      <updated>1724766895788</updated>
+    </task>
+    <option name="localTasksCounter" value="138" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -535,7 +536,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_mvp_pmcolor.py</url>
-          <line>346</line>
+          <line>352</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
