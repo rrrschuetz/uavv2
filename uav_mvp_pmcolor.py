@@ -22,6 +22,8 @@ Gtraining_mode = True
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * 1280)
 Gx_coords = np.zeros(1280, dtype=float)
+Gblue_line_count = 0
+
 Gmodel = None
 Gscaler_lidar = None
 Gdevice = None
@@ -356,6 +358,7 @@ def detect_and_label_blobs(image):
 
     # detect blue lines
     largest_contour = None
+    max_area = 0
     blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
     blue_mask = remove_small_contours(blue_mask)
     cv2.imwrite('blue_mask.jpg', blue_mask)
@@ -367,17 +370,16 @@ def detect_and_label_blobs(image):
             largest_contour = contour
     if largest_contour is not None:
         cv2.drawContours(image, [contour], -1, (0, 255, 255), 2)  # Draw each contour in blue
-        print("Blue blob detected")
 
     # Add timestamp in the lower left corner
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
     cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
-    return x_coords, image
+    return x_coords, largest_contour is not None, image
 
 
 def camera_thread(picam0, picam1):
-    global Gcolor_string, Gx_coords
+    global Gcolor_string, Gx_coords, Gblue_line_count
     fps_list = deque(maxlen=10)
 
     # VideoWriter setup
@@ -401,15 +403,21 @@ def camera_thread(picam0, picam1):
             image1_flipped = cv2.flip(image1, -1)
             combined_image = np.hstack((image0_flipped, image1_flipped))
             #cropped_image = combined_image[frame_height // 3:, :]
-            Gx_coords, image = detect_and_label_blobs(combined_image)
+            Gx_coords, blue_line, image = detect_and_label_blobs(combined_image)
             end_time = time.time()
 
             # Convert arrays to lists of strings and join them into one string per array
             Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
             # print(f"#color values {len(Gcolor_string.strip().split(','))}")
-
             # with open("object_coords.txt", "a") as f:
             #    f.write(Gcolor_string + "\n")
+
+            if blue_line:
+                current_time = time.time()
+                if current_time - last_blue_line_time >= 3:  # Check if 3 seconds have passed
+                    Gblue_line_count += 1
+                    last_blue_line_time = current_time
+                    print(f"Blue line detected: Count {Gblue_line_count}")
 
             # Save the image with labeled contours
             cv2.imwrite("labeled_image.jpg", image)

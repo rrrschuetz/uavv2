@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data" />
+    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uav_mvp_pmcolor.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_mvp_pmcolor.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -122,14 +125,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00085" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1722493812963</created>
-      <option name="number" value="00085" />
-      <option name="presentableId" value="LOCAL-00085" />
-      <option name="project" value="LOCAL" />
-      <updated>1722493812963</updated>
     </task>
     <task id="LOCAL-00086" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -515,7 +510,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724758826419</updated>
     </task>
-    <option name="localTasksCounter" value="134" />
+    <task id="LOCAL-00134" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1724763365758</created>
+      <option name="number" value="00134" />
+      <option name="presentableId" value="LOCAL-00134" />
+      <option name="project" value="LOCAL" />
+      <updated>1724763365758</updated>
+    </task>
+    <option name="localTasksCounter" value="135" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -533,7 +536,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_mvp_pmcolor.py</url>
-          <line>338</line>
+          <line>340</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
