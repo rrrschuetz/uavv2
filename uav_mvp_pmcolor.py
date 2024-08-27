@@ -16,7 +16,7 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gtraining_mode = False
+Gtraining_mode = True
 #########################################
 
 Glidar_string = ""
@@ -177,7 +177,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY):
             print(f"Error during interpolation: {e}")
             continue  # Skip this iteration if interpolation fails
 
-        num_sections = 150
+        num_sections = 100
         section_data = np.array_split(interpolated_distances[-1500:], num_sections)
         section_means = [np.mean(section) for section in section_data]
         section_means = np.array(section_means)
@@ -306,7 +306,6 @@ def detect_and_label_blobs(image):
     green_upper1 = np.array([70, 255, 255])
     green_lower2 = np.array([70, 40, 40])
     green_upper2 = np.array([90, 255, 255])
-
     blue_lower = np.array([100, 50, 50])  # Broader range for blue detection
     blue_upper = np.array([140, 255, 255])
 
@@ -319,14 +318,9 @@ def detect_and_label_blobs(image):
     green_mask2 = cv2.inRange(hsv, green_lower2, green_upper2)
     green_mask = cv2.bitwise_or(green_mask1, green_mask2)
 
-    blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
-
     # Apply morphological operations and remove small contours
     red_mask = remove_small_contours(apply_morphological_operations(red_mask))
     green_mask = remove_small_contours(apply_morphological_operations(green_mask))
-
-    blue_mask = remove_small_contours(apply_morphological_operations(blue_mask))
-    cv2.imwrite('blue_mask.jpg', blue_mask)
 
     #cv2.imwrite('red_mask.jpg', red_mask)
     #cv2.imwrite('red_mask1.jpg', red_mask)
@@ -359,6 +353,15 @@ def detect_and_label_blobs(image):
         cv2.drawContours(image, [box], -1, (0, 255, 255), 2)
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
+
+    # detect blue lines
+    blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
+    blue_mask = remove_small_contours(blue_mask)
+    cv2.imwrite('blue_mask.jpg', blue_mask)
+    contours, _ = cv2.findContours(blue_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        cv2.drawContours(image, [contour], -1, (255, 0, 0), 2)  # Draw each contour in blue
+        print("Blue blob detected")
 
     # Add timestamp in the lower left corner
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
@@ -403,7 +406,7 @@ def camera_thread(picam0, picam1):
             #    f.write(Gcolor_string + "\n")
 
             # Save the image with labeled contours
-            #cv2.imwrite("labeled_image.jpg", image)
+            cv2.imwrite("labeled_image.jpg", image)
             video_writer.write(image)
             frame_count += 1
 
