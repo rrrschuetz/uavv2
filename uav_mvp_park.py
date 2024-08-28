@@ -499,6 +499,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
 
             if parking_lot and shared_blue_line_count.value >= 4:
                 shared_race_mode.value = 2
+                print("Parking initiated")
 
             # Save the image with labeled contours
             cv2.imwrite("labeled_image.jpg", image)
