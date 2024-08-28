@@ -3,6 +3,7 @@ import struct
 import pygame
 import time
 import numpy as np
+from scipy.stats import trim_mean
 import cv2
 from picamera2 import Picamera2
 from multiprocessing import Process, Value
@@ -12,9 +13,6 @@ from adafruit_pca9685 import PCA9685
 from board import SCL, SDA
 import busio
 import torch
-from pygments.styles.gh_dark import BLUE_1
-from sympy import print_rcode
-
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
@@ -181,16 +179,42 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
             print(f"Error during interpolation: {e}")
             continue  # Skip this iteration if interpolation fails
 
-        num_sections = 100
-        section_data = np.array_split(interpolated_distances[-1500:], num_sections)
-        section_means = [np.mean(section) for section in section_data]
-        section_means = np.array(section_means)
-        non_zero_front_distances = section_means[40:60][section_means[40:60] > 0]
-        if non_zero_front_distances.size > 0:  # Check if there are any non-zero distances
-            front_dist = np.min(non_zero_front_distances)
+#################################
+        window_size = 50
+
+        # Step 1: Apply a median filter to smooth the data (you could use other filters too)
+        smoothed_distances = np.convolve(interpolated_distances[-1500+200 : -200], np.ones(5) / 5, mode='same')
+        # Step 2: Filter out zero values and define a reasonable range for valid distances
+        valid_distances = smoothed_distances[(smoothed_distances > 0.0) & (smoothed_distances < 2.5)]
+        if valid_distances.size > 0:
+            # Step 3: Consider multiple minima
+            sorted_indices = np.argsort(valid_distances)
+            candidate_min_indices = sorted_indices[:5]  # Take the top 5 smallest distances as candidates
+            # Step 4: Evaluate candidates by checking surrounding values
+            min_distance = float('inf')
+            min_distance_index = -1
+            for idx in candidate_min_indices:
+                global_idx = np.where(smoothed_distances == valid_distances[idx])[0][0]
+                start_index = max(global_idx - window_size // 2, 0)
+                end_index = min(global_idx + window_size // 2, len(smoothed_distances))
+                # Extract the data points within this window
+                window_distances = smoothed_distances[start_index:end_index]
+                window_valid_distances = window_distances[window_distances > 0]
+                # Calculate robust statistics
+                if window_valid_distances.size > 0:
+                    trimmed_avg = trim_mean(window_valid_distances, proportiontocut=0.1)
+                    if trimmed_avg < min_distance:
+                        min_distance = trimmed_avg
+                        min_distance_index = global_idx
+            if min_distance_index >= 0:
+                print(
+                    f"Lowest robust average distance to wall: {min_distance:.2f} meters at index {min_distance_index}")
+            else:
+                print("No valid robust minimum distance found.")
         else:
-            front_dist = float('inf')  # If all values are zero, set to infinity or some large value
-        #print(f"Front distance: {front_dist:.2f} meters")
+            print("No valid non-zero distances found in the data.")
+
+        #################################
 
         if Gtraining_mode:
             data = np.column_stack((interpolated_distances, angles))
@@ -225,8 +249,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
                         set_motor_speed(pca, 13, 0.1)
                         set_servo_angle(pca, 12, 0.5)
 
-                if 0.0 < front_dist < 0.1:
-                    print(f"Obstacle detected: Distance {front_dist:.2f} meters")
+                #if 0.0 < front_dist < 0.1:
+                    #print(f"Obstacle detected: Distance {front_dist:.2f} meters")
                     #set_motor_speed(pca, 13, 0.1)
                     #set_servo_angle(pca, 12, 0.5)
                     #set_motor_speed(pca, 13, 0.3)
