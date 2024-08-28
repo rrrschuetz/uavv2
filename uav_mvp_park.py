@@ -3,6 +3,7 @@ import struct
 import pygame
 import time
 import numpy as np
+from scipy.ndimage import median_filter
 from scipy.stats import trim_mean
 import cv2
 from picamera2 import Picamera2
@@ -165,9 +166,12 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
 
     fps_list = deque(maxlen=10)
     while True:
+
         start_time = time.time()
         distances, angles = full_scan(sock)
-        end_time = time.time()
+        if len(distances) < 3160:
+            print("Invalid data received, skipping this iteration")
+            continue
 
         # Check for finite values in the distances array
         distances = np.array(distances)
@@ -179,41 +183,28 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
             print(f"Error during interpolation: {e}")
             continue  # Skip this iteration if interpolation fails
 
-#################################
-        window_size = 50
-
-        # Step 1: Apply a median filter to smooth the data (you could use other filters too)
-        smoothed_distances = np.convolve(interpolated_distances[-1500+200 : -200], np.ones(5) / 5, mode='same')
-        # Step 2: Filter out zero values and define a reasonable range for valid distances
-        valid_distances = smoothed_distances[(smoothed_distances > 0.0) & (smoothed_distances < 2.5)]
-        if valid_distances.size > 0:
-            # Step 3: Consider multiple minima
-            sorted_indices = np.argsort(valid_distances)
-            candidate_min_indices = sorted_indices[:5]  # Take the top 5 smallest distances as candidates
-            # Step 4: Evaluate candidates by checking surrounding values
+        #################################
+        # Step 1: Smooth the data using a median filter to reduce noise and outliers
+        valid_distances = median_filter(interpolated_distances[-1500+250:-250], size=5)
+        # Step 3: Find the indices of the valid distances (i.e., distances greater than zero)
+        valid_indices = np.where(valid_distances > 0)[0]
+        if valid_indices.size > 0:
+            # Extract only valid (non-zero) distances
+            filtered_distances = valid_distances[valid_indices]
+            # Step 4: Use a sliding window to compute the local robust minimum distance
+            window_size = 50  # Adjust based on desired robustness
             min_distance = float('inf')
-            min_distance_index = -1
-            for idx in candidate_min_indices:
-                global_idx = np.where(smoothed_distances == valid_distances[idx])[0][0]
-                start_index = max(global_idx - window_size // 2, 0)
-                end_index = min(global_idx + window_size // 2, len(smoothed_distances))
-                # Extract the data points within this window
-                window_distances = smoothed_distances[start_index:end_index]
-                window_valid_distances = window_distances[window_distances > 0]
-                # Calculate robust statistics
-                if window_valid_distances.size > 0:
-                    trimmed_avg = trim_mean(window_valid_distances, proportiontocut=0.1)
-                    if trimmed_avg < min_distance:
-                        min_distance = trimmed_avg
-                        min_distance_index = global_idx
-            if min_distance_index >= 0:
-                print(
-                    f"Lowest robust average distance to wall: {min_distance:.2f} meters at index {min_distance_index}")
-            else:
-                print("No valid robust minimum distance found.")
+            min_index = -1
+            for i in range(len(filtered_distances) - window_size + 1):
+                window = filtered_distances[i:i + window_size]
+                # Calculate trimmed mean of the window as a robust measure
+                trimmed_mean_distance = trim_mean(window, proportiontocut=0.1)
+                if trimmed_mean_distance < min_distance:
+                    min_distance = trimmed_mean_distance
+                    min_index = valid_indices[i + window_size // 2]  # Center of the window
+            print(f"Distance to wall: {min_distance:.2f} meters at angle {angles[-1750-min_index]:.2f} degrees")
         else:
             print("No valid non-zero distances found in the data.")
-
         #################################
 
         if Gtraining_mode:
@@ -230,12 +221,6 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
             #print(f"GX: {shared_GX.value}, GY: {shared_GY.value}")
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
-
-            frame_time = end_time - start_time
-            fps_list.append(1.0 / frame_time)
-
-            moving_avg_fps = sum(fps_list) / len(fps_list)
-            #print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
 
         else:
 
@@ -282,6 +267,11 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
                 set_servo_angle(pca, 12, 0.5)
                 set_motor_speed(pca, 13, 0.1)
 
+        frame_time = time.time() - start_time
+        fps_list.append(1.0 / frame_time)
+
+        moving_avg_fps = sum(fps_list) / len(fps_list)
+        #print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}
 
 # Camera functions
 def gamma_correction(image, gamma=1.5):
@@ -432,7 +422,7 @@ def detect_and_label_blobs(image):
         for line_contour in line_contours:
             cv2.drawContours(image, [line_contour], -1, (0,255, 255), 2)  # Draw contours in blue
         blue_line = True
-        print(f"Detected {len(line_contours)} straight blue line(s)")
+        #print(f"Detected {len(line_contours)} straight blue line(s)")
 
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
