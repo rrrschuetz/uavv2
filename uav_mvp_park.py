@@ -570,6 +570,8 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                 elif event.button == 3:  # X button
                     print("Race stopped")
                     shared_race_mode.value = 0
+                    set_motor_speed(pca, 13, 0.1)
+                    set_servo_angle(pca, 12, 0.5)
 
             elif event.type == pygame.JOYBUTTONUP:
                 print(f"JOYBUTTONUP: button={event.button}")
@@ -601,6 +603,8 @@ def main():
     pca = PCA9685(i2c)
     pca.frequency = 50  # Standard servo frequency
     arm_esc(pca, 1)
+    set_motor_speed(pca, 13, 0.1)
+    set_servo_angle(pca, 12, 0.5)
 
     # LIDAR setup
     IP_ADDRESS = '192.168.11.2'
