@@ -281,7 +281,6 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 set_motor_speed(pca, 13, Y * 0.3 + 0.1)
 
         elif shared_race_mode.value == 2:
-            print("Parking initiated")
             set_motor_speed(pca, 13, 0.1)
             set_servo_angle(pca, 12, 0.5)
 
