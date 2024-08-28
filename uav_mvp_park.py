@@ -500,6 +500,8 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
             if parking_lot and shared_blue_line_count.value >= 4:
                 shared_race_mode.value = 2
                 print("Parking initiated")
+                set_motor_speed(pca, 13, 0.1)
+                set_servo_angle(pca, 12, 0.5)
 
             # Save the image with labeled contours
             cv2.imwrite("labeled_image.jpg", image)
@@ -654,6 +656,8 @@ def main():
 
         while shared_race_mode.value != 2:
             time.sleep(1)
+            print(f"Race mode: {shared_race_mode.value}")
+
         distance, angle = navigate(sock)
         print(f"Distance to wall: {distance:.2f} meters at angle {angle:.2f} degrees")
         print("Parking completed, stopping the vehicle")
