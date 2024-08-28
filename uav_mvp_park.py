@@ -17,20 +17,15 @@ import torch
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 from servo_control import angle
+from train_model import scaler_lidar
 
 #########################################
-Gtraining_mode = True
 Gclock_wise = False
 #########################################
 
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * 1280)
 Gx_coords = np.zeros(1280, dtype=float)
-Gparking_lot = False
-
-Gmodel = None
-Gscaler_lidar = None
-Gdevice = None
 
 # Servo functions
 def set_servo_angle(pca, channel, angle):
@@ -163,7 +158,7 @@ def navigate(sock):
     min_distance = float('inf')
     angle = 0.0
     distances, angles = full_scan(sock)
-    if len(distances) = 3160:
+    if len(distances) == 3160:
         distances = np.array(distances)
         finite_vals = np.isfinite(distances)
         x = np.arange(len(distances))
@@ -191,11 +186,14 @@ def navigate(sock):
                 print("No valid non-zero distances found in the data.")
     return min_distance, angle
 
+
 def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
-    global Gtraining_mode
     global Glidar_string, Gcolor_string
     global Gx_coords
-    global Gmodel, Gscaler_lidar, Gdevice
+
+    model = None
+    scaler_lidar = None
+    device = None
 
     fps_list = deque(maxlen=10)
     while True:
@@ -214,7 +212,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
         x = np.arange(len(distances))
         interpolated_distances = np.interp(x, x[finite_vals], distances[finite_vals])
 
-        if Gtraining_mode:
+        if shared_race_mode.value == 0:
             data = np.column_stack((interpolated_distances, angles))
             np.savetxt("radar.txt", data[1580+200:3159-200],header="Distances, Angles", comments='', fmt='%f')
 
@@ -229,42 +227,60 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
-        else:
+        elif shared_race_mode.value == 1:
 
-            if shared_race_mode.value == 1:
+            if model is None:
+                # Load the trained model and the scaler
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-                #if 0.0 < front_dist < 0.1:
-                    #print(f"Obstacle detected: Distance {front_dist:.2f} meters")
-                    #set_motor_speed(pca, 13, 0.1)
-                    #set_servo_angle(pca, 12, 0.5)
-                    #set_motor_speed(pca, 13, 0.3)
-                    #time.sleep(2)
-                    #set_motor_speed(pca, 13, 0.1)
+                lidar_input_shape = 1500  # Update based on your data
+                color_input_shape = 1280  # Update based on your data
 
-                ld = interpolated_distances[-1500:]
+                # Initialize the model
+                model = CNNModel(lidar_input_shape, color_input_shape).to(device)
+
+                # Load the trained weights into the model
+                state_dict = torch.load('./model.pth', map_location=torch.device('cpu'))
+                # Convert all weights to float32 if they are in float64
+                for key, value in state_dict.items():
+                    if value.dtype == torch.float64:  # Check if the parameter is in double precision
+                        state_dict[key] = value.float()  # Convert to single precision (float32)
+                # Load the state dict into the model
+                model.load_state_dict(state_dict)
+                model.eval()
+
+            if scaler_lidar is None:
+                # Load the scaler for LIDAR data
+                scaler_lidar = load_scaler('./scaler.pkl')
+
+            #if 0.0 < front_dist < 0.1:
+                #print(f"Obstacle detected: Distance {front_dist:.2f} meters")
+                #set_motor_speed(pca, 13, 0.1)
+                #set_servo_angle(pca, 12, 0.5)
+                #set_motor_speed(pca, 13, 0.3)
+                #time.sleep(2)
+                #set_motor_speed(pca, 13, 0.1)
+
+            ld = interpolated_distances[-1500:]
+            if Gclock_wise:
+                ld = ld[::-1]
+            lidar_tensor, color_tensor = preprocess_input(
+                ld, Gx_coords, scaler_lidar, device)
+
+            if lidar_tensor is not None and color_tensor is not None:
+                # Perform inference
+                with torch.no_grad():
+                    output = model(lidar_tensor, color_tensor)
+
+                # Convert the model's output to steering commands or other UAV controls
+                steering_commands = output.cpu().numpy()
+                #print("Steering Commands:", steering_commands)
+                X = steering_commands[0, 0]  # Extract GX (first element of the output)
+                Y = steering_commands[0, 1]  # Extract GY (second element of the output)
                 if Gclock_wise:
-                    ld = ld[::-1]
-                lidar_tensor, color_tensor = preprocess_input(
-                    ld, Gx_coords, Gscaler_lidar, Gdevice)
-
-                if lidar_tensor is not None and color_tensor is not None:
-                    # Perform inference
-                    with torch.no_grad():
-                        output = Gmodel(lidar_tensor, color_tensor)
-
-                    # Convert the model's output to steering commands or other UAV controls
-                    steering_commands = output.cpu().numpy()
-                    #print("Steering Commands:", steering_commands)
-                    X = steering_commands[0, 0]  # Extract GX (first element of the output)
-                    Y = steering_commands[0, 1]  # Extract GY (second element of the output)
-                    if Gclock_wise:
-                        X = -X
-                    set_servo_angle(pca, 12, X * 0.4 + 0.5)
-                    set_motor_speed(pca, 13, Y * 0.3 + 0.1)
-
-            else:
-                set_servo_angle(pca, 12, 0.5)
-                set_motor_speed(pca, 13, 0.1)
+                    X = -X
+                set_servo_angle(pca, 12, X * 0.4 + 0.5)
+                set_motor_speed(pca, 13, Y * 0.3 + 0.1)
 
         frame_time = time.time() - start_time
         fps_list.append(1.0 / frame_time)
@@ -442,7 +458,7 @@ def detect_and_label_blobs(image):
 
 
 def camera_thread(picam0, picam1, shared_blue_line_count):
-    global Gcolor_string, Gx_coords, Gparking_lot
+    global Gcolor_string, Gx_coords
     fps_list = deque(maxlen=10)
 
     # VideoWriter setup
@@ -462,7 +478,7 @@ def camera_thread(picam0, picam1, shared_blue_line_count):
     last_blue_line_time = time.time()
 
     try:
-        while True and shared_blue_line_count.value !=2:
+        while True and shared_race_mode.value != 2:
             start_time = time.time()
             image0 = picam0.capture_array()
             image1 = picam1.capture_array()
@@ -470,20 +486,20 @@ def camera_thread(picam0, picam1, shared_blue_line_count):
             image1_flipped = cv2.flip(image1, -1)
             combined_image = np.hstack((image0_flipped, image1_flipped))
             cropped_image = combined_image[frame_height:, :]
-            Gx_coords, blue_line, Gparking_lot, image = detect_and_label_blobs(cropped_image)
+            Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(cropped_image)
 
             if Gclock_wise:
                 Gx_coords = Gx_coords * -1.0
             Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-            if blue_line:
+            if blue_line and shared_race_mode.value == 1:
                 current_time = time.time()
                 if current_time - last_blue_line_time >= 3:  # Check if 3 seconds have passed
                     last_blue_line_time = current_time
                     shared_blue_line_count.value += 1
                     print(f"Blue line count: {shared_blue_line_count.value}")
 
-            if Gparking_lot and shared_blue_line_count.value >= 4:
+            if parking_lot and shared_blue_line_count.value >= 4:
                 shared_race_mode.value = 2
 
             # Save the image with labeled contours
@@ -573,7 +589,6 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
 
 
 def main():
-    global Gtraining_mode, Gmodel, Gscaler_lidar, Gdevice
 
     # Create shared variables
     shared_GX = Value('d', 0.0)  # 'd' for double precision float
@@ -605,30 +620,6 @@ def main():
     print('Starting scan...')
     start_scan(sock)
 
-    if not Gtraining_mode:
-        # Load the trained model and the scaler
-        Gdevice = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        lidar_input_shape = 1500  # Update based on your data
-        color_input_shape = 1280  # Update based on your data
-
-        # Initialize the model
-        Gmodel = CNNModel(lidar_input_shape, color_input_shape).to(Gdevice)
-
-        # Load the trained weights into the model
-        state_dict = torch.load('./model.pth', map_location=torch.device('cpu'))
-        # Convert all weights to float32 if they are in float64
-        for key, value in state_dict.items():
-            if value.dtype == torch.float64:  # Check if the parameter is in double precision
-                state_dict[key] = value.float()  # Convert to single precision (float32)
-        # Load the state dict into the model
-        Gmodel.load_state_dict(state_dict)
-
-        Gmodel.eval()
-
-        # Load the scaler for LIDAR data
-        Gscaler_lidar = load_scaler('./scaler.pkl')
-
     # Camera setup
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
@@ -654,7 +645,6 @@ def main():
     xbox_controller_process_instance.start()
 
     try:
-        # pass
         lidar_thread_instance.join()
         camera_thread_instance.join()
         xbox_controller_process_instance.join()
