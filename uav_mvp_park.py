@@ -18,7 +18,7 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gtraining_mode = False
+Gtraining_mode = True
 Gclock_wise = False
 #########################################
 
@@ -185,7 +185,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
 
         #################################
         # Step 1: Smooth the data using a median filter to reduce noise and outliers
-        valid_distances = median_filter(interpolated_distances[-1500+250:-250], size=5)
+        valid_distances = median_filter(interpolated_distances[1580+200:3159-200], size=5)
         # Step 3: Find the indices of the valid distances (i.e., distances greater than zero)
         valid_indices = np.where(valid_distances > 0)[0]
         if valid_indices.size > 0:
@@ -202,14 +202,15 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
                 if trimmed_mean_distance < min_distance:
                     min_distance = trimmed_mean_distance
                     min_index = valid_indices[i + window_size // 2]  # Center of the window
-            print(f"Distance to wall: {min_distance:.2f} meters at angle {angles[-1750-min_index]:.2f} degrees")
+                    angle = angles[1580+200+min_index]-180
+            print(f"Distance to wall: {min_distance:.2f} meters at angle {angle:.2f} degrees")
         else:
             print("No valid non-zero distances found in the data.")
         #################################
 
         if Gtraining_mode:
             data = np.column_stack((interpolated_distances, angles))
-            np.savetxt("radar.txt", data[-1500:], header="Distances, Angles", comments='', fmt='%f')
+            np.savetxt("radar.txt", data[1580+200:3159-200],header="Distances, Angles", comments='', fmt='%f')
 
             Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[-1500:])
             # print(f"#lidar values {len(Glidar_string.strip().split(','))}")
@@ -434,7 +435,6 @@ def detect_and_label_blobs(image):
     for contour in contours:
         magenta_rectangle = True
         cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
-        print(contour)
 
     # Add timestamp in the lower left corner
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
