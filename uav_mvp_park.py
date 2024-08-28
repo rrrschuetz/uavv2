@@ -16,6 +16,7 @@ import busio
 import torch
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
+from servo_control import angle
 
 #########################################
 Gtraining_mode = True
@@ -158,34 +159,17 @@ def full_scan(sock):
     # print(i,old_start_angle)
     return all_distances, all_angles
 
-def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count):
-    global Gtraining_mode
-    global Glidar_string, Gcolor_string
-    global Gx_coords, Gparking_lot
-    global Gmodel, Gscaler_lidar, Gdevice
-
-    fps_list = deque(maxlen=10)
-    while True:
-
-        start_time = time.time()
-        distances, angles = full_scan(sock)
-        if len(distances) < 3160:
-            print("Invalid data received, skipping this iteration")
-            continue
-
-        # Check for finite values in the distances array
+def navigate(sock):
+    min_distance = float('inf')
+    angle = 0.0
+    distances, angles = full_scan(sock)
+    if len(distances) = 3160:
         distances = np.array(distances)
         finite_vals = np.isfinite(distances)
         x = np.arange(len(distances))
-        try:
-            interpolated_distances = np.interp(x, x[finite_vals], distances[finite_vals])
-        except Exception as e:
-            print(f"Error during interpolation: {e}")
-            continue  # Skip this iteration if interpolation fails
-
-        #################################
+        interpolated_distances= np.interp(x, x[finite_vals], distances[finite_vals])
         # Step 1: Smooth the data using a median filter to reduce noise and outliers
-        valid_distances = median_filter(interpolated_distances[1580+200:3159-200], size=5)
+        valid_distances = median_filter(interpolated_distances[1580 + 200:3159 - 200], size=5)
         # Step 3: Find the indices of the valid distances (i.e., distances greater than zero)
         valid_indices = np.where(valid_distances > 0)[0]
         if valid_indices.size > 0:
@@ -193,7 +177,6 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
             filtered_distances = valid_distances[valid_indices]
             # Step 4: Use a sliding window to compute the local robust minimum distance
             window_size = 50  # Adjust based on desired robustness
-            min_distance = float('inf')
             min_index = -1
             for i in range(len(filtered_distances) - window_size + 1):
                 window = filtered_distances[i:i + window_size]
@@ -202,11 +185,34 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
                 if trimmed_mean_distance < min_distance:
                     min_distance = trimmed_mean_distance
                     min_index = valid_indices[i + window_size // 2]  # Center of the window
-                    angle = angles[1580+200+min_index]-180
-            print(f"Distance to wall: {min_distance:.2f} meters at angle {angle:.2f} degrees")
-        else:
-            print("No valid non-zero distances found in the data.")
-        #################################
+                    angle = angles[1580 + 200 + min_index] - 180
+                    print(f"Distance to wall: {min_distance:.2f} meters at angle {angle:.2f} degrees")
+            else:
+                print("No valid non-zero distances found in the data.")
+    return min_distance, angle
+
+def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
+    global Gtraining_mode
+    global Glidar_string, Gcolor_string
+    global Gx_coords
+    global Gmodel, Gscaler_lidar, Gdevice
+
+    fps_list = deque(maxlen=10)
+    while True:
+
+        if shared_race_mode.value == 2:
+            time.sleep(1)
+            continue
+
+        start_time = time.time()
+        distances, angles = full_scan(sock)
+        if len(distances) < 3160:
+            print("Invalid data received, skipping this iteration")
+            continue
+        distances = np.array(distances)
+        finite_vals = np.isfinite(distances)
+        x = np.arange(len(distances))
+        interpolated_distances = np.interp(x, x[finite_vals], distances[finite_vals])
 
         if Gtraining_mode:
             data = np.column_stack((interpolated_distances, angles))
@@ -225,15 +231,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_
 
         else:
 
-            if shared_race_mode.value:
-
-                print(f"Blue line count: {shared_blue_line_count.value}")
-                if shared_blue_line_count.value >= 4:
-                    print("Race completed, parking initiated")
-                    if Gparking_lot:
-                        print("Parking lot detected, stopping the vehicle")
-                        set_motor_speed(pca, 13, 0.1)
-                        set_servo_angle(pca, 12, 0.5)
+            if shared_race_mode.value == 1:
 
                 #if 0.0 < front_dist < 0.1:
                     #print(f"Obstacle detected: Distance {front_dist:.2f} meters")
@@ -464,7 +462,7 @@ def camera_thread(picam0, picam1, shared_blue_line_count):
     last_blue_line_time = time.time()
 
     try:
-        while True:
+        while True and shared_blue_line_count.value !=2:
             start_time = time.time()
             image0 = picam0.capture_array()
             image1 = picam1.capture_array()
@@ -481,8 +479,12 @@ def camera_thread(picam0, picam1, shared_blue_line_count):
             if blue_line:
                 current_time = time.time()
                 if current_time - last_blue_line_time >= 3:  # Check if 3 seconds have passed
-                    shared_blue_line_count.value += 1
                     last_blue_line_time = current_time
+                    shared_blue_line_count.value += 1
+                    print(f"Blue line count: {shared_blue_line_count.value}")
+
+            if Gparking_lot and shared_blue_line_count.value >= 4:
+                shared_race_mode.value = 2
 
             # Save the image with labeled contours
             cv2.imwrite("labeled_image.jpg", image)
@@ -549,11 +551,11 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                 print(f"JOYBUTTONDOWN: button={event.button}")
                 if event.button == 0:   # A button
                     print("Race started")
-                    shared_race_mode.value = True
+                    shared_race_mode.value = 1
                     shared_blue_line_count.value = 0
                 elif event.button == 3:  # X button
                     print("Race stopped")
-                    shared_race_mode.value = False
+                    shared_race_mode.value = 0
 
             elif event.type == pygame.JOYBUTTONUP:
                 print(f"JOYBUTTONUP: button={event.button}")
@@ -576,7 +578,7 @@ def main():
     # Create shared variables
     shared_GX = Value('d', 0.0)  # 'd' for double precision float
     shared_GY = Value('d', 0.0)
-    shared_race_mode = Value('b', False)  # 'b' for boolean
+    shared_race_mode = Value('i', 0)  # 'i' for integer
     shared_blue_line_count = Value('i', 0)  # 'i' for integer
 
     # Initialize the I2C bus
@@ -642,7 +644,7 @@ def main():
 
     # Start processes
     lidar_thread_instance = threading.Thread(target=lidar_thread,
-        args=(sock, pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count))
+        args=(sock, pca, shared_GX, shared_GY, shared_race_mode))
     camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1, shared_blue_line_count))
     xbox_controller_process_instance = Process(target=xbox_controller_process,
         args=(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count))
@@ -656,6 +658,14 @@ def main():
         lidar_thread_instance.join()
         camera_thread_instance.join()
         xbox_controller_process_instance.join()
+
+        while shared_race_mode.value != 2:
+            time.sleep(1)
+        distance, angle = navigate(sock)
+        print(f"Distance to wall: {distance:.2f} meters at angle {angle:.2f} degrees")
+        print("Parking completed, stopping the vehicle")
+        set_motor_speed(pca, 13, 0.1)
+        set_servo_angle(pca, 12, 0.5)
 
     except KeyboardInterrupt:
         picam0.stop()
