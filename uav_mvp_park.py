@@ -1,5 +1,7 @@
 import socket
 import struct
+from xmlrpc.client import Error
+
 import pygame
 import time
 import numpy as np
@@ -153,23 +155,25 @@ def full_scan(sock):
     return all_distances, all_angles
 
 def navigate(sock):
+    window_size = 20  # Adjust based on desired robustness
     min_distance = float('inf')
     angle = 0.0
-    distances, angles = full_scan(sock)
-    if len(distances) == 3160:
-        distances = np.array(distances)
-        finite_vals = np.isfinite(distances)
-        x = np.arange(len(distances))
-        interpolated_distances= np.interp(x, x[finite_vals], distances[finite_vals])
-        # Step 1: Smooth the data using a median filter to reduce noise and outliers
-        valid_distances = median_filter(interpolated_distances[1580 + 200:3159 - 200], size=5)
-        # Step 3: Find the indices of the valid distances (i.e., distances greater than zero)
-        valid_indices = np.where(valid_distances > 0)[0]
-        if valid_indices.size > 0:
+    while True:
+        try:
+            distances, angles = full_scan(sock)
+            if len(distances) != 3160: continue
+            distances = np.array(distances)
+            finite_vals = np.isfinite(distances)
+            x = np.arange(len(distances))
+            interpolated_distances= np.interp(x, x[finite_vals], distances[finite_vals])
+            # Step 1: Smooth the data using a median filter to reduce noise and outliers
+            valid_distances = median_filter(interpolated_distances[1580 + 600:3159 - 600], size=5)
+            # Step 3: Find the indices of the valid distances (i.e., distances greater than zero)
+            valid_indices = np.where(valid_distances > 0)[0]
+            if valid_indices.size == 0: continue
             # Extract only valid (non-zero) distances
             filtered_distances = valid_distances[valid_indices]
             # Step 4: Use a sliding window to compute the local robust minimum distance
-            window_size = 50  # Adjust based on desired robustness
             min_index = -1
             for i in range(len(filtered_distances) - window_size + 1):
                 window = filtered_distances[i:i + window_size]
@@ -178,10 +182,11 @@ def navigate(sock):
                 if trimmed_mean_distance < min_distance:
                     min_distance = trimmed_mean_distance
                     min_index = valid_indices[i + window_size // 2]  # Center of the window
-                    angle = angles[1580 + 200 + min_index] - 180
-                    print(f"Distance to wall: {min_distance:.2f} meters at angle {angle:.2f} degrees")
-            else:
-                print("No valid non-zero distances found in the data.")
+                    angle = angles[1580 + 600 + min_index] - 180
+                    #print(f"Distance to wall: {min_distance:.2f} meters at angle {angle:.2f} degrees")
+                    break
+        except Error as e:
+            continue
     return min_distance, angle
 
 
@@ -281,8 +286,9 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 set_motor_speed(pca, 13, Y * 0.3 + 0.1)
 
         elif shared_race_mode.value == 2:
-            set_motor_speed(pca, 13, 0.1)
-            set_servo_angle(pca, 12, 0.5)
+            #set_motor_speed(pca, 13, 0.1)
+            #set_servo_angle(pca, 12, 0.5)
+            pass
 
         frame_time = time.time() - start_time
         fps_list.append(1.0 / frame_time)
@@ -627,6 +633,13 @@ def main():
     print('Starting scan...')
     start_scan(sock)
 
+    #while True:
+    #    try:
+    #        distance, angle = navigate(sock)
+    #        print(f"Distance to wall: {distance:.2f} meters at angle {angle:.2f} degrees")
+    #    except Error as e:
+    #        print(e)
+
     # Camera setup
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
@@ -652,19 +665,21 @@ def main():
     xbox_controller_process_instance.start()
 
     try:
-        lidar_thread_instance.join()
-        camera_thread_instance.join()
-        xbox_controller_process_instance.join()
+        #lidar_thread_instance.join()
+        #camera_thread_instance.join()
+        #xbox_controller_process_instance.join()
+        print("All processes have started")
 
         while shared_race_mode.value != 2:
-            time.sleep(1)
-            print(f"Race mode: {shared_race_mode.value}")
+            time.sleep(0.1)
+            #print(f"Race mode: {shared_race_mode.value}")
+
+        set_motor_speed(pca, 13, 0.1)
+        set_servo_angle(pca, 12, 0.5)
 
         distance, angle = navigate(sock)
         print(f"Distance to wall: {distance:.2f} meters at angle {angle:.2f} degrees")
         print("Parking completed, stopping the vehicle")
-        set_motor_speed(pca, 13, 0.1)
-        set_servo_angle(pca, 12, 0.5)
 
     except KeyboardInterrupt:
         picam0.stop()
