@@ -280,6 +280,11 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 set_servo_angle(pca, 12, X * 0.4 + 0.5)
                 set_motor_speed(pca, 13, Y * 0.3 + 0.1)
 
+        elif shared_race_mode.value == 2:
+            print("Parking initiated")
+            set_motor_speed(pca, 13, 0.1)
+            set_servo_angle(pca, 12, 0.5)
+
         frame_time = time.time() - start_time
         fps_list.append(1.0 / frame_time)
 
@@ -500,8 +505,6 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
             if parking_lot and shared_blue_line_count.value >= 4:
                 shared_race_mode.value = 2
                 print("Parking initiated")
-                set_motor_speed(pca, 13, 0.1)
-                set_servo_angle(pca, 12, 0.5)
 
             # Save the image with labeled contours
             cv2.imwrite("labeled_image.jpg", image)
