@@ -16,8 +16,6 @@ import busio
 import torch
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
-from servo_control import angle
-from train_model import scaler_lidar
 
 #########################################
 Gclock_wise = False
@@ -205,7 +203,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
         start_time = time.time()
         distances, angles = full_scan(sock)
         if len(distances) < 3160:
-            print("Invalid data received, skipping this iteration")
+            #print("Invalid data received, skipping this iteration")
             continue
         distances = np.array(distances)
         finite_vals = np.isfinite(distances)
@@ -457,7 +455,7 @@ def detect_and_label_blobs(image):
     return x_coords, blue_line, magenta_rectangle, image
 
 
-def camera_thread(picam0, picam1, shared_blue_line_count):
+def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
     global Gcolor_string, Gx_coords
     fps_list = deque(maxlen=10)
 
@@ -589,7 +587,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
 
 
 def main():
-
+    print("Starting the UAV program...")
     # Create shared variables
     shared_GX = Value('d', 0.0)  # 'd' for double precision float
     shared_GY = Value('d', 0.0)
@@ -636,7 +634,7 @@ def main():
     # Start processes
     lidar_thread_instance = threading.Thread(target=lidar_thread,
         args=(sock, pca, shared_GX, shared_GY, shared_race_mode))
-    camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1, shared_blue_line_count))
+    camera_thread_instance = threading.Thread(target=camera_thread, args=(picam0, picam1, shared_race_mode, shared_blue_line_count))
     xbox_controller_process_instance = Process(target=xbox_controller_process,
         args=(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count))
 
