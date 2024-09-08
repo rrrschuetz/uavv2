@@ -22,6 +22,11 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 #########################################
 Gclock_wise = False
 #########################################
+WRITE_CAMERA_IMAGE = False
+WRITE_CAMERA_MOVIE = False
+
+SERVO_FACTOR = 0.4
+SERVO_BASIS = 0.6
 
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * 1280)
@@ -259,7 +264,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
             #if 0.0 < front_dist < 0.1:
                 #print(f"Obstacle detected: Distance {front_dist:.2f} meters")
                 #set_motor_speed(pca, 13, 0.1)
-                #set_servo_angle(pca, 12, 0.5)
+                #set_servo_angle(pca, 12, SERVO_BASIS)
                 #set_motor_speed(pca, 13, 0.3)
                 #time.sleep(2)
                 #set_motor_speed(pca, 13, 0.1)
@@ -282,12 +287,12 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 Y = steering_commands[0, 1]  # Extract GY (second element of the output)
                 if Gclock_wise:
                     X = -X
-                set_servo_angle(pca, 12, X * 0.4 + 0.5)
+                set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
                 set_motor_speed(pca, 13, Y * 0.3 + 0.1)
 
         elif shared_race_mode.value == 2:
             #set_motor_speed(pca, 13, 0.1)
-            #set_servo_angle(pca, 12, 0.5)
+            #set_servo_angle(pca, 12, SERVO_BASIS)
             pass
 
         frame_time = time.time() - start_time
@@ -470,18 +475,19 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
     fps_list = deque(maxlen=10)
 
     # VideoWriter setup
-    frame_height, frame_width, _ = picam0.capture_array().shape
-    frame_width *= 2
-    frame_height //= 2
-    print(f"Frame width: {frame_width}, Frame height: {frame_height}")
-    fps = 20  # Set frames per second for the output video
-    video_filename = "output_video_000.avi"  # Output video file name
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
-    video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
+    if WRITE_CAMERA_MOVIE:
+        frame_height, frame_width, _ = picam0.capture_array().shape
+        frame_width *= 2
+        frame_height //= 2
+        print(f"Frame width: {frame_width}, Frame height: {frame_height}")
+        fps = 20  # Set frames per second for the output video
+        video_filename = "output_video_000.avi"  # Output video file name
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
+        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
 
-    frame_count = 0
-    file_index = 0
-    max_frame_count = 2000  # Maximum number of frames per video file
+        frame_count = 0
+        file_index = 0
+        max_frame_count = 2000  # Maximum number of frames per video file
 
     last_blue_line_time = time.time()
 
@@ -512,16 +518,17 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
                 print("Parking initiated")
 
             # Save the image with labeled contours
-            cv2.imwrite("labeled_image.jpg", image)
-            video_writer.write(image)
-            frame_count += 1
+            if WRITE_CAMERA_IMAGE:
+                cv2.imwrite("labeled_image.jpg", image)
+                video_writer.write(image)
+                frame_count += 1
 
-            if frame_count > max_frame_count:
-                video_writer.release()
-                file_index += 1
-                frame_count = 0
-                video_filename = f"output_video_{file_index:03d}.avi"
-                video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
+                if frame_count > max_frame_count:
+                    video_writer.release()
+                    file_index += 1
+                    frame_count = 0
+                    video_filename = f"output_video_{file_index:03d}.avi"
+                    video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
 
             frame_time = time.time() - start_time
             fps_list.append(1.0 / frame_time)
@@ -533,7 +540,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
         print("Keyboard Interrupt detected, stopping video capture and saving...")
 
     finally:
-        if video_writer.isOpened():
+        if WRITE_CAMERA_MOVIE and video_writer.isOpened():
             video_writer.release()
 
 
@@ -564,7 +571,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                     set_motor_speed(pca, 13, event.value * 0.3 + 0.1)
                 elif event.axis == 2:
                     shared_GX.value = event.value
-                    set_servo_angle(pca, 12, event.value * 0.4 + 0.5)
+                    set_servo_angle(pca, 12, event.value * SERVO_FACTOR + SERVO_BASIS)
                 elif event.axis == 3:
                     pass
                     #set_servo_angle(pca, 11, abs(event.value) * 1.5 + 0.0)
@@ -582,7 +589,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                     print("Race stopped")
                     shared_race_mode.value = 0
                     set_motor_speed(pca, 13, 0.1)
-                    set_servo_angle(pca, 12, 0.5)
+                    set_servo_angle(pca, 12, SERVO_BASIS)
 
             elif event.type == pygame.JOYBUTTONUP:
                 print(f"JOYBUTTONUP: button={event.button}")
@@ -615,7 +622,7 @@ def main():
     pca.frequency = 50  # Standard servo frequency
     arm_esc(pca, 1)
     set_motor_speed(pca, 13, 0.1)
-    set_servo_angle(pca, 12, 0.5)
+    set_servo_angle(pca, 12, SERVO_BASIS)
 
     # LIDAR setup
     IP_ADDRESS = '192.168.11.2'
@@ -675,7 +682,7 @@ def main():
             #print(f"Race mode: {shared_race_mode.value}")
 
         set_motor_speed(pca, 13, 0.1)
-        set_servo_angle(pca, 12, 0.5)
+        set_servo_angle(pca, 12, SERVO_BASIS)
 
         distance, angle = navigate(sock)
         print(f"Distance to wall: {distance:.2f} meters at angle {angle:.2f} degrees")

@@ -59,7 +59,7 @@
     &quot;git-widget-placeholder&quot;: &quot;master&quot;
   }
 }</component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.blobdetect">
     <configuration name="blobdetect" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="uavv2" />
       <option name="ENV_FILES" value="" />
@@ -125,14 +125,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00111" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1724595335314</created>
-      <option name="number" value="00111" />
-      <option name="presentableId" value="LOCAL-00111" />
-      <option name="project" value="LOCAL" />
-      <updated>1724595335314</updated>
     </task>
     <task id="LOCAL-00112" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -518,7 +510,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724877839060</updated>
     </task>
-    <option name="localTasksCounter" value="160" />
+    <task id="LOCAL-00160" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1724881914224</created>
+      <option name="number" value="00160" />
+      <option name="presentableId" value="LOCAL-00160" />
+      <option name="project" value="LOCAL" />
+      <updated>1724881914224</updated>
+    </task>
+    <option name="localTasksCounter" value="161" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -541,7 +541,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_mvp_park.py</url>
-          <line>148</line>
+          <line>153</line>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
