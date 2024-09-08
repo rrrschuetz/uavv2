@@ -22,7 +22,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 #########################################
 Gclock_wise = False
 #########################################
-SCAN_RESOLUTION = 3120
+FULL_SCAN_INTERVALS = 81
 
 WRITE_CAMERA_IMAGE = False
 WRITE_CAMERA_MOVIE = False
@@ -98,8 +98,7 @@ def stop_scan(sock):
     sock.send(b'\xA5\x25')
     time.sleep(0.1)
 
-
-def decode_dense_mode_packet(packet, old_start_angle=0.0):
+def decode_dense_mode_packet(packet):
     if len(packet) != 84:
         raise ValueError(f"Invalid packet length: {len(packet)}")
 
@@ -122,48 +121,49 @@ def decode_dense_mode_packet(packet, old_start_angle=0.0):
 
     start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
     start_angle = start_angle_q6 / 64.0
-    angle_diff = start_angle - old_start_angle
 
-    if angle_diff > 0:
-        valid_flag = True
-        for i in range(40):
-            index = 4 + i * 2
-            if index + 1 >= len(packet):
-                raise ValueError(f"Packet is too short for expected data: index {index}")
-            distance = (packet[index] | (packet[index + 1] << 8))
-            distance /= 1000.0  # Convert from millimeters to meters
-            angle = start_angle + i * 4.6 / 40.0
+    for i in range(40):
+        index = 4 + i * 2
+        if index + 1 >= len(packet):
+            raise ValueError(f"Packet is too short for expected data: index {index}")
+        distance = (packet[index] | (packet[index + 1] << 8))
+        distance /= 1000.0  # Convert from millimeters to meters
+        angle = start_angle + i * 4.6 / 40.0
 
-            distances.append(distance)
-            angles.append(angle)
-    else:
-        valid_flag = False
+        distances.append(distance)
+        angles.append(angle)
 
     return {
-        "valid": valid_flag,
         "start_angle": start_angle,
         "distances": distances,
         "angles": angles
     }
 
+
 def full_scan(sock):
-    old_start_angle = 0.0
     all_distances = []
     all_angles = []
 
-    i = 0
-    while True:
+    for i in range(FULL_SCAN_INTERVALS):
         data = receive_full_data(sock, 84)
-        decoded_data = decode_dense_mode_packet(data, old_start_angle)
-        if decoded_data['valid'] == False:
-            break
-        old_start_angle = decoded_data['start_angle']
+        decoded_data = decode_dense_mode_packet(data)
         all_distances.extend(decoded_data['distances'])
         all_angles.extend(decoded_data['angles'])
-        i += 1
 
-    # print(i,old_start_angle)
-    return all_distances, all_angles
+    # Convert the lists to numpy arrays for easier manipulation
+    all_distances = np.array(all_distances)
+    all_angles = np.array(all_angles)
+    # Ensure all angles are within the 0-360 degree range
+    all_angles = all_angles % 360
+    # Find the index of the smallest positive angle
+    min_angle_index = np.argmin(all_angles)
+    # Rotate both the angles and distances arrays to start from the minimum angle
+    all_distances = np.roll(all_distances, -min_angle_index)
+    all_angles = np.roll(all_angles, -min_angle_index)
+    #print(f"Start angle: {all_angles[0]:.2f} End angle: {all_angles[-1]:.2f}")
+
+    return all_distances.tolist(), all_angles.tolist()  # Return as lists if necessary
+
 
 def navigate(sock):
     window_size = 20  # Adjust based on desired robustness
@@ -172,10 +172,7 @@ def navigate(sock):
     try:
         while True:
             distances, angles = full_scan(sock)
-            #print(f"Distances: {len(distances)}, Angles: {len(angles)}")
-            #if len(distances) != SCAN_RESOLUTION:
-            #    print(f"Invalid data received, skipping this iteration {len(distances)}")
-            #    continue
+            print(f"Distances: {len(distances)}, Angles: {len(angles)}")
             distances = np.array(distances)
             finite_vals = np.isfinite(distances)
             x = np.arange(len(distances))
@@ -190,7 +187,6 @@ def navigate(sock):
             # Extract only valid (non-zero) distances
             filtered_distances = valid_distances[valid_indices]
             # Step 4: Use a sliding window to compute the local robust minimum distance
-            min_index = -1
             for i in range(len(filtered_distances) - window_size + 1):
                 window = filtered_distances[i:i + window_size]
                 # Calculate trimmed mean of the window as a robust measure
