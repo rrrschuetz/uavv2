@@ -475,13 +475,13 @@ def detect_and_label_blobs(image):
 def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
     global Gcolor_string, Gx_coords
     fps_list = deque(maxlen=10)
+    frame_height, frame_width, _ = picam0.capture_array().shape
+    frame_width *= 2
+    frame_height //= 2
+    print(f"Frame width: {frame_width}, Frame height: {frame_height}")
 
     # VideoWriter setup
     if WRITE_CAMERA_MOVIE:
-        frame_height, frame_width, _ = picam0.capture_array().shape
-        frame_width *= 2
-        frame_height //= 2
-        print(f"Frame width: {frame_width}, Frame height: {frame_height}")
         fps = 20  # Set frames per second for the output video
         video_filename = "output_video_000.avi"  # Output video file name
         fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
