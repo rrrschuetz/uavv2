@@ -30,6 +30,8 @@ SERVO_BASIS = 0.6
 MOTOR_FACTOR = 0.3
 MOTOR_BASIS = 0.1
 
+BLUE_LINE_PARKING_COUNT = 2
+
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * 1280)
 Gx_coords = np.zeros(1280, dtype=float)
@@ -515,7 +517,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
                     shared_blue_line_count.value += 1
                     print(f"Blue line count: {shared_blue_line_count.value}")
 
-            if parking_lot and shared_blue_line_count.value >= 4:
+            if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
                 shared_race_mode.value = 2
                 print("Parking initiated")
 
