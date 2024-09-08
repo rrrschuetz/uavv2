@@ -23,6 +23,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 Gclock_wise = False
 #########################################
 FULL_SCAN_INTERVALS = 81
+ANGLE_CORRECTION = 23.0
 
 WRITE_CAMERA_IMAGE = False
 WRITE_CAMERA_MOVIE = False
@@ -166,37 +167,30 @@ def full_scan(sock):
 
 
 def navigate(sock):
-    window_size = 20  # Adjust based on desired robustness
-    min_distance = float('inf')
+    window_size = 10  # Adjust based on desired robustness
+    min_distance = 3.0
     angle = 0.0
     try:
         while True:
             distances, angles = full_scan(sock)
-            print(f"Distances: {len(distances)}, Angles: {len(angles)}")
+            #print(f"Distances: {len(distances)}, Angles: {len(angles)}")
             distances = np.array(distances)
             finite_vals = np.isfinite(distances)
             x = np.arange(len(distances))
             interpolated_distances= np.interp(x, x[finite_vals], distances[finite_vals])
-            # Step 1: Smooth the data using a median filter to reduce noise and outliers
-            valid_distances = median_filter(interpolated_distances[1580 + 600:3159 - 600], size=5)
-            # Step 3: Find the indices of the valid distances (i.e., distances greater than zero)
-            valid_indices = np.where(valid_distances > 0)[0]
-            if valid_indices.size == 0:
-                print("No valid distances found, skipping this iteration")
-                continue
-            # Extract only valid (non-zero) distances
-            filtered_distances = valid_distances[valid_indices]
-            # Step 4: Use a sliding window to compute the local robust minimum distance
-            for i in range(len(filtered_distances) - window_size + 1):
-                window = filtered_distances[i:i + window_size]
+            # Smooth the data using a median filter to reduce noise and outliers
+            valid_distances = median_filter(interpolated_distances[1620 + 300:3240 - 300], size= window_size)
+            # Use the sliding window to compute the local robust minimum distance
+            for i in range(len(valid_distances) - window_size + 1):
+                window = valid_distances[i:i + window_size]
                 # Calculate trimmed mean of the window as a robust measure
                 trimmed_mean_distance = trim_mean(window, proportiontocut=0.1)
                 if trimmed_mean_distance < min_distance:
                     min_distance = trimmed_mean_distance
-                    min_index = valid_indices[i + window_size // 2]  # Center of the window
-                    angle = angles[1580 + 600 + min_index] - 180
+                    min_index = i + window_size // 2  # Center of the window
+                    angle = angles[1620 + 300 + min_index] - 180
                     #rint(f"Distance to wall: {min_distance:.2f} meters at angle {angle:.2f} degrees")
-                    return  min_distance, angle
+                    return  min_distance, angle+ANGLE_CORRECTION
     except Error as e:
         print(e)
 
