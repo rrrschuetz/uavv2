@@ -27,6 +27,8 @@ WRITE_CAMERA_MOVIE = False
 
 SERVO_FACTOR = 0.4
 SERVO_BASIS = 0.6
+MOTOR_FACTOR = 0.3
+MOTOR_BASIS = 0.1
 
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * 1280)
@@ -288,10 +290,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 if Gclock_wise:
                     X = -X
                 set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
-                set_motor_speed(pca, 13, Y * 0.3 + 0.1)
+                set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
 
         elif shared_race_mode.value == 2:
-            #set_motor_speed(pca, 13, 0.1)
+            #set_motor_speed(pca, 13, MOTOR_BASIS)
             #set_servo_angle(pca, 12, SERVO_BASIS)
             pass
 
@@ -568,7 +570,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                 #print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
                     shared_GY.value = event.value
-                    set_motor_speed(pca, 13, event.value * 0.3 + 0.1)
+                    set_motor_speed(pca, 13, event.value * MOTOR_FACTOR + MOTOR_BASIS)
                 elif event.axis == 2:
                     shared_GX.value = event.value
                     set_servo_angle(pca, 12, event.value * SERVO_FACTOR + SERVO_BASIS)
@@ -588,7 +590,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                 elif event.button == 3:  # X button
                     print("Race stopped")
                     shared_race_mode.value = 0
-                    set_motor_speed(pca, 13, 0.1)
+                    set_motor_speed(pca, 13, MOTOR_BASIS)
                     set_servo_angle(pca, 12, SERVO_BASIS)
 
             elif event.type == pygame.JOYBUTTONUP:
@@ -621,7 +623,7 @@ def main():
     pca = PCA9685(i2c)
     pca.frequency = 50  # Standard servo frequency
     arm_esc(pca, 1)
-    set_motor_speed(pca, 13, 0.1)
+    set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
     # LIDAR setup
@@ -681,7 +683,7 @@ def main():
             time.sleep(0.1)
             #print(f"Race mode: {shared_race_mode.value}")
 
-        set_motor_speed(pca, 13, 0.1)
+        set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
 
         distance, angle = navigate(sock)

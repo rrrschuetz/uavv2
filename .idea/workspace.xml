@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/uav_mvp_park.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_mvp_park.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -125,14 +124,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00112" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1724597262779</created>
-      <option name="number" value="00112" />
-      <option name="presentableId" value="LOCAL-00112" />
-      <option name="project" value="LOCAL" />
-      <updated>1724597262779</updated>
     </task>
     <task id="LOCAL-00113" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -518,7 +509,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724881914224</updated>
     </task>
-    <option name="localTasksCounter" value="161" />
+    <task id="LOCAL-00161" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1725801890856</created>
+      <option name="number" value="00161" />
+      <option name="presentableId" value="LOCAL-00161" />
+      <option name="project" value="LOCAL" />
+      <updated>1725801890857</updated>
+    </task>
+    <option name="localTasksCounter" value="162" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -541,7 +540,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_mvp_park.py</url>
-          <line>153</line>
+          <line>156</line>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
