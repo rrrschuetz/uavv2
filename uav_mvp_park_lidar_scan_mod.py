@@ -163,7 +163,11 @@ def full_scan(sock):
     all_angles = np.roll(all_angles, -min_angle_index)
     #print(f"Start angle: {all_angles[0]:.2f} End angle: {all_angles[-1]:.2f}")
 
-    return all_distances.tolist(), all_angles.tolist()  # Return as lists if necessary
+    finite_vals = np.isfinite(all_distances)
+    x = np.arange(len(all_distances))
+    interpolated_distances = np.interp(x, x[finite_vals], all_distances[finite_vals])
+
+    return interpolated_distances, all_angles
 
 
 def navigate(sock):
@@ -172,12 +176,7 @@ def navigate(sock):
     angle = 0.0
     try:
         while True:
-            distances, angles = full_scan(sock)
-            #print(f"Distances: {len(distances)}, Angles: {len(angles)}")
-            distances = np.array(distances)
-            finite_vals = np.isfinite(distances)
-            x = np.arange(len(distances))
-            interpolated_distances= np.interp(x, x[finite_vals], distances[finite_vals])
+            interpolated_distances, angles = full_scan(sock)
             # Smooth the data using a median filter to reduce noise and outliers
             valid_distances = median_filter(interpolated_distances[1620 + 300:3240 - 300], size= window_size)
             # Use the sliding window to compute the local robust minimum distance
@@ -213,11 +212,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
             continue
 
         start_time = time.time()
-        distances, angles = full_scan(sock)
-        distances = np.array(distances)
-        finite_vals = np.isfinite(distances)
-        x = np.arange(len(distances))
-        interpolated_distances = np.interp(x, x[finite_vals], distances[finite_vals])
+        interpolated_distances, angles = full_scan(sock)
 
         if shared_race_mode.value == 0:
             data = np.column_stack((interpolated_distances, angles))
