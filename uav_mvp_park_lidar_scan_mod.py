@@ -167,7 +167,7 @@ def full_scan(sock):
     x = np.arange(len(all_distances))
     interpolated_distances = np.interp(x, x[finite_vals], all_distances[finite_vals])
     
-    data = np.column_stack((interpolated_distances, angles))
+    data = np.column_stack((interpolated_distances, all_angles))
     np.savetxt("radar.txt", data[-1620:],header="Distances, Angles", comments='', fmt='%f')
     
     return interpolated_distances, all_angles
