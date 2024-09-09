@@ -166,7 +166,10 @@ def full_scan(sock):
     finite_vals = np.isfinite(all_distances)
     x = np.arange(len(all_distances))
     interpolated_distances = np.interp(x, x[finite_vals], all_distances[finite_vals])
-
+    
+    data = np.column_stack((interpolated_distances, angles))
+    np.savetxt("radar.txt", data[-1620:],header="Distances, Angles", comments='', fmt='%f')
+    
     return interpolated_distances, all_angles
 
 
@@ -215,17 +218,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
         interpolated_distances, angles = full_scan(sock)
 
         if shared_race_mode.value == 0:
-            data = np.column_stack((interpolated_distances, angles))
-            np.savetxt("radar.txt", data[-1620:],header="Distances, Angles", comments='', fmt='%f')
-
             Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[-1620:])
-            # print(f"#lidar values {len(Glidar_string.strip().split(','))}")
-
-            # with open("lidar_distances.txt", "a") as file:
-            #    file.write(Glidar_string + "\n")
-
-            # Access the shared values GX and GY
-            #print(f"GX: {shared_GX.value}, GY: {shared_GY.value}")
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
