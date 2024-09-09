@@ -214,9 +214,6 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
 
         start_time = time.time()
         distances, angles = full_scan(sock)
-        if len(distances) < 3160:
-            #print("Invalid data received, skipping this iteration")
-            continue
         distances = np.array(distances)
         finite_vals = np.isfinite(distances)
         x = np.arange(len(distances))
@@ -224,9 +221,9 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
 
         if shared_race_mode.value == 0:
             data = np.column_stack((interpolated_distances, angles))
-            np.savetxt("radar.txt", data[1580+200:3159-200],header="Distances, Angles", comments='', fmt='%f')
+            np.savetxt("radar.txt", data[-1620:],header="Distances, Angles", comments='', fmt='%f')
 
-            Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[-1500:])
+            Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[-1620:])
             # print(f"#lidar values {len(Glidar_string.strip().split(','))}")
 
             # with open("lidar_distances.txt", "a") as file:
@@ -243,7 +240,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 # Load the trained model and the scaler
                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-                lidar_input_shape = 1500  # Update based on your data
+                lidar_input_shape = 1620  # Update based on your data
                 color_input_shape = 1280  # Update based on your data
 
                 # Initialize the model
@@ -271,7 +268,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 #time.sleep(2)
                 #set_motor_speed(pca, 13, 0.1)
 
-            ld = interpolated_distances[-1500:]
+            ld = interpolated_distances[-1620:]
             if Gclock_wise:
                 ld = ld[::-1]
             lidar_tensor, color_tensor = preprocess_input(
