@@ -5,6 +5,7 @@ from xmlrpc.client import Error
 import pygame
 import time
 import numpy as np
+from numpy.lib.function_base import interp
 from scipy.ndimage import median_filter
 from scipy.stats import trim_mean
 import cv2
@@ -23,7 +24,8 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 Gclock_wise = False
 #########################################
 FULL_SCAN_INTERVALS = 81
-ANGLE_CORRECTION = 23.0
+ANGLE_CORRECTION = -180.0
+DISTANCE_CORRECTION = -0.10
 
 WRITE_CAMERA_IMAGE = False
 WRITE_CAMERA_MOVIE = False
@@ -155,7 +157,7 @@ def full_scan(sock):
     all_distances = np.array(all_distances)
     all_angles = np.array(all_angles)
     # Ensure all angles are within the 0-360 degree range
-    all_angles = all_angles % 360
+    all_angles = (all_angles % 360) + ANGLE_CORRECTION
     # Find the index of the smallest positive angle
     min_angle_index = np.argmin(all_angles)
     # Rotate both the angles and distances arrays to start from the minimum angle
@@ -163,9 +165,11 @@ def full_scan(sock):
     all_angles = np.roll(all_angles, -min_angle_index)
     #print(f"Start angle: {all_angles[0]:.2f} End angle: {all_angles[-1]:.2f}")
 
+    all_distances[all_distances == 0] = np.inf
     finite_vals = np.isfinite(all_distances)
     x = np.arange(len(all_distances))
     interpolated_distances = np.interp(x, x[finite_vals], all_distances[finite_vals])
+    interpolated_distances += DISTANCE_CORRECTION
     
     data = np.column_stack((interpolated_distances, all_angles))
     np.savetxt("radar.txt", data[-1620:],header="Distances, Angles", comments='', fmt='%f')
@@ -177,25 +181,20 @@ def navigate(sock):
     window_size = 10  # Adjust based on desired robustness
     min_distance = 3.0
     angle = 0.0
-    try:
-        while True:
-            interpolated_distances, angles = full_scan(sock)
-            # Smooth the data using a median filter to reduce noise and outliers
-            valid_distances = median_filter(interpolated_distances[1620 + 300:3240 - 300], size= window_size)
-            # Use the sliding window to compute the local robust minimum distance
-            for i in range(len(valid_distances) - window_size + 1):
-                window = valid_distances[i:i + window_size]
-                # Calculate trimmed mean of the window as a robust measure
-                trimmed_mean_distance = trim_mean(window, proportiontocut=0.1)
-                if trimmed_mean_distance < min_distance:
-                    min_distance = trimmed_mean_distance
-                    min_index = i + window_size // 2  # Center of the window
-                    angle = angles[1620 + 300 + min_index] - 180
-                    #rint(f"Distance to wall: {min_distance:.2f} meters at angle {angle:.2f} degrees")
-                    return  min_distance, angle+ANGLE_CORRECTION
-    except Error as e:
-        print(e)
 
+    interpolated_distances, angles = full_scan(sock)
+    # Smooth the data using a median filter to reduce noise and outliers
+    valid_distances = median_filter(interpolated_distances[-1620:], size= window_size)
+    # Use the sliding window to compute the local robust minimum distance
+    for i in range(len(valid_distances) - window_size + 1):
+        window = valid_distances[i:i + window_size]
+        trimmed_mean_distance = trim_mean(window, proportiontocut=0.1)
+        if 0 < trimmed_mean_distance < min_distance:
+            min_distance = trimmed_mean_distance
+            min_index = i + window_size // 2  # Center of the window
+            angle = angles[-1620 + min_index]
+
+    #print(f"Distance to wall: {min_distance:.2f} meters at angle {angle:.2f} degrees")
     return min_distance, angle
 
 
@@ -626,11 +625,6 @@ def main():
 
     print('Starting scan...')
     start_scan(sock)
-
-    print('Navigating...')
-    while True:
-        distance, angle = navigate(sock)
-        print(f"Distance to wall: {distance:.2f} meters at angle {angle:.2f} degrees")
 
     # Camera setup
     picam0 = Picamera2(camera_num=0)

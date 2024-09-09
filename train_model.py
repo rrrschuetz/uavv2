@@ -15,8 +15,8 @@ data_raw = pd.read_csv("./data_file.txt", header=None)
 
 # Extract x, y, lidar, red, and green values
 x_y = data_raw.iloc[:, :2].values
-lidar_data = data_raw.iloc[:, 2:1502].values  # Adjust this based on your actual data range
-color_data = data_raw.iloc[:, 1502:2782].values  # Adjust based on actual data range
+lidar_data = data_raw.iloc[:, 2:1622].values  # Adjust this based on your actual data range
+color_data = data_raw.iloc[:, 1622:2902].values  # Adjust based on actual data range
 
 # Apply reciprocal transformation to LIDAR data
 lidar_data = apply_reciprocal(lidar_data)
