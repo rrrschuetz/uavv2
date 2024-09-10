@@ -291,10 +291,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
 
         elif shared_race_mode.value == 2:
-            set_motor_speed(pca, 13, MOTOR_BASIS)
-            set_servo_angle(pca, 12, SERVO_BASIS)
-            position = navigate(sock)
-            print(f"Minimal distance {position['min_distance']:.2f}")
+            pass
 
         frame_time = time.time() - start_time
         fps_list.append(1.0 / frame_time)
@@ -640,6 +637,10 @@ def main():
 
     print('Starting scan...')
     start_scan(sock)
+    position = navigate(sock)
+    print(f"Minimal distance {position['min_distance']:.2f}")
+    print(f"Minimal angle {position['min_angle']:.2f}")
+    print(f"Front distance {position['front_distance']:.2f}")
 
     # Camera setup
     picam0 = Picamera2(camera_num=0)
@@ -678,8 +679,9 @@ def main():
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
 
-        distance, angle = navigate(sock)
-        print(f"Distance to wall: {distance:.2f} meters at angle {angle:.2f} degrees")
+        position = navigate(sock)
+        print(f"Minimal distance {position['min_distance']:.2f}")
+        print(f"Minimal angle {position['min_angle']:.2f}")
         print("Parking completed, stopping the vehicle")
 
     except KeyboardInterrupt:
