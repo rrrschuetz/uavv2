@@ -203,8 +203,8 @@ def navigate(sock):
             min_angle = angles[min_index]
     #print(f"Distance to wall: {min_distance:.2f} meters at angle {min_angle:.2f} degrees")
     
-    front_distance = np.mean(trimmed_mean_distance[LIDAR_LEN//2-window//2:LIDAR_LEN//2+window//2])
-    
+    front_distance = trim_mean(valid_distances[LIDAR_LEN//2-window//2:LIDAR_LEN//2+window//2])
+
     return {
         "min_distance": min_distance,
         "min_angle": min_angle,
