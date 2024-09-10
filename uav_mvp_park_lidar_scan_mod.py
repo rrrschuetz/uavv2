@@ -164,7 +164,7 @@ def full_scan(sock):
     min_angle_index = np.argmin(all_angles)
     # Rotate both the angles and distances arrays to start from the minimum angle
     all_distances = np.roll(all_distances, -min_angle_index)
-    all_distances.reverse()
+    all_distances = all_distances[::-1]
     all_angles = np.roll(all_angles, -min_angle_index)
     #print(f"Start angle: {all_angles[0]:.2f} End angle: {all_angles[-1]:.2f}")
 
@@ -194,7 +194,7 @@ def navigate(sock):
     valid_distances = median_filter(interpolated_distances[:LIDAR_LEN], size= window_size)
     
     # Use the sliding window to compute the local robust minimum distance
-    for i in range(LIDAR_LEN) - window_size + 1):
+    for i in range(LIDAR_LEN - window_size + 1):
         window = valid_distances[i:i + window_size]
         trimmed_mean_distance = trim_mean(window, proportiontocut=0.1)
         if 0 < trimmed_mean_distance < min_distance:
@@ -203,7 +203,7 @@ def navigate(sock):
             min_angle = angles[min_index]
     #print(f"Distance to wall: {min_distance:.2f} meters at angle {min_angle:.2f} degrees")
     
-    front_distance = np.mean(trimmed_mean_distance[LIDAR_LEN/2-window/2:LIDAR_LEN/2+window/2])
+    front_distance = np.mean(trimmed_mean_distance[LIDAR_LEN//2-window//2:LIDAR_LEN//2+window//2])
     
     return {
         "min_distance": min_distance,
