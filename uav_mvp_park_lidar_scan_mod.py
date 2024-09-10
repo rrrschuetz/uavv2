@@ -26,7 +26,7 @@ Gclock_wise = False
 LIDAR_LEN = 1620
 COLOR_LEN = 1280
 FULL_SCAN_INTERVALS = 81
-ANGLE_CORRECTION = -180.0
+ANGLE_CORRECTION = 0
 DISTANCE_CORRECTION = -0.10
 
 WRITE_CAMERA_IMAGE = False
@@ -201,9 +201,16 @@ def navigate(sock):
             min_distance = trimmed_mean_distance
             min_index = i + window_size // 2  # Center of the window
             min_angle = angles[min_index]
-    #print(f"Distance to wall: {min_distance:.2f} meters at angle {min_angle:.2f} degrees")
-    
-    front_distance = trim_mean(valid_distances[LIDAR_LEN//2-window//2:LIDAR_LEN//2+window//2])
+        if i < LIDAR_LEN//2:
+            if 0 < trimmed_mean_distance < left_min_distance:
+                left_min_distance = trimmed_mean_distance
+                left_min_angle = angles[i + window_size // 2]
+        else:
+            if 0 < trimmed_mean_distance < right_min_distance:
+                right_min_distance = trimmed_mean_distance
+                right_min_angle = angles[i + window_size // 2]
+
+    front_distance = np.mean(valid_distances[LIDAR_LEN//2-window_size//2:LIDAR_LEN//2+window_size//2])
 
     return {
         "min_distance": min_distance,
@@ -637,9 +644,11 @@ def main():
 
     print('Starting scan...')
     start_scan(sock)
+    time.sleep(10)
     position = navigate(sock)
-    print(f"Minimal distance {position['min_distance']:.2f}")
-    print(f"Minimal angle {position['min_angle']:.2f}")
+    print(f"Minimal distance {position['min_distance']:.2f} at angle {position['min_angle']:.2f}")
+    print(f"Left minimal distance {position['left_min_distance']:.2f} at angle {position['left_min_angle']:.2f}")
+    print(f"Right minimal distance {position['right_min_distance']:.2f} at angle {position['right_min_angle']:.2f}")
     print(f"Front distance {position['front_distance']:.2f}")
 
     # Camera setup
