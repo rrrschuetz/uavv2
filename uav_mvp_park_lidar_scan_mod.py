@@ -180,7 +180,12 @@ def full_scan(sock):
 def navigate(sock):
     window_size = 10  # Adjust based on desired robustness
     min_distance = 3.0
-    angle = 0.0
+    min_angle = 0.0
+    left_min_distance = 3.0
+    left_min_angle = 0.0
+    right_min_distance = 0.0
+    right_min_angle = 0.0
+    front_distance = 0.0
 
     interpolated_distances, angles = full_scan(sock)
     # Smooth the data using a median filter to reduce noise and outliers
@@ -192,11 +197,18 @@ def navigate(sock):
         if 0 < trimmed_mean_distance < min_distance:
             min_distance = trimmed_mean_distance
             min_index = i + window_size // 2  # Center of the window
-            angle = angles[-1620 + min_index]
+            min_angle = angles[-1620 + min_index]
 
-    #print(f"Distance to wall: {min_distance:.2f} meters at angle {angle:.2f} degrees")
-    return min_distance, angle
-
+    #print(f"Distance to wall: {min_distance:.2f} meters at angle {min_angle:.2f} degrees")
+    return {
+        "min_distance": min_distance,
+        "min_angle": min_angle,
+        "left_min_distance": left_min_distance,
+        "left_min_angle": left_min_angle,
+        "right_min_distance": right_min_distance,
+        "right_min_angle": right_min_angle,
+        "front_distance": front_distance
+    }
 
 def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     global Glidar_string, Gcolor_string
