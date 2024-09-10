@@ -23,6 +23,8 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 #########################################
 Gclock_wise = False
 #########################################
+LIDAR_LEN = 1620
+COLOR_LEN = 1280
 FULL_SCAN_INTERVALS = 81
 ANGLE_CORRECTION = -180.0
 DISTANCE_CORRECTION = -0.10
@@ -38,8 +40,8 @@ MOTOR_BASIS = 0.1
 BLUE_LINE_PARKING_COUNT = 2
 
 Glidar_string = ""
-Gcolor_string = ",".join(["0"] * 1280)
-Gx_coords = np.zeros(1280, dtype=float)
+Gcolor_string = ",".join(["0"] * COLOR_LEN)
+Gx_coords = np.zeros(COLOR_LEN, dtype=float)
 
 # Servo functions
 def set_servo_angle(pca, channel, angle):
@@ -162,6 +164,7 @@ def full_scan(sock):
     min_angle_index = np.argmin(all_angles)
     # Rotate both the angles and distances arrays to start from the minimum angle
     all_distances = np.roll(all_distances, -min_angle_index)
+    all_distances.reverse()
     all_angles = np.roll(all_angles, -min_angle_index)
     #print(f"Start angle: {all_angles[0]:.2f} End angle: {all_angles[-1]:.2f}")
 
@@ -172,7 +175,7 @@ def full_scan(sock):
     interpolated_distances += DISTANCE_CORRECTION
     
     data = np.column_stack((interpolated_distances, all_angles))
-    np.savetxt("radar.txt", data[-1620:],header="Distances, Angles", comments='', fmt='%f')
+    np.savetxt("radar.txt", data[:LIDAR_LEN],header="Distances, Angles", comments='', fmt='%f')
     
     return interpolated_distances, all_angles
 
@@ -185,21 +188,23 @@ def navigate(sock):
     left_min_angle = 0.0
     right_min_distance = 0.0
     right_min_angle = 0.0
-    front_distance = 0.0
 
     interpolated_distances, angles = full_scan(sock)
     # Smooth the data using a median filter to reduce noise and outliers
-    valid_distances = median_filter(interpolated_distances[-1620:], size= window_size)
+    valid_distances = median_filter(interpolated_distances[:LIDAR_LEN], size= window_size)
+    
     # Use the sliding window to compute the local robust minimum distance
-    for i in range(len(valid_distances) - window_size + 1):
+    for i in range(LIDAR_LEN) - window_size + 1):
         window = valid_distances[i:i + window_size]
         trimmed_mean_distance = trim_mean(window, proportiontocut=0.1)
         if 0 < trimmed_mean_distance < min_distance:
             min_distance = trimmed_mean_distance
             min_index = i + window_size // 2  # Center of the window
-            min_angle = angles[-1620 + min_index]
-
+            min_angle = angles[min_index]
     #print(f"Distance to wall: {min_distance:.2f} meters at angle {min_angle:.2f} degrees")
+    
+    front_distance = np.mean(trimmed_mean_distance[LIDAR_LEN/2-window/2:LIDAR_LEN/2+window/2])
+    
     return {
         "min_distance": min_distance,
         "min_angle": min_angle,
@@ -229,7 +234,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
         interpolated_distances, angles = full_scan(sock)
 
         if shared_race_mode.value == 0:
-            Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[-1620:])
+            Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[:LIDAR_LEN])
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
@@ -239,11 +244,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 # Load the trained model and the scaler
                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-                lidar_input_shape = 1620  # Update based on your data
-                color_input_shape = 1280  # Update based on your data
-
                 # Initialize the model
-                model = CNNModel(lidar_input_shape, color_input_shape).to(device)
+                model = CNNModel(LIDAR_LEN,COLOR_LEN).to(device)
 
                 # Load the trained weights into the model
                 state_dict = torch.load('./model.pth', map_location=torch.device('cpu'))
@@ -267,7 +269,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 #time.sleep(2)
                 #set_motor_speed(pca, 13, 0.1)
 
-            ld = interpolated_distances[-1620:]
+            ld = interpolated_distances[:LIDAR_LEN]
             if Gclock_wise:
                 ld = ld[::-1]
             lidar_tensor, color_tensor = preprocess_input(
@@ -289,9 +291,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
 
         elif shared_race_mode.value == 2:
-            #set_motor_speed(pca, 13, MOTOR_BASIS)
-            #set_servo_angle(pca, 12, SERVO_BASIS)
-            pass
+            set_motor_speed(pca, 13, MOTOR_BASIS)
+            set_servo_angle(pca, 12, SERVO_BASIS)
+            position = navigate(sock)
+            print(f"Minimal distance {position['min_distance']:.2f}")
 
         frame_time = time.time() - start_time
         fps_list.append(1.0 / frame_time)
