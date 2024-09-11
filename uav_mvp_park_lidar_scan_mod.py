@@ -705,10 +705,20 @@ def main():
         #xbox_controller_process_instance.join()
         print("All processes have started")
 
+        shared_race_mode.value = 2
+        
         while shared_race_mode.value != 2:
             time.sleep(0.1)
             #print(f"Race mode: {shared_race_mode.value}")
 
+        align_parallel(sock)
+        while True:
+            position = navigate(sock)
+            if position['front_distance'] < 100: break 
+        align_orthogonal(sock)
+        while True:
+            position = navigate(sock)
+            if position['front_distance'] < 5: break 
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
 
