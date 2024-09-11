@@ -615,15 +615,23 @@ def align_parallel(sock):
         position = navigate(sock)
         angle_gap = position['right_min_angle']-position['left_min_angle']
         distance_sum = position['right_min_distance']+position['left_min_distance']
-        if angle_gap > 170 and distance_sum < 70:
-            break
-    print("Car aligned")
+        if angle_gap > 170 and distance_sum < 70: break
+        steer = 0.0
+        drive = 0.2
+        if position['left_min_angle'] > 10: steer = 0.5
+        if position['right_min_angle'] < 170: steer = -0.5
+        set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
+        set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
+    print(f"Car aligned: angle {angle_gap:.2f} distance {distance_sum:.2f}")
             
 def align_orthogonal(sock):
     while True:
         position = navigate(sock)
-        if abs(position['min_angle']-90) < 5:
-            break
+        if abs(position['min_angle']-90) < 5: break
+        steer = 0.5 ? if position['min_angle'] < 90 else -0.5 
+        drive = 0.2
+        set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
+        set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
     print(f"Car aligned: {position['min_angle']:.2f} degrees"
 
           
