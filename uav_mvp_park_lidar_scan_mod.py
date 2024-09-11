@@ -610,7 +610,23 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
 
         time.sleep(1 / 30)
 
+def align_parallel(sock):
+    while True:
+        position = navigate(sock)
+        angle_gap = position['right_min_angle']-position['left_min_angle']
+        distance_sum = position['right_min_distance']+position['left_min_distance']
+        if angle_gap > 170 and distance_sum < 70:
+            break
+    print("Car aligned")
+            
+def align_orthogonal(sock):
+    while True:
+        position = navigate(sock)
+        if abs(position['min_angle']-90) < 5:
+            break
+    print(f"Car aligned: {position['min_angle']:.2f} degrees"
 
+          
 def main():
     print("Starting the UAV program...")
     # Create shared variables
