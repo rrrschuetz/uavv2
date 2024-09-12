@@ -586,6 +586,10 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                     print("Race started")
                     shared_race_mode.value = 1
                     shared_blue_line_count.value = 0
+                elif event.button == 1:  # B button
+                    print("STOP")
+                    set_motor_speed(pca, 13, MOTOR_BASIS)
+                    set_servo_angle(pca, 12, SERVO_BASIS)
                 elif event.button == 3:  # X button
                     print("Race stopped")
                     shared_race_mode.value = 0
@@ -616,14 +620,14 @@ def align_parallel(pca, sock):
         print(f"Left min distance {position['left_min_distance']:.2f} at angle {position['left_min_angle']:.2f}")
         print(f"Right min distance {position['right_min_distance']:.2f} at angle {position['right_min_angle']:.2f}")
 
-        if angle_gap > 170 and distance_sum < 92: break
+        #if angle_gap > 170 and distance_sum < 92: break
         steer = 0.0
-        drive = -0.0
+        drive = -0.6
         if position['left_min_angle'] > 10: steer = 0.8
         if position['right_min_angle'] < 170: steer = -0.8
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-        time.sleep(0.1)
+        time.sleep(0.2)
     print(f"Car aligned: angle {angle_gap:.2f} distance {distance_sum:.2f}")
             
 def align_orthogonal(pca, sock):
@@ -634,7 +638,7 @@ def align_orthogonal(pca, sock):
         drive = 0.2
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-        time.sleep(0.1)
+        time.sleep(0.2)
     print(f"Car aligned: {position['min_angle']:.2f} degrees")
 
           
