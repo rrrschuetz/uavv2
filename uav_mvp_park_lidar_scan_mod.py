@@ -233,10 +233,6 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     fps_list = deque(maxlen=10)
     while True:
 
-        if shared_race_mode.value == 2:
-            time.sleep(1)
-            continue
-
         start_time = time.time()
         interpolated_distances, angles = full_scan(sock)
 
