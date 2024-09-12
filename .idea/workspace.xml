@@ -132,14 +132,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00123" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1724704955191</created>
-      <option name="number" value="00123" />
-      <option name="presentableId" value="LOCAL-00123" />
-      <option name="project" value="LOCAL" />
-      <updated>1724704955191</updated>
-    </task>
     <task id="LOCAL-00124" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
       <created>1724708657368</created>
@@ -524,7 +516,15 @@
       <option name="project" value="LOCAL" />
       <updated>1726008749093</updated>
     </task>
-    <option name="localTasksCounter" value="172" />
+    <task id="LOCAL-00172" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1726011281946</created>
+      <option name="number" value="00172" />
+      <option name="presentableId" value="LOCAL-00172" />
+      <option name="project" value="LOCAL" />
+      <updated>1726011281946</updated>
+    </task>
+    <option name="localTasksCounter" value="173" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">

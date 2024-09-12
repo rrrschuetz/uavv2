@@ -186,7 +186,7 @@ def navigate(sock):
     min_angle = 0.0
     left_min_distance = 3.0
     left_min_angle = 0.0
-    right_min_distance = 0.0
+    right_min_distance = 3.0
     right_min_angle = 0.0
 
     interpolated_distances, angles = full_scan(sock)
@@ -610,29 +610,34 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
 
         time.sleep(1 / 30)
 
-def align_parallel(sock):
+def align_parallel(pca, sock):
     while True:
         position = navigate(sock)
         angle_gap = position['right_min_angle']-position['left_min_angle']
         distance_sum = position['right_min_distance']+position['left_min_distance']
+
+        print(f"Car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
+        print(f"Left min distance {position['left_min_distance']:.2f} at angle {position['left_min_angle']:.2f}")
+        print(f"Right min distance {position['right_min_distance']:.2f} at angle {position['right_min_angle']:.2f}")
+
         if angle_gap > 170 and distance_sum < 70: break
         steer = 0.0
-        drive = 0.2
+        drive = -0.0
         if position['left_min_angle'] > 10: steer = 0.5
         if position['right_min_angle'] < 170: steer = -0.5
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
     print(f"Car aligned: angle {angle_gap:.2f} distance {distance_sum:.2f}")
             
-def align_orthogonal(sock):
+def align_orthogonal(pca, sock):
     while True:
         position = navigate(sock)
         if abs(position['min_angle']-90) < 5: break
-        steer = 0.5 ? if position['min_angle'] < 90 else -0.5 
+        steer = 0.5 if position['min_angle'] < 90 else -0.5
         drive = 0.2
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-    print(f"Car aligned: {position['min_angle']:.2f} degrees"
+    print(f"Car aligned: {position['min_angle']:.2f} degrees")
 
           
 def main():
@@ -668,7 +673,6 @@ def main():
 
     print('Starting scan...')
     start_scan(sock)
-    time.sleep(10)
     position = navigate(sock)
     print(f"Minimal distance {position['min_distance']:.2f} at angle {position['min_angle']:.2f}")
     print(f"Left minimal distance {position['left_min_distance']:.2f} at angle {position['left_min_angle']:.2f}")
@@ -711,11 +715,12 @@ def main():
             time.sleep(0.1)
             #print(f"Race mode: {shared_race_mode.value}")
 
-        align_parallel(sock)
+        print("Starting the parking procedure")
+        align_parallel(pca, sock)
         while True:
             position = navigate(sock)
             if position['front_distance'] < 100: break 
-        align_orthogonal(sock)
+        align_orthogonal(pca, sock)
         while True:
             position = navigate(sock)
             if position['front_distance'] < 5: break 
