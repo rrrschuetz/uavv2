@@ -232,16 +232,16 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
 
     fps_list = deque(maxlen=10)
     while True:
-
         start_time = time.time()
-        interpolated_distances, angles = full_scan(sock)
 
         if shared_race_mode.value == 0:
+            interpolated_distances, angles = full_scan(sock)
             Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[:LIDAR_LEN])
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
         elif shared_race_mode.value == 1:
+            interpolated_distances, angles = full_scan(sock)
 
             if model is None:
                 # Load the trained model and the scaler
@@ -294,7 +294,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
 
         elif shared_race_mode.value == 2:
-            pass
+            time.sleep(1)
 
         frame_time = time.time() - start_time
         fps_list.append(1.0 / frame_time)
@@ -616,13 +616,14 @@ def align_parallel(pca, sock):
         print(f"Left min distance {position['left_min_distance']:.2f} at angle {position['left_min_angle']:.2f}")
         print(f"Right min distance {position['right_min_distance']:.2f} at angle {position['right_min_angle']:.2f}")
 
-        if angle_gap > 170 and distance_sum < 70: break
+        if angle_gap > 170 and distance_sum < 92: break
         steer = 0.0
         drive = -0.0
-        if position['left_min_angle'] > 10: steer = 0.5
-        if position['right_min_angle'] < 170: steer = -0.5
+        if position['left_min_angle'] > 10: steer = 0.8
+        if position['right_min_angle'] < 170: steer = -0.8
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
+        time.sleep(0.1)
     print(f"Car aligned: angle {angle_gap:.2f} distance {distance_sum:.2f}")
             
 def align_orthogonal(pca, sock):
@@ -633,6 +634,7 @@ def align_orthogonal(pca, sock):
         drive = 0.2
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
+        time.sleep(0.1)
     print(f"Car aligned: {position['min_angle']:.2f} degrees")
 
           
