@@ -615,11 +615,8 @@ def align_parallel(pca, sock):
         position = navigate(sock)
         angle_gap = position['right_min_angle']-position['left_min_angle']
         distance_sum = position['right_min_distance']+position['left_min_distance']
-
-        print(f"Car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
-        print(f"Left min distance {position['left_min_distance']:.2f} at angle {position['left_min_angle']:.2f}")
-        print(f"Right min distance {position['right_min_distance']:.2f} at angle {position['right_min_angle']:.2f}")
-
+        #print(f"car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
+        print(f"left {position['left_min_angle']:.2f} right {position['right_min_angle']:.2f}")
         #if angle_gap > 170 and distance_sum < 92: break
         steer = 0.0
         drive = -0.6
@@ -641,7 +638,29 @@ def align_orthogonal(pca, sock):
         time.sleep(0.2)
     print(f"Car aligned: {position['min_angle']:.2f} degrees")
 
-          
+def park(pca, sock):
+    while True:
+        position = navigate(sock)
+        print(f"left {position['left_min_angle']:.2f} right {position['right_min_angle']:.2f}")
+        time.sleep(0.2)
+
+    align_parallel(pca, sock)
+    while True:
+        position = navigate(sock)
+        if position['front_distance'] < 100: break
+    align_orthogonal(pca, sock)
+    while True:
+        position = navigate(sock)
+        if position['front_distance'] < 5: break
+    set_motor_speed(pca, 13, MOTOR_BASIS)
+    set_servo_angle(pca, 12, SERVO_BASIS)
+
+    position = navigate(sock)
+    print(f"Minimal distance {position['min_distance']:.2f}")
+    print(f"Minimal angle {position['min_angle']:.2f}")
+    print("Parking completed, stopping the vehicle")
+
+
 def main():
     print("Starting the UAV program...")
     # Create shared variables
@@ -681,6 +700,9 @@ def main():
     print(f"Right minimal distance {position['right_min_distance']:.2f} at angle {position['right_min_angle']:.2f}")
     print(f"Front distance {position['front_distance']:.2f}")
 
+    park(pca, sock)
+    return
+
     # Camera setup
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
@@ -704,12 +726,12 @@ def main():
     lidar_thread_instance.start()
     camera_thread_instance.start()
     xbox_controller_process_instance.start()
+    print("All processes have started")
 
     try:
         #lidar_thread_instance.join()
         #camera_thread_instance.join()
         #xbox_controller_process_instance.join()
-        print("All processes have started")
 
         shared_race_mode.value = 2
         
@@ -718,21 +740,7 @@ def main():
             #print(f"Race mode: {shared_race_mode.value}")
 
         print("Starting the parking procedure")
-        align_parallel(pca, sock)
-        while True:
-            position = navigate(sock)
-            if position['front_distance'] < 100: break 
-        align_orthogonal(pca, sock)
-        while True:
-            position = navigate(sock)
-            if position['front_distance'] < 5: break 
-        set_motor_speed(pca, 13, MOTOR_BASIS)
-        set_servo_angle(pca, 12, SERVO_BASIS)
-
-        position = navigate(sock)
-        print(f"Minimal distance {position['min_distance']:.2f}")
-        print(f"Minimal angle {position['min_angle']:.2f}")
-        print("Parking completed, stopping the vehicle")
+        park(pca, sock)
 
     except KeyboardInterrupt:
         picam0.stop()
