@@ -133,7 +133,7 @@ def decode_dense_mode_packet(packet):
             raise ValueError(f"Packet is too short for expected data: index {index}")
         distance = (packet[index] | (packet[index + 1] << 8))
         distance /= 1000.0  # Convert from millimeters to meters
-        angle = start_angle + i * 4.6 / 40.0
+        angle = start_angle + i * 360 / FULL_SCAN_INTERVALS / 40.0
 
         distances.append(distance)
         angles.append(angle)
