@@ -173,21 +173,24 @@ def full_scan(sock):
     sorted_angles = all_angles[sorted_indices]
     sorted_distances = all_distances[sorted_indices]
 
-    # Remove duplicate angles by keeping only the last occurrence of each unique angle
-    # np.unique returns the unique sorted array and the index of the last occurrence
-    unique_angles, unique_indices = np.unique(sorted_angles, return_index=False, return_inverse=False,
-                                              return_counts=False, axis=0)
+    # Reverse arrays to ensure the last occurrence of duplicates is kept
+    reversed_angles = sorted_angles[::-1]
+    reversed_distances = sorted_distances[::-1]
 
-    # Select distances corresponding to the last occurrence of each unique angle
-    deduplicated_distances = sorted_distances[np.searchsorted(sorted_angles, unique_angles)]
+    # Get unique angles and indices of the last occurrence by reversing
+    unique_angles, unique_indices = np.unique(reversed_angles, return_index=True)
+
+    # Re-reverse the distances and angles to maintain the original order
+    unique_angles = unique_angles[::-1]
+    unique_distances = reversed_distances[unique_indices][::-1]
 
     # Replace zero distance values with np.inf for interpolation purposes
-    deduplicated_distances[deduplicated_distances == 0] = np.inf
+    unique_distances[unique_distances == 0] = np.inf
 
     # Interpolate missing or infinite distances
-    finite_vals = np.isfinite(deduplicated_distances)
-    x = np.arange(len(deduplicated_distances))
-    interpolated_distances = np.interp(x, x[finite_vals], deduplicated_distances[finite_vals])
+    finite_vals = np.isfinite(unique_distances)
+    x = np.arange(len(unique_distances))
+    interpolated_distances = np.interp(x, x[finite_vals], unique_distances[finite_vals])
 
     # Apply distance correction if necessary
     interpolated_distances += DISTANCE_CORRECTION
