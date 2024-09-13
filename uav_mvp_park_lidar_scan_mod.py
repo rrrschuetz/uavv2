@@ -26,7 +26,7 @@ Gclock_wise = False
 LIDAR_LEN = 1620
 COLOR_LEN = 1280
 FULL_SCAN_INTERVALS = 81
-ANGLE_CORRECTION = -180
+ANGLE_CORRECTION = 0
 DISTANCE_CORRECTION = -0.10
 
 WRITE_CAMERA_IMAGE = False
@@ -197,6 +197,7 @@ def full_scan(sock):
     data = np.column_stack((interpolated_distances, unique_angles))
     np.savetxt("radar.txt", data[:LIDAR_LEN], header="Distances, Angles", comments='', fmt='%f')
 
+    print(f"unique_angles start: {unique_angles[0]}")
     return interpolated_distances, unique_angles
 
 
