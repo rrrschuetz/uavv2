@@ -149,35 +149,54 @@ def full_scan(sock):
     all_distances = []
     all_angles = []
 
+    # Collect data from multiple intervals
     for i in range(FULL_SCAN_INTERVALS):
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data)
-        all_distances.extend(decoded_data['distances'])
-        all_angles.extend(decoded_data['angles'])
+        print(f"Start angle: {decoded_data['start_angle']:.2f} End angle: {decoded_data['angles'][-1]:.2f}")
 
-    # Convert the lists to numpy arrays for easier manipulation
+        distances = decoded_data['distances']
+        angles = decoded_data['angles']
+
+        all_distances.extend(distances)
+        all_angles.extend(angles)
+
+    # Convert lists to numpy arrays for easier manipulation
     all_distances = np.array(all_distances)
     all_angles = np.array(all_angles)
-    # Ensure all angles are within the 0-360 degree range
-    all_angles = (all_angles % 360) + ANGLE_CORRECTION
-    # Find the index of the smallest positive angle
-    min_angle_index = np.argmin(all_angles)
-    # Rotate both the angles and distances arrays to start from the minimum angle
-    all_distances = np.roll(all_distances, -min_angle_index)
-    all_distances = all_distances[::-1]
-    all_angles = np.roll(all_angles, -min_angle_index)
-    #print(f"Start angle: {all_angles[0]:.2f} End angle: {all_angles[-1]:.2f}")
 
-    all_distances[all_distances == 0] = np.inf
-    finite_vals = np.isfinite(all_distances)
-    x = np.arange(len(all_distances))
-    interpolated_distances = np.interp(x, x[finite_vals], all_distances[finite_vals])
+    # Ensure all angles are within the 0-360 degree range and apply correction if necessary
+    all_angles = (all_angles % 360) + ANGLE_CORRECTION
+
+    # Sort angles and distances by the angles
+    sorted_indices = np.argsort(all_angles)
+    sorted_angles = all_angles[sorted_indices]
+    sorted_distances = all_distances[sorted_indices]
+
+    # Remove duplicate angles by keeping only the last occurrence of each unique angle
+    # np.unique returns the unique sorted array and the index of the last occurrence
+    unique_angles, unique_indices = np.unique(sorted_angles, return_index=False, return_inverse=False,
+                                              return_counts=False, axis=0)
+
+    # Select distances corresponding to the last occurrence of each unique angle
+    deduplicated_distances = sorted_distances[np.searchsorted(sorted_angles, unique_angles)]
+
+    # Replace zero distance values with np.inf for interpolation purposes
+    deduplicated_distances[deduplicated_distances == 0] = np.inf
+
+    # Interpolate missing or infinite distances
+    finite_vals = np.isfinite(deduplicated_distances)
+    x = np.arange(len(deduplicated_distances))
+    interpolated_distances = np.interp(x, x[finite_vals], deduplicated_distances[finite_vals])
+
+    # Apply distance correction if necessary
     interpolated_distances += DISTANCE_CORRECTION
-    
-    data = np.column_stack((interpolated_distances, all_angles))
-    np.savetxt("radar.txt", data[:LIDAR_LEN],header="Distances, Angles", comments='', fmt='%f')
-    
-    return interpolated_distances, all_angles
+
+    # Save the processed and deduplicated data
+    data = np.column_stack((interpolated_distances, unique_angles))
+    np.savetxt("radar.txt", data[:LIDAR_LEN], header="Distances, Angles", comments='', fmt='%f')
+
+    return interpolated_distances, unique_angles
 
 
 def navigate(sock):
