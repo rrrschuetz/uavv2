@@ -26,7 +26,7 @@ Gclock_wise = False
 LIDAR_LEN = 1620
 COLOR_LEN = 1280
 FULL_SCAN_INTERVALS = 81
-ANGLE_CORRECTION = 0
+ANGLE_CORRECTION = -180
 DISTANCE_CORRECTION = -0.10
 
 WRITE_CAMERA_IMAGE = False
@@ -153,11 +153,9 @@ def full_scan(sock):
     for i in range(FULL_SCAN_INTERVALS):
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data)
-        print(f"Start angle: {decoded_data['start_angle']:.2f} End angle: {decoded_data['angles'][-1]:.2f}")
-
+        #print(f"Start angle: {decoded_data['start_angle']:.2f} End angle: {decoded_data['angles'][-1]:.2f}")
         distances = decoded_data['distances']
         angles = decoded_data['angles']
-
         all_distances.extend(distances)
         all_angles.extend(angles)
 
