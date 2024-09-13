@@ -617,7 +617,7 @@ def align_parallel(pca, sock):
         distance_sum = position['right_min_distance']+position['left_min_distance']
         #print(f"car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
         print(f"left {position['left_min_angle']:.2f} right {position['right_min_angle']:.2f}")
-        #if angle_gap > 170 and distance_sum < 92: break
+        if angle_gap > 170 and distance_sum < 70: break
         steer = 0.0
         drive = -0.6
         if position['left_min_angle'] > 10: steer = 0.8
@@ -699,9 +699,6 @@ def main():
     print(f"Left minimal distance {position['left_min_distance']:.2f} at angle {position['left_min_angle']:.2f}")
     print(f"Right minimal distance {position['right_min_distance']:.2f} at angle {position['right_min_angle']:.2f}")
     print(f"Front distance {position['front_distance']:.2f}")
-
-    park(pca, sock)
-    return
 
     # Camera setup
     picam0 = Picamera2(camera_num=0)
