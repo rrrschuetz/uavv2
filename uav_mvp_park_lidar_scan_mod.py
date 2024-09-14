@@ -649,6 +649,7 @@ def align_orthogonal(pca, sock):
         time.sleep(0.2)
     print(f"Car aligned: {position['min_angle']:.2f} degrees")
 
+
 def park(pca, sock):
     align_parallel(pca, sock)
     while True:
