@@ -1,11 +1,8 @@
 import socket
 import struct
-from xmlrpc.client import Error
-
 import pygame
 import time
 import numpy as np
-from numpy.lib.function_base import interp
 from scipy.ndimage import median_filter
 from scipy.stats import trim_mean
 import cv2
@@ -17,8 +14,6 @@ from adafruit_pca9685 import PCA9685
 from board import SCL, SDA
 import busio
 import torch
-from sympy.codegen import Print
-
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
@@ -27,7 +22,6 @@ Gclock_wise = False
 #########################################
 LIDAR_LEN = 1620
 COLOR_LEN = 1280
-FULL_SCAN_INTERVALS = 81
 ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
 
@@ -35,9 +29,12 @@ WRITE_CAMERA_IMAGE = False
 WRITE_CAMERA_MOVIE = False
 
 SERVO_FACTOR = 0.4
-SERVO_BASIS = 0.6
+SERVO_BASIS = 0.55
 MOTOR_FACTOR = 0.3
 MOTOR_BASIS = 0.1
+
+PARK_SPEED = -0.5
+PARK_STEER = 0.8
 
 BLUE_LINE_PARKING_COUNT = 2
 
@@ -135,7 +132,7 @@ def decode_dense_mode_packet(packet):
             raise ValueError(f"Packet is too short for expected data: index {index}")
         distance = (packet[index] | (packet[index + 1] << 8))
         distance /= 1000.0  # Convert from millimeters to meters
-        angle = start_angle + i * 360 / FULL_SCAN_INTERVALS / 40.0
+        angle = start_angle + i * 360 / 81 / 40.0
 
         distances.append(distance)
         angles.append(angle)
@@ -196,7 +193,7 @@ def full_scan(sock):
 
 
 def navigate(sock):
-    window_size = 10  # Adjust based on desired robustness
+    window_size = 10 # Adjust based on desired robustness
     min_distance = 3.0
     min_angle = 0.0
     left_min_distance = 3.0
@@ -612,6 +609,9 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                     shared_race_mode.value = 0
                     set_motor_speed(pca, 13, MOTOR_BASIS)
                     set_servo_angle(pca, 12, SERVO_BASIS)
+                elif event.button == 4:  # Y button
+                    print("Parking initiated")
+                    shared_race_mode.value = 2
 
             elif event.type == pygame.JOYBUTTONUP:
                 print(f"JOYBUTTONUP: button={event.button}")
@@ -627,44 +627,57 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
 
         time.sleep(1 / 30)
 
-def align_parallel(pca, sock):
+def align_parallel(pca, sock, stop_distance=1.0):
     while True:
         position = navigate(sock)
         angle_gap = position['right_min_angle']-position['left_min_angle']
         distance_sum = position['right_min_distance']+position['left_min_distance']
         #print(f"car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
         #print(f"left {position['left_min_angle']:.2f} right {position['right_min_angle']:.2f}")
-        if angle_gap > 170 and distance_sum < 0.8: break
+        if angle_gap > 170 and distance_sum < 0.8 and position['front_distance'] <= stop_distance: break
         steer = 0.0
-        drive = -0.6
-        if position['left_min_angle'] > 10: steer = 0.8
-        if position['right_min_angle'] < 170: steer = -0.8
+        drive = PARK_SPEED
+        if 80 > position['left_min_angle'] > 10:
+            #print("Steer left")
+            steer = -PARK_STEER
+        if 100 < position['right_min_angle'] < 170:
+            #print("Steer right")
+            steer = PARK_STEER
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-        time.sleep(0.2)
-    print(f"Car aligned: angle {angle_gap:.2f} distance {distance_sum:.2f}")
+    set_servo_angle(pca, 12, SERVO_BASIS)
+    print(f"Car aligned: angle_gap {angle_gap:.2f} distance_sum {distance_sum:.2f} front distance {front_distance:.2f}" )
             
 def align_orthogonal(pca, sock):
     while True:
         position = navigate(sock)
-        if abs(position['min_angle']-90) < 5: break
-        steer = 0.5 if position['min_angle'] < 90 else -0.5
-        drive = 0.2
+        print(f"Minimal distance {position['min_angle']:.2f}")
+        if abs(position['min_angle']-90) < 10: break
+        steer = PARK_STEER if position['min_angle'] < 90 else -PARK_STEER
+        drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-        time.sleep(0.2)
+    set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car aligned: {position['min_angle']:.2f} degrees")
 
 
 def park(pca, sock):
+    drive = PARK_SPEED
+    steer = -PARK_STEER if Gclock_wise else PARK_STEER
+
     align_parallel(pca, sock)
-    while True:
-        position = navigate(sock)
-        if position['front_distance'] < 100: break
+
+    set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
+    set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
+    time.sleep(0.5)
+
     align_orthogonal(pca, sock)
     while True:
+        set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         position = navigate(sock)
-        if position['front_distance'] < 5: break
+        print(f"front distance {position['front_distance']:.2f}")
+        if position['front_distance'] < 0.10: break
+
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
@@ -739,18 +752,18 @@ def main():
     print("All processes have started")
 
     try:
-        #lidar_thread_instance.join()
-        #camera_thread_instance.join()
-        #xbox_controller_process_instance.join()
+        while True:
+            #lidar_thread_instance.join()
+            #camera_thread_instance.join()
+            #xbox_controller_process_instance.join()
 
-        shared_race_mode.value = 2
-        
-        while shared_race_mode.value != 2:
-            time.sleep(0.1)
-            #print(f"Race mode: {shared_race_mode.value}")
+            while shared_race_mode.value != 2:
+                time.sleep(0.1)
+                #print(f"Race mode: {shared_race_mode.value}")
 
-        print("Starting the parking procedure")
-        park(pca, sock)
+            print("Starting the parking procedure")
+            park(pca, sock)
+            shared_race_mode.value = 0
 
     except KeyboardInterrupt:
         picam0.stop()
