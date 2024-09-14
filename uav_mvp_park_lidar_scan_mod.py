@@ -18,7 +18,7 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gclock_wise = True
+Gclock_wise = False
 #########################################
 LIDAR_LEN = 1620
 COLOR_LEN = 1280
