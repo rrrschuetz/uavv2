@@ -36,7 +36,7 @@ MOTOR_BASIS = 0.1
 PARK_SPEED = -0.6
 PARK_STEER = 1.2
 
-BLUE_LINE_PARKING_COUNT = 8
+BLUE_LINE_PARKING_COUNT = 4
 
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
@@ -47,14 +47,20 @@ def set_servo_angle(pca, channel, angle):
     pulse_min = 260  # Pulse width for 0 degrees
     pulse_max = 380  # Pulse width for 180 degrees
     pulse_width = pulse_min + angle * (pulse_max - pulse_min)
-    pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
+    try:
+        pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
+    except ValueError:
+        print("Invalid angle value: ", angle)
 
 # ESC functions
 def set_motor_speed(pca, channel, speed):
     pulse_min = 310  # Pulse width for 0% speed
     pulse_max = 409  # Pulse width for 100% speed
     pulse_width = pulse_min + speed * (pulse_max - pulse_min)
-    pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
+    try:
+        pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
+    except ValueError:
+        print("Invalid speed value: ", speed)
 
 def arm_esc(pca, channel):
     print("Arming ESC...")
@@ -303,10 +309,13 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 #print("Steering Commands:", steering_commands)
                 X = steering_commands[0, 0]  # Extract GX (first element of the output)
                 Y = steering_commands[0, 1]  # Extract GY (second element of the output)
-                if Gclock_wise:
-                    X = -X
-                set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
-                set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
+                if -1.0 < X < 1.0 and 0.0 < Y < 1.0:
+                    if Gclock_wise:
+                        X = -X
+                    set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
+                    set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
+                else:
+                    print("Invalid steering commands:", X, Y)
 
         elif shared_race_mode.value == 2:
             time.sleep(1)
@@ -531,7 +540,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
 
             if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
                 shared_race_mode.value = 2
-                print("Parking initiated")
+                print(f"Parking initiated: Blue line count: {shared_blue_line_count.value}")
 
             # Save the image with labeled contours
             if WRITE_CAMERA_IMAGE:
@@ -636,18 +645,18 @@ def align_parallel(pca, sock, stop_distance=1.5):
         angle_gap =  right_angle-left_angle
         distance_sum = position['right_min_distance']+position['left_min_distance']
         front_distance = position['front_distance']
-        print(f"car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
-        print(f"left {left_angle:.2f} right {right_angle:.2f}")
-        print(f"front distance {front_distance:.2f}")
+        #print(f"car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
+        #print(f"left {left_angle:.2f} right {right_angle:.2f}")
+        #print(f"front distance {front_distance:.2f}")
         if angle_gap > 160 and distance_sum < 0.8 and front_distance < stop_distance: break
         steer = 0.0
         drive = PARK_SPEED
         if 80 > left_angle >  10:
             steer = -PARK_STEER*(left_angle)/90
-            print(f"Steer left {steer:.2f}")
+            #print(f"Steer left {steer:.2f}")
         if 100 < right_angle < 170:
             steer = PARK_STEER*(180-right_angle)/90
-            print(f"Steer right {steer:.2f}")
+            #print(f"Steer right {steer:.2f}")
         steer = max(min(steer,1),-1)
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
@@ -682,7 +691,7 @@ def park(pca, sock):
     while True:
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         position = navigate(sock)
-        print(f"front distance {position['front_distance']:.2f}")
+        #print(f"front distance {position['front_distance']:.2f}")
         if position['front_distance'] < 0.10: break
 
     set_motor_speed(pca, 13, MOTOR_BASIS)
