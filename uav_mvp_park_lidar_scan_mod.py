@@ -17,6 +17,8 @@ from adafruit_pca9685 import PCA9685
 from board import SCL, SDA
 import busio
 import torch
+from sympy.codegen import Print
+
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
@@ -148,9 +150,11 @@ def full_scan(sock):
     inf_threshold = 100  # Stop scanning when fewer than 100 np.inf values remain
     final_distances = np.full(LIDAR_LEN*2, np.inf)  # Initialize with np.inf for missing values
     full_angle_range = np.linspace(0, 360, LIDAR_LEN*2, endpoint=False)  # High-resolution angle range
+    angle_0_to_180_indices = (full_angle_range >= 0) & (full_angle_range <= 180)
 
     # Continue scanning until the number of np.inf values is below the threshold
-    while np.sum(np.isinf(final_distances)) > inf_threshold:
+    while np.sum(np.isinf(final_distances[angle_0_to_180_indices])) > inf_threshold:
+
         # Collect data in each iteration (single scan)
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data)
@@ -246,12 +250,14 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
         start_time = time.time()
 
         if shared_race_mode.value == 0:
+            #print("LIDAR in manual mode")
             interpolated_distances, angles = full_scan(sock)
             Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[:LIDAR_LEN])
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
         elif shared_race_mode.value == 1:
+            #print("LIDAR in autonomous mode")
             interpolated_distances, angles = full_scan(sock)
 
             if model is None:
@@ -311,7 +317,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
         fps_list.append(1.0 / frame_time)
 
         moving_avg_fps = sum(fps_list) / len(fps_list)
-        #print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}
+        #print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
 
 # Camera functions
 def gamma_correction(image, gamma=1.5):
