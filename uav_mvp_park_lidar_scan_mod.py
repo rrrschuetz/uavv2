@@ -778,8 +778,13 @@ def main():
                 #print(f"Race mode: {shared_race_mode.value}")
 
             print("Starting the parking procedure")
-            park(pca, sock)
+            #park(pca, sock)
+
             shared_race_mode.value = 0
+            shared_blue_line_count.value = 0
+            set_motor_speed(pca, 13, MOTOR_BASIS)
+            set_servo_angle(pca, 12, SERVO_BASIS)
+            print("Parking completed")
 
     except KeyboardInterrupt:
         picam0.stop()
