@@ -36,7 +36,7 @@ MOTOR_BASIS = 0.1
 PARK_SPEED = -0.6
 PARK_STEER = 1.2
 
-BLUE_LINE_PARKING_COUNT = 2
+BLUE_LINE_PARKING_COUNT = 8
 
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
