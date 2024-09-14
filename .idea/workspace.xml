@@ -132,22 +132,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00136" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1724765370183</created>
-      <option name="number" value="00136" />
-      <option name="presentableId" value="LOCAL-00136" />
-      <option name="project" value="LOCAL" />
-      <updated>1724765370183</updated>
-    </task>
-    <task id="LOCAL-00137" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1724766895788</created>
-      <option name="number" value="00137" />
-      <option name="presentableId" value="LOCAL-00137" />
-      <option name="project" value="LOCAL" />
-      <updated>1724766895788</updated>
-    </task>
     <task id="LOCAL-00138" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
       <created>1724766958847</created>
@@ -524,7 +508,23 @@
       <option name="project" value="LOCAL" />
       <updated>1726272528965</updated>
     </task>
-    <option name="localTasksCounter" value="185" />
+    <task id="LOCAL-00185" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1726273310698</created>
+      <option name="number" value="00185" />
+      <option name="presentableId" value="LOCAL-00185" />
+      <option name="project" value="LOCAL" />
+      <updated>1726273310698</updated>
+    </task>
+    <task id="LOCAL-00186" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1726273402865</created>
+      <option name="number" value="00186" />
+      <option name="presentableId" value="LOCAL-00186" />
+      <option name="project" value="LOCAL" />
+      <updated>1726273402865</updated>
+    </task>
+    <option name="localTasksCounter" value="187" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">

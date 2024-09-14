@@ -627,8 +627,8 @@ def align_parallel(pca, sock):
         angle_gap = position['right_min_angle']-position['left_min_angle']
         distance_sum = position['right_min_distance']+position['left_min_distance']
         #print(f"car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
-        print(f"left {position['left_min_angle']:.2f} right {position['right_min_angle']:.2f}")
-        if angle_gap > 170 and distance_sum < 70: break
+        #print(f"left {position['left_min_angle']:.2f} right {position['right_min_angle']:.2f}")
+        if angle_gap > 170 and distance_sum < 0.8: break
         steer = 0.0
         drive = -0.6
         if position['left_min_angle'] > 10: steer = 0.8
