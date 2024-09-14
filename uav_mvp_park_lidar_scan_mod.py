@@ -144,56 +144,33 @@ def decode_dense_mode_packet(packet):
         "angles": angles
     }
 
-
 def full_scan(sock):
-    duplicate_threshold = 200
-    duplicate_count = 0
-    all_distances = []
-    all_angles = []
+    inf_threshold = 100  # Stop scanning when fewer than 100 np.inf values remain
+    final_distances = np.full(LIDAR_LEN*2, np.inf)  # Initialize with np.inf for missing values
+    full_angle_range = np.linspace(0, 360, LIDAR_LEN*2, endpoint=False)  # High-resolution angle range
 
-    # Collect data from multiple intervals
-    for i in range(FULL_SCAN_INTERVALS):
+    # Continue scanning until the number of np.inf values is below the threshold
+    while np.sum(np.isinf(final_distances)) > inf_threshold:
+        # Collect data in each iteration (single scan)
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data)
-        distances = decoded_data['distances']
-        angles = decoded_data['angles']
-        all_distances.extend(distances)
-        all_angles.extend(angles)
+        distances = np.array(decoded_data['distances'])
+        angles = np.array(decoded_data['angles'])
 
-    # Convert lists to numpy arrays for easier manipulation
-    all_distances = np.array(all_distances)
-    all_angles = np.array(all_angles)
+        # Ensure all angles are within the 0-360 degree range and apply angle correction if necessary
+        angles = (angles + ANGLE_CORRECTION) % 360
 
-    # Ensure all angles are within the 0-360 degree range and apply angle correction if necessary
-    all_angles = (all_angles + ANGLE_CORRECTION) % 360
+        # Sort all angles and distances based on the sorted angles
+        sorted_indices = np.argsort(angles)
+        sorted_angles = angles[sorted_indices]
+        sorted_distances = distances[sorted_indices]
 
-    # Define the full resolution angle array (from 0 to 360 with 3240 values)
-    full_angle_range = np.linspace(0, 360, LIDAR_LEN*2, endpoint=False)
-
-    # Initialize the final distances array with np.inf for missing values
-    final_distances = np.full_like(full_angle_range, np.inf, dtype=float)
-
-    # Sort all angles and distances based on the sorted angles
-    sorted_indices = np.argsort(all_angles)
-    sorted_angles = all_angles[sorted_indices]
-    sorted_distances = all_distances[sorted_indices]
-
-    # Update final_distances with the latest distance for each unique angle in full resolution
-    seen_angles = set()
-    for angle, distance in zip(sorted_angles, sorted_distances):
-        # Find the closest index in the full resolution angle array
-        index = np.searchsorted(full_angle_range, angle, side='left')
-        if index < len(final_distances):
-            # Check if the angle has already been seen
-            if index in seen_angles:
-                duplicate_count += 1
-            seen_angles.add(index)
-            final_distances[index] = distance  # Update the distance at the correct index
-
-    # Check if the number of duplicates exceeds the threshold
-    if duplicate_count > duplicate_threshold:
-        print(f"Scan invalid due to too many duplicates: {duplicate_count} duplicates found.")
-        return None, None # Return None values if the scan is invalid
+        # Update final_distances with the latest distance for each unique angle in full resolution
+        for angle, distance in zip(sorted_angles, sorted_distances):
+            # Find the closest index in the full resolution angle array
+            index = np.searchsorted(full_angle_range, angle, side='left')
+            if index < len(final_distances):
+                final_distances[index] = distance  # Update the distance at the correct index
 
     # Replace zero distance values with np.inf (if zero means missing data)
     final_distances[final_distances == 0] = np.inf
@@ -223,9 +200,7 @@ def navigate(sock):
     right_min_distance = 3.0
     right_min_angle = 0.0
 
-    while True:
-        interpolated_distances, angles = full_scan(sock)
-        if interpolated_distances is not None: break
+    interpolated_distances, angles = full_scan(sock)
     # Smooth the data using a median filter to reduce noise and outliers
     valid_distances = median_filter(interpolated_distances[:LIDAR_LEN], size= window_size)
     
@@ -271,18 +246,13 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
         start_time = time.time()
 
         if shared_race_mode.value == 0:
-            while True:
-                interpolated_distances, angles = full_scan(sock)
-                if interpolated_distances is not None: break
-
+            interpolated_distances, angles = full_scan(sock)
             Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[:LIDAR_LEN])
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
         elif shared_race_mode.value == 1:
-            while True:
-                interpolated_distances, angles = full_scan(sock)
-                if interpolated_distances is not None: break
+            interpolated_distances, angles = full_scan(sock)
 
             if model is None:
                 # Load the trained model and the scaler
@@ -680,11 +650,6 @@ def align_orthogonal(pca, sock):
     print(f"Car aligned: {position['min_angle']:.2f} degrees")
 
 def park(pca, sock):
-    while True:
-        position = navigate(sock)
-        print(f"left {position['left_min_angle']:.2f} right {position['right_min_angle']:.2f}")
-        time.sleep(0.2)
-
     align_parallel(pca, sock)
     while True:
         position = navigate(sock)
