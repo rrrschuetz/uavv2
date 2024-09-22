@@ -301,7 +301,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 #print("Steering Commands:", steering_commands)
                 X = steering_commands[0, 0]  # Extract GX (first element of the output)
                 Y = steering_commands[0, 1]  # Extract GY (second element of the output)
-                if -1.0 < X < 1.0 and 0.0 < Y < 1.0:
+                if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
                     if Gclock_wise:
                         X = -X
                     set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
@@ -640,16 +640,17 @@ def align_parallel(pca, sock, stop_distance=1.5):
         #print(f"car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
         #print(f"left {left_angle:.2f} right {right_angle:.2f}")
         #print(f"front distance {front_distance:.2f}")
-        if angle_gap > 160 and distance_sum < 0.8 and front_distance < stop_distance: break
+        if angle_gap > 160 and distance_sum < 0.8 and abs(front_distance - stop_distance) < 0.10: break
+        sign = 1.0 if front_distance >= stop_distance else -1.0
+        drive = PARK_SPEED * sign
         steer = 0.0
-        drive = PARK_SPEED
         if 80 > left_angle >  10:
             steer = -PARK_STEER*(left_angle)/90
             #print(f"Steer left {steer:.2f}")
         if 100 < right_angle < 170:
             steer = PARK_STEER*(180-right_angle)/90
             #print(f"Steer right {steer:.2f}")
-        steer = max(min(steer,1),-1)
+        steer = max(min(steer,1),-1) * sign
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
@@ -662,7 +663,7 @@ def align_orthogonal(pca, sock):
         #print(f"Minimal distance {position['min_angle']:.2f}")
         if abs(position['min_angle']-90) < 10: break
         steer = PARK_STEER*2*(90 - position['min_angle'])/90
-        drive = PARK_SPEED
+        drive = -PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
@@ -673,13 +674,17 @@ def park(pca, sock):
     drive = PARK_SPEED
     steer = -PARK_STEER*2 if Gclock_wise else PARK_STEER*2
 
+    print("Parallel alignment")
     align_parallel(pca, sock)
 
     set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
     set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
     time.sleep(1.0)
 
+    print("Orthogonal alignment")
     align_orthogonal(pca, sock)
+
+    print("Move forward to park")
     while True:
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         position = navigate(sock)
@@ -770,7 +775,7 @@ def main():
                 #print(f"Race mode: {shared_race_mode.value}")
 
             print("Starting the parking procedure")
-            #park(pca, sock)
+            park(pca, sock)
 
             shared_race_mode.value = 0
             shared_blue_line_count.value = 0
