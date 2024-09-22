@@ -33,7 +33,7 @@ SERVO_BASIS = 0.55
 MOTOR_FACTOR = 0.3
 MOTOR_BASIS = 0.1
 
-PARK_SPEED = -0.6
+PARK_SPEED = -0.5
 PARK_STEER = 1.2
 
 BLUE_LINE_PARKING_COUNT = 4
@@ -76,11 +76,20 @@ def connect_lidar(ip, port=8089):
     return sock
 
 
-def receive_full_data(sock, expected_length):
+def receive_full_data(sock, expected_length, timeout = 5):
+    sock.settimeout(timeout)
     data = b''
-    while len(data) < expected_length:
-        packet, _ = sock.recvfrom(expected_length - len(data))
-        data += packet
+    try:
+        while len(data) < expected_length:
+            try:
+                packet, _ = sock.recvfrom(expected_length - len(data))
+                data += packet
+            except socket.timeout:
+                print(f"Timeout after {timeout} seconds while waiting for data.")
+                raise  # Re-raise the timeout exception
+    except socket.timeout:
+        print("Socket timed out. Returning incomplete data.")
+        return None  # Return None or raise an exception depending on how you want to handle it
     return data
 
 
