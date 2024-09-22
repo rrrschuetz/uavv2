@@ -285,14 +285,6 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 # Load the scaler for LIDAR data
                 scaler_lidar = load_scaler('./scaler.pkl')
 
-            #if 0.0 < front_dist < 0.1:
-                #print(f"Obstacle detected: Distance {front_dist:.2f} meters")
-                #set_motor_speed(pca, 13, 0.1)
-                #set_servo_angle(pca, 12, SERVO_BASIS)
-                #set_motor_speed(pca, 13, 0.3)
-                #time.sleep(2)
-                #set_motor_speed(pca, 13, 0.1)
-
             ld = interpolated_distances[:LIDAR_LEN]
             if Gclock_wise:
                 ld = ld[::-1]

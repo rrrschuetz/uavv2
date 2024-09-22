@@ -43,22 +43,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.blob_color_detect.executor": "Run",
-    "Python.blobdetect.executor": "Run",
-    "Python.camera_display.executor": "Run",
-    "Python.data_file_check.executor": "Run",
-    "Python.display_race_video.executor": "Run",
-    "Python.double_cam_blob_detector.executor": "Run",
-    "Python.double_cam_blob_detector_adv.executor": "Run",
-    "Python.lidar_color_model.executor": "Run",
-    "Python.plot_data_file.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "/home/rrrschuetz/PycharmProjects/uavv2"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.blob_color_detect.executor&quot;: &quot;Run&quot;,
+    &quot;Python.blobdetect.executor&quot;: &quot;Run&quot;,
+    &quot;Python.camera_display.executor&quot;: &quot;Run&quot;,
+    &quot;Python.data_file_check.executor&quot;: &quot;Run&quot;,
+    &quot;Python.display_race_video.executor&quot;: &quot;Run&quot;,
+    &quot;Python.double_cam_blob_detector.executor&quot;: &quot;Run&quot;,
+    &quot;Python.double_cam_blob_detector_adv.executor&quot;: &quot;Run&quot;,
+    &quot;Python.lidar_color_model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.plot_data_file.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/rrrschuetz/PycharmProjects/uavv2&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -118,7 +118,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-abccbe9d933a-ba05f1cad1b1-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.20224.428" />
+        <option value="bundled-python-sdk-98f27166c754-ba05f1cad1b1-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.21829.153" />
       </set>
     </attachedChunks>
   </component>
@@ -130,14 +130,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00146" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1724795784534</created>
-      <option name="number" value="00146" />
-      <option name="presentableId" value="LOCAL-00146" />
-      <option name="project" value="LOCAL" />
-      <updated>1724795784534</updated>
     </task>
     <task id="LOCAL-00147" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -523,7 +515,15 @@
       <option name="project" value="LOCAL" />
       <updated>1726357418355</updated>
     </task>
-    <option name="localTasksCounter" value="195" />
+    <task id="LOCAL-00195" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1726358312019</created>
+      <option name="number" value="00195" />
+      <option name="presentableId" value="LOCAL-00195" />
+      <option name="project" value="LOCAL" />
+      <updated>1726358312019</updated>
+    </task>
+    <option name="localTasksCounter" value="196" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
