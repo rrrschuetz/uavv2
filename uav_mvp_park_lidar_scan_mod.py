@@ -4,6 +4,7 @@ import pygame
 import time
 import numpy as np
 from scipy.ndimage import median_filter
+from scipy.spatial import distance_matrix
 from scipy.stats import trim_mean
 import cv2
 from picamera2 import Picamera2
@@ -33,7 +34,7 @@ SERVO_BASIS = 0.55
 MOTOR_FACTOR = 0.3
 MOTOR_BASIS = 0.1
 
-PARK_SPEED = -0.5
+PARK_SPEED = -0.55
 PARK_STEER = 1.2
 
 BLUE_LINE_PARKING_COUNT = 4
@@ -102,7 +103,9 @@ def get_health(sock):
 
 def get_info(sock):
     sock.send(b'\xA5\x50')
-    response = receive_full_data(sock, 27)
+    response = None
+    while response is None:
+        response = receive_full_data(sock, 27)
     model, firmware_minor, firmware_major, hardware, serialnum = struct.unpack('<BBBB16s', response[7:])
     serialnum_str = serialnum[::-1].hex()
     return model, firmware_minor, firmware_major, hardware, serialnum_str
@@ -638,41 +641,41 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
 
         time.sleep(1 / 30)
 
-def align_parallel(pca, sock, stop_distance=1.5):
+def align_parallel(pca, sock, stop_distance=1.3):
     while True:
         position = navigate(sock)
         left_angle = position['left_min_angle']
         right_angle = position['right_min_angle']
         angle_gap =  right_angle-left_angle
-        distance_sum = position['right_min_distance']+position['left_min_distance']
         front_distance = position['front_distance']
-        #print(f"car alignment: angle {angle_gap:.2f} distance {distance_sum:.2f}")
+        distance2stop = front_distance - stop_distance
+        sign = 1.0 if distance2stop >= 0 else -1.0
+        #print(f"car alignment: angle {angle_gap:.2f}")
         #print(f"left {left_angle:.2f} right {right_angle:.2f}")
-        #print(f"front distance {front_distance:.2f}")
-        if angle_gap > 160 and distance_sum < 0.8 and abs(front_distance - stop_distance) < 0.10: break
-        sign = 1.0 if front_distance >= stop_distance else -1.0
+        #print(f"distance2stop {distance2stop:.2f}")
+        if angle_gap > 170 and abs(distance2stop) < 0.05: break
         drive = PARK_SPEED * sign
         steer = 0.0
-        if 80 > left_angle >  10:
+        if 85 > left_angle >  5:
             steer = -PARK_STEER*(left_angle)/90
             #print(f"Steer left {steer:.2f}")
-        if 100 < right_angle < 170:
+        if 95 < right_angle < 175:
             steer = PARK_STEER*(180-right_angle)/90
             #print(f"Steer right {steer:.2f}")
         steer = max(min(steer,1),-1) * sign
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
-    print(f"Car aligned: angle_gap {angle_gap:.2f} distance_sum {distance_sum:.2f} front distance {front_distance:.2f}" )
+    print(f"Car aligned: angle_gap {angle_gap:.2f} front distance {front_distance:.2f}" )
 
 
 def align_orthogonal(pca, sock):
     while True:
-        position = navigate(sock)
-        #print(f"Minimal distance {position['min_angle']:.2f}")
+        position = navigate(sock, narrow = True)
+        print(f"Minimal distance {position['min_angle']:.2f}")
         if abs(position['min_angle']-90) < 10: break
-        steer = PARK_STEER*2*(90 - position['min_angle'])/90
-        drive = -PARK_SPEED
+        steer = PARK_STEER*(90 - position['min_angle'])/90
+        drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
@@ -688,7 +691,7 @@ def park(pca, sock):
 
     set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
     set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-    time.sleep(1.0)
+    time.sleep(0.5)
 
     print("Orthogonal alignment")
     align_orthogonal(pca, sock)
@@ -697,7 +700,7 @@ def park(pca, sock):
     while True:
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         position = navigate(sock)
-        #print(f"front distance {position['front_distance']:.2f}")
+        print(f"front distance {position['front_distance']:.2f}")
         if position['front_distance'] < 0.10: break
 
     set_motor_speed(pca, 13, MOTOR_BASIS)
