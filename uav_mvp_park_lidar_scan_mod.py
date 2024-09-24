@@ -504,7 +504,8 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = picam0.capture_array().shape
     frame_width *= 2
-    frame_height //= 2
+    frame_height //= 4
+    frame_height *= 3
     print(f"Frame width: {frame_width}, Frame height: {frame_height}")
 
     # VideoWriter setup
