@@ -709,14 +709,16 @@ def park(pca, sock):
         print(f"front distance {position['front_distance']:.2f}")
         if position['front_distance'] < 0.10: break
 
+    print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
     position = navigate(sock)
     print(f"Minimal distance {position['min_distance']:.2f}")
     print(f"Minimal angle {position['min_angle']:.2f}")
-    print("Parking completed, stopping the vehicle")
-
+    
+    set_servo_angle(pca, 11, 0.2)
+    
 
 def main():
     print("Starting the UAV program...")
@@ -797,8 +799,6 @@ def main():
 
             shared_race_mode.value = 0
             shared_blue_line_count.value = 0
-            set_motor_speed(pca, 13, MOTOR_BASIS)
-            set_servo_angle(pca, 12, SERVO_BASIS)
             print("Parking completed")
 
     except KeyboardInterrupt:
