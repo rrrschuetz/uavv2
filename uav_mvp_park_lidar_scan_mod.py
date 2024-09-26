@@ -504,8 +504,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = picam0.capture_array().shape
     frame_width *= 2
-    frame_height //= 4
-    frame_height *= 3
+    frame_height //= 2
     print(f"Frame width: {frame_width}, Frame height: {frame_height}")
 
     # VideoWriter setup
@@ -559,6 +558,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
                     frame_count = 0
                     video_filename = f"output_video_{file_index:03d}.avi"
                     video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
+
 
             frame_time = time.time() - start_time
             fps_list.append(1.0 / frame_time)
