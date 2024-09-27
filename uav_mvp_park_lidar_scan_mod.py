@@ -35,7 +35,7 @@ MOTOR_FACTOR = 0.3
 MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
-PARK_STEER = 1.2
+PARK_STEER = 1.3
 
 BLUE_LINE_PARKING_COUNT = 4
 
@@ -680,7 +680,7 @@ def align_orthogonal(pca, sock):
     while True:
         position = navigate(sock, narrow = True)
         print(f"Minimal distance {position['min_angle']:.2f}")
-        if abs(position['min_angle']-90) < 10: break
+        if abs(position['min_angle']-90) < 10 or position['front_distance'] < 0.10: break
         steer = PARK_STEER*(90 - position['min_angle'])/90
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
@@ -718,8 +718,9 @@ def park(pca, sock):
     print(f"Minimal distance {position['min_distance']:.2f}")
     print(f"Minimal angle {position['min_angle']:.2f}")
     
-    #set_servo_angle(pca, 11, 0.2)
-    
+    set_servo_angle(pca, 11, 1.2)
+    time.sleep(5)
+    set_servo_angle(pca, 11, 0.0)
 
 def main():
     print("Starting the UAV program...")
@@ -738,6 +739,7 @@ def main():
     arm_esc(pca, 1)
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
+    set_servo_angle(pca, 11, 0.0)
 
     # LIDAR setup
     IP_ADDRESS = '192.168.11.2'
