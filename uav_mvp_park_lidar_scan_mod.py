@@ -218,7 +218,7 @@ def navigate(sock, narrow=False):
     left_min_angle = 0.0
     right_min_distance = 3.0
     right_min_angle = 0.0
-    reduce = 0 if not narrow else 500
+    reduce = 0 if not narrow else 600
 
     interpolated_distances, angles = full_scan(sock)
     # Smooth the data using a median filter to reduce noise and outliers
