@@ -653,7 +653,7 @@ def align_parallel(pca, sock, stop_distance=1.3):
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
         sign = 1.0 if distance2stop >= 0 else -1.0
-        boost = 1.5 if sign != previous_sign else 1.0
+        boost = 1.2 if sign != previous_sign else 1.0
         #print(f"car alignment: angle {angle_gap:.2f}")
         #print(f"left {left_angle:.2f} right {right_angle:.2f}")
         #print(f"distance2stop {distance2stop:.2f}")
@@ -667,9 +667,10 @@ def align_parallel(pca, sock, stop_distance=1.3):
             steer = PARK_STEER*(180-right_angle)/90
             #print(f"Steer right {steer:.2f}")
         steer = max(min(steer,1),-1) * sign
+        #print(f"Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-        if boost > 1.0: time.sleep(0.1)
+        #if boost > 1.0: time.sleep(0.1)
         previous_sign = sign
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car aligned: angle_gap {angle_gap:.2f} front distance {front_distance:.2f}" )
@@ -717,7 +718,7 @@ def park(pca, sock):
     print(f"Minimal distance {position['min_distance']:.2f}")
     print(f"Minimal angle {position['min_angle']:.2f}")
     
-    set_servo_angle(pca, 11, 0.2)
+    #set_servo_angle(pca, 11, 0.2)
     
 
 def main():
