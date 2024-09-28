@@ -685,7 +685,7 @@ def align_orthogonal(pca, sock):
         if abs(90 - position['min_angle']) < 5 or position['front_distance'] < 0.10: break
         steer = PARK_STEER*(90 - position['min_angle'])/90
         steer += PARK_FIX_STEER
-        steer = max(min(steer, 1), -1) * sign
+        steer = max(min(steer, 1), -1)
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
