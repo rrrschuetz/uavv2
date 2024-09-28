@@ -538,7 +538,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
 
             if blue_line and shared_race_mode.value == 1:
                 current_time = time.time()
-                if current_time - last_blue_line_time >= 3:  # Check if 3 seconds have passed
+                if current_time - last_blue_line_time >= 5:  # Check if 3 seconds have passed
                     last_blue_line_time = current_time
                     shared_blue_line_count.value += 1
                     print(f"Blue line count: {shared_blue_line_count.value}")
@@ -644,9 +644,9 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
         time.sleep(1 / 30)
         
 
-def align_parallel(pca, sock, stop_distance=1.3):
+def align_parallel(pca, sock, stop_distance=1.3, shared_race_mode):
     previous_sign = 0
-    while True:
+    while shared_race_mode.value == 2:
         position = navigate(sock)
         left_angle = position['left_min_angle']
         right_angle = position['right_min_angle']
@@ -678,8 +678,8 @@ def align_parallel(pca, sock, stop_distance=1.3):
     print(f"Car aligned: angle_gap {angle_gap:.2f} front distance {front_distance:.2f}" )
 
 
-def align_orthogonal(pca, sock):
-    while True:
+def align_orthogonal(pca, sock, shared_race_mode):
+    while shared_race_mode.value == 2::
         position = navigate(sock, narrow = True)
         print(f"Minimal distance {position['min_angle']:.2f}")
         if abs(90 - position['min_angle']) < 5 or position['front_distance'] < 0.10: break
@@ -693,22 +693,22 @@ def align_orthogonal(pca, sock):
     print(f"Car aligned: {position['min_angle']:.2f} degrees")
 
 
-def park(pca, sock):
+def park(pca, sock, shared_race_mode):
     drive = PARK_SPEED
     steer = -PARK_STEER*2 if Gclock_wise else PARK_STEER*2
 
     print("Parallel alignment")
-    align_parallel(pca, sock)
+    align_parallel(pca, sock, shared_race_mode)
 
     set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
     set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
     time.sleep(0.5)
 
     print("Orthogonal alignment")
-    align_orthogonal(pca, sock)
+    align_orthogonal(pca, sock, shared_race_mode)
 
-    print("Move forward to park")
-    align_parallel(pca, sock, stop_distance=0.1)
+    #print("Move forward to park")
+    #align_parallel(pca, sock, stop_distance=0.1, shared_race_mode)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
@@ -718,9 +718,10 @@ def park(pca, sock):
     print(f"Minimal distance {position['min_distance']:.2f}")
     print(f"Minimal angle {position['min_angle']:.2f}")
     
-    set_servo_angle(pca, 11, 1.2)
-    time.sleep(5)
-    set_servo_angle(pca, 11, 0.0)
+    #set_servo_angle(pca, 11, 1.2)
+    #time.sleep(5)
+    #set_servo_angle(pca, 11, 0.0)
+
 
 def main():
     print("Starting the UAV program...")
