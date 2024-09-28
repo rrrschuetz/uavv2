@@ -644,7 +644,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
         time.sleep(1 / 30)
         
 
-def align_parallel(pca, sock, stop_distance=1.3, shared_race_mode):
+def align_parallel(pca, sock, shared_race_mode, stop_distance=1.3):
     previous_sign = 0
     while shared_race_mode.value == 2:
         position = navigate(sock)
@@ -708,7 +708,7 @@ def park(pca, sock, shared_race_mode):
     align_orthogonal(pca, sock, shared_race_mode)
 
     #print("Move forward to park")
-    #align_parallel(pca, sock, stop_distance=0.1, shared_race_mode)
+    #align_parallel(pca, sock, shared_race_mode, stop_distance=0.1)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
