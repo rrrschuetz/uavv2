@@ -36,7 +36,7 @@ MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
 PARK_STEER = 1.4
-PARK_FIX_STEER = 0.2
+PARK_FIX_STEER = 0.3
 
 BLUE_LINE_PARKING_COUNT = 4
 
@@ -662,12 +662,11 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.3):
         drive = PARK_SPEED * sign * boost
         steer = 0.0
         if 85 > left_angle >  5:
-            steer = -PARK_STEER*(left_angle)/90
+            steer = -PARK_STEER*(left_angle)/90-PARK_FIX_STEER
             #print(f"Steer left {steer:.2f}")
         if 95 < right_angle < 175:
-            steer = PARK_STEER*(180-right_angle)/90
+            steer = PARK_STEER*(180-right_angle)/90+PARK_FIX_STEER
             #print(f"Steer right {steer:.2f}")
-        steer += PARK_FIX_STEER
         steer = max(min(steer,1),-1) * sign
         #print(f"Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
@@ -684,13 +683,11 @@ def align_orthogonal(pca, sock, shared_race_mode):
         print(f"Minimal distance {position['min_angle']:.2f}")
         if abs(90 - position['min_angle']) < 5 or position['front_distance'] < 0.10: break
         steer = PARK_STEER*(90 - position['min_angle'])/90
-        steer += PARK_FIX_STEER
         steer = max(min(steer, 1), -1)
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
-    print(f"Car aligned: {position['min_angle']:.2f} degrees")
 
 
 def park(pca, sock, shared_race_mode):
@@ -706,16 +703,18 @@ def park(pca, sock, shared_race_mode):
 
     print("Orthogonal alignment")
     align_orthogonal(pca, sock, shared_race_mode)
+    set_servo_angle(pca, 12, SERVO_BASIS - SERVO_FACTOR * PARK_FIX_STEER)
+    #time.sleep(0.2)
 
-    while True:
-        position = navigate(sock)
-        if position['front_distance'] < 0.10: break
-        set_servo_angle(pca, 12, SERVO_BASIS)
-        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+    #while True:
+    #    position = navigate(sock)
+    #    if position['front_distance'] < 0.10: break
+    #    set_servo_angle(pca, 12, SERVO_BASIS)
+    #    set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
+    #set_servo_angle(pca, 12, SERVO_BASIS)
 
     #set_servo_angle(pca, 11, 1.2)
     #time.sleep(5)
