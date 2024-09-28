@@ -36,6 +36,7 @@ MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
 PARK_STEER = 1.4
+PARK_FIX_STEER = 0.2
 
 BLUE_LINE_PARKING_COUNT = 4
 
@@ -666,6 +667,7 @@ def align_parallel(pca, sock, stop_distance=1.3):
         if 95 < right_angle < 175:
             steer = PARK_STEER*(180-right_angle)/90
             #print(f"Steer right {steer:.2f}")
+        steer += PARK_FIX_STEER
         steer = max(min(steer,1),-1) * sign
         #print(f"Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
@@ -680,8 +682,10 @@ def align_orthogonal(pca, sock):
     while True:
         position = navigate(sock, narrow = True)
         print(f"Minimal distance {position['min_angle']:.2f}")
-        if position['front_distance'] < 0.10: break
+        if abs(90 - position['min_angle']) < 5 or position['front_distance'] < 0.10: break
         steer = PARK_STEER*(90 - position['min_angle'])/90
+        steer += PARK_FIX_STEER
+        steer = max(min(steer, 1), -1) * sign
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
@@ -703,12 +707,8 @@ def park(pca, sock):
     print("Orthogonal alignment")
     align_orthogonal(pca, sock)
 
-    #print("Move forward to park")
-    #while True:
-    #    set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-    #    position = navigate(sock)
-    #    print(f"front distance {position['front_distance']:.2f}")
-    #    if position['front_distance'] < 0.10: break
+    print("Move forward to park")
+    align_parallel(pca, sock, stop_distance=0.1)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
