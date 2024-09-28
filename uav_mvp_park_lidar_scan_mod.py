@@ -538,7 +538,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
 
             if blue_line and shared_race_mode.value == 1:
                 current_time = time.time()
-                if current_time - last_blue_line_time >= 5:  # Check if 3 seconds have passed
+                if current_time - last_blue_line_time >= 3:  # Check if 3 seconds have passed
                     last_blue_line_time = current_time
                     shared_blue_line_count.value += 1
                     print(f"Blue line count: {shared_blue_line_count.value}")
@@ -707,17 +707,16 @@ def park(pca, sock, shared_race_mode):
     print("Orthogonal alignment")
     align_orthogonal(pca, sock, shared_race_mode)
 
-    #print("Move forward to park")
-    #align_parallel(pca, sock, shared_race_mode, stop_distance=0.1)
+    while True:
+        position = navigate(sock)
+        if position['front_distance'] < 0.10: break
+        set_servo_angle(pca, 12, SERVO_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
-    position = navigate(sock)
-    print(f"Minimal distance {position['min_distance']:.2f}")
-    print(f"Minimal angle {position['min_angle']:.2f}")
-    
     #set_servo_angle(pca, 11, 1.2)
     #time.sleep(5)
     #set_servo_angle(pca, 11, 0.0)
@@ -799,7 +798,7 @@ def main():
                 #print(f"Race mode: {shared_race_mode.value}")
 
             print("Starting the parking procedure")
-            park(pca, sock)
+            park(pca, sock, shared_race_mode)
 
             shared_race_mode.value = 0
             shared_blue_line_count.value = 0
