@@ -679,7 +679,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.3):
 
 
 def align_orthogonal(pca, sock, shared_race_mode):
-    while shared_race_mode.value == 2::
+    while shared_race_mode.value == 2:
         position = navigate(sock, narrow = True)
         print(f"Minimal distance {position['min_angle']:.2f}")
         if abs(90 - position['min_angle']) < 5 or position['front_distance'] < 0.10: break
