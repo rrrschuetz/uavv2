@@ -3,7 +3,7 @@ import struct
 import time
 
 # Configuration for the WT61 gyroscope
-SERIAL_PORT = "/dev/serial0"  # or "/dev/ttyS0"
+SERIAL_PORT = "/dev/ttyAMA0"  # or "/dev/ttyS0"
 BAUD_RATE = 115200  # WT61 usually works with 115200 baud rate
 TIMEOUT = 1  # Serial timeout in seconds
 
@@ -47,4 +47,6 @@ def read_gyro_data():
 
 # Start reading data from WT61 gyro
 if __name__ == "__main__":
+
+    print("Reading data from WT61 gyro sensor...")
     read_gyro_data()
