@@ -749,7 +749,7 @@ def align_angular(pca, angle, shared_race_mode):
     global Gyaw
     yaw_init = Gyaw
     print(f"Car alignment: initial angle {yaw_init:.2f} delta angle {angle:.2f}")
-    while shared_race_mode.value == 2 and abs(Gyaw - yaw_init) < abs(angle):
+    while shared_race_mode.value == 2 and abs(Gyaw - yaw_init) < abs(angle-5):
         print(f"Car orthogonal alignment: angle {Gyaw - yaw_init:.2f}")
         steer = PARK_STEER * (angle - Gyaw + yaw_init) / angle
         steer = max(min(steer, 1), -1)
@@ -761,9 +761,12 @@ def align_angular(pca, angle, shared_race_mode):
 
 
 def park(pca, sock, shared_race_mode):
-
     align_parallel(pca, sock, shared_race_mode)
     align_angular(pca, 90 if Gclock_wise else -90, shared_race_mode)
+
+    correct = PARK_FIXED_STEER if Gclock_wise else -PARK_FIXED_STEER
+    set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
+    time.sleep(0.2)
 
     while True:
         position = navigate(sock)
