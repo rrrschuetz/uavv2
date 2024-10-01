@@ -516,7 +516,8 @@ def detect_and_label_blobs(image):
 
 
 def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
-    global Gcolor_string, Gx_coords
+    global Gcolor_string, Gx_coords, Gyaw
+
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = picam0.capture_array().shape
     frame_width *= 2
@@ -535,6 +536,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
         max_frame_count = 2000  # Maximum number of frames per video file
 
     last_blue_line_time = time.time()
+    yaw_last = Gyaw
 
     try:
         while True and shared_race_mode.value != 2:
@@ -553,10 +555,12 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
 
             if blue_line and shared_race_mode.value == 1:
                 current_time = time.time()
-                if current_time - last_blue_line_time >= 3:  # Check if 3 seconds have passed
+                if current_time - last_blue_line_time >= 3 and abs(Gyaw-yaw_last) > 10:
+                    print(f"Blue line count: {shared_blue_line_count.value+1} \\"
+                          f"time: {current_time-last_blue_line_time:.2f} yaw gain: {abs(Gyaw-yaw_last):.2f}")
                     last_blue_line_time = current_time
+                    yaw_last = Gyaw
                     shared_blue_line_count.value += 1
-                    print(f"Blue line count: {shared_blue_line_count.value}")
 
             if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
                 shared_race_mode.value = 2
@@ -705,6 +709,8 @@ def gyro_thread():
                                 if data_type == 0x53:  # Angle data
                                     Gyaw = val3 * 180
                             buff = buff[11:]
+                else:
+                    time.sleep(0.02)
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
@@ -712,7 +718,7 @@ def gyro_thread():
         print("Stopping data read.")
 
 
-def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
+def align_parallel(pca, sock, shared_race_mode, stop_distance=1.35):
     previous_sign = 0
     while shared_race_mode.value == 2:
         position = navigate(sock)
@@ -764,7 +770,7 @@ def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
     align_angular(pca, 90 if Gclock_wise else -90, shared_race_mode)
 
-    correct = PARK_FIXED_STEER if Gclock_wise else -PARK_FIXED_STEER
+    correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
     set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
     time.sleep(0.2)
 
@@ -778,9 +784,9 @@ def park(pca, sock, shared_race_mode):
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
-    # set_servo_angle(pca, 11, 1.2)
-    # time.sleep(5)
-    # set_servo_angle(pca, 11, 0.0)
+    set_servo_angle(pca, 11, 1.4)
+    time.sleep(5)
+    set_servo_angle(pca, 11, 0.0)
 
 
 def main():
