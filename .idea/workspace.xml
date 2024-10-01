@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
-      <change afterPath="$PROJECT_DIR$/baud_rate_test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/uav_park_gyro.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gyro_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/gyro_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uav_park_gyro.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_park_gyro.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,14 +132,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00166" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1725835093110</created>
-      <option name="number" value="00166" />
-      <option name="presentableId" value="LOCAL-00166" />
-      <option name="project" value="LOCAL" />
-      <updated>1725835093110</updated>
     </task>
     <task id="LOCAL-00167" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -527,7 +517,15 @@
       <option name="project" value="LOCAL" />
       <updated>1727593883019</updated>
     </task>
-    <option name="localTasksCounter" value="215" />
+    <task id="LOCAL-00215" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1727797221501</created>
+      <option name="number" value="00215" />
+      <option name="presentableId" value="LOCAL-00215" />
+      <option name="project" value="LOCAL" />
+      <updated>1727797221501</updated>
+    </task>
+    <option name="localTasksCounter" value="216" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -575,7 +573,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_gyro.py</url>
-          <line>859</line>
+          <line>839</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
       </breakpoints>

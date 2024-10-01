@@ -661,7 +661,6 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
 def parse_wt61_data(data):
     if len(data) == 11 and data[0] == 0x55 and sum(data[0:-1]) & 0xFF == data[-1]:
         data_type = data[1]
-        print(f"Data Type: {data_type}")
         values = struct.unpack('<hhh', data[2:8])  # Convert data to three signed short values
         return data_type, values[0] / 32768.0, values[1] / 32768.0, values[2] / 32768.0
     else:
@@ -746,7 +745,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.3):
     print(f"Car aligned: angle_gap {angle_gap:.2f} front distance {front_distance:.2f}")
 
 
-def align_angular(angle, shared_race_mode):
+def align_angular(pca, angle, shared_race_mode):
     global Gyaw
     yaw_init = Gyaw
     while shared_race_mode.value == 2 and abs(Gyaw - yaw_init) < angle:
@@ -762,7 +761,7 @@ def align_angular(angle, shared_race_mode):
 def park(pca, sock, shared_race_mode):
 
     align_parallel(pca, sock, shared_race_mode)
-    align_angular(90 if Gclockwise else -90, shared_race_mode)
+    align_angular(pca, 90 if Gclock_wise else -90, shared_race_mode)
 
     # while True:
     #    position = navigate(sock)
