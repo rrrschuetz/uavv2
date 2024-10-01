@@ -712,7 +712,7 @@ def gyro_thread():
         print("Stopping data read.")
 
 
-def align_parallel(pca, sock, shared_race_mode, stop_distance=1.3):
+def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     previous_sign = 0
     while shared_race_mode.value == 2:
         position = navigate(sock)
@@ -748,13 +748,15 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.3):
 def align_angular(pca, angle, shared_race_mode):
     global Gyaw
     yaw_init = Gyaw
-    while shared_race_mode.value == 2 and abs(Gyaw - yaw_init) < angle:
+    print(f"Car alignment: initial angle {yaw_init:.2f} delta angle {angle:.2f}")
+    while shared_race_mode.value == 2 and abs(Gyaw - yaw_init) < abs(angle):
         print(f"Car orthogonal alignment: angle {Gyaw - yaw_init:.2f}")
         steer = PARK_STEER * (angle - Gyaw + yaw_init) / angle
         steer = max(min(steer, 1), -1)
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
+        time.sleep(0.1)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
 
@@ -763,11 +765,11 @@ def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
     align_angular(pca, 90 if Gclock_wise else -90, shared_race_mode)
 
-    # while True:
-    #    position = navigate(sock)
-    #    if position['front_distance'] < 0.10: break
-    #    set_servo_angle(pca, 12, SERVO_BASIS)
-    #    set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+    while True:
+        position = navigate(sock)
+        if position['front_distance'] < 0.10: break
+        set_servo_angle(pca, 12, SERVO_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
