@@ -719,34 +719,30 @@ def gyro_thread():
 
 
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.35):
-    previous_sign = 0
-    while shared_race_mode.value == 2:
+    position = navigate(sock)
+    left_angle = position['left_min_angle']
+    right_angle = position['right_min_angle']
+    yaw_init = Gyaw
+    if 85 > left_angle > 5:
+        yaw_delta = left_angle
+        # print(f"Steer left {steer:.2f}")
+    if 95 < right_angle < 175:
+        yaw_delta = right_angle - 180
+        # print(f"Steer right {steer:.2f}")
+
+    while shared_race_mode.value == 2 and abs(Gyaw-yaw_init) < abs(yaw_delta) and abs(distance2stop) > 0.05:
         position = navigate(sock)
-        left_angle = position['left_min_angle']
-        right_angle = position['right_min_angle']
-        angle_gap = right_angle - left_angle
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
         sign = 1.0 if distance2stop >= 0 else -1.0
-        boost = 1.2 if sign != previous_sign else 1.0
-        # print(f"car alignment: angle {angle_gap:.2f}")
-        # print(f"left {left_angle:.2f} right {right_angle:.2f}")
-        # print(f"distance2stop {distance2stop:.2f}")
-        if angle_gap > 170 and abs(distance2stop) < 0.05: break
-        drive = PARK_SPEED * sign * boost
-        steer = 0.0
-        if 85 > left_angle > 5:
-            steer = -PARK_STEER * (left_angle) / 90 - PARK_FIX_STEER
-            # print(f"Steer left {steer:.2f}")
-        if 95 < right_angle < 175:
-            steer = PARK_STEER * (180 - right_angle) / 90 + PARK_FIX_STEER
-            # print(f"Steer right {steer:.2f}")
+        drive = PARK_SPEED * sign
+        steer = -PARK_STEER * (abs(Gyaw-yaw_init) - abs(yaw_delta)) / 90
         steer = max(min(steer, 1), -1) * sign
         # print(f"Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-        # if boost > 1.0: time.sleep(0.1)
-        previous_sign = sign
+
+    set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car aligned: angle_gap {angle_gap:.2f} front distance {front_distance:.2f}")
 
