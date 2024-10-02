@@ -717,6 +717,9 @@ def gyro_thread():
     except KeyboardInterrupt:
         print("Stopping data read.")
 
+def add_angles(angle1,angle2):
+    sum = (angle1+angle2) % 360
+    return sum if sum >= 0 else sum + 360
 
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.35):
     position = navigate(sock)
@@ -736,9 +739,9 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.35):
         distance2stop = front_distance - stop_distance
         sign = 1.0 if distance2stop >= 0 else -1.0
         drive = PARK_SPEED * sign
-        steer = -PARK_STEER * (abs(Gyaw-yaw_init) - abs(yaw_delta)) / 90
+        steer = -PARK_STEER * (yaw_delta - (Gyaw - yaw_init)) / 90
         steer = max(min(steer, 1), -1) * sign
-        # print(f"Steer {steer:.2f} Drive {drive:.2f}")
+        print(f"Steer {steer:.2f} Drive {drive:.2f} Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
 
