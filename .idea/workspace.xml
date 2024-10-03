@@ -120,7 +120,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-884f5ed5d46b-c546a90a8094-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.22855.92" />
+        <option value="bundled-python-sdk-0e3be3396995-c546a90a8094-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.23339.19" />
       </set>
     </attachedChunks>
   </component>
@@ -132,22 +132,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00170" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1726008502529</created>
-      <option name="number" value="00170" />
-      <option name="presentableId" value="LOCAL-00170" />
-      <option name="project" value="LOCAL" />
-      <updated>1726008502529</updated>
-    </task>
-    <task id="LOCAL-00171" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1726008749093</created>
-      <option name="number" value="00171" />
-      <option name="presentableId" value="LOCAL-00171" />
-      <option name="project" value="LOCAL" />
-      <updated>1726008749093</updated>
     </task>
     <task id="LOCAL-00172" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -525,7 +509,23 @@
       <option name="project" value="LOCAL" />
       <updated>1727800928235</updated>
     </task>
-    <option name="localTasksCounter" value="219" />
+    <task id="LOCAL-00219" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1727812183877</created>
+      <option name="number" value="00219" />
+      <option name="presentableId" value="LOCAL-00219" />
+      <option name="project" value="LOCAL" />
+      <updated>1727812183877</updated>
+    </task>
+    <task id="LOCAL-00220" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1727846050790</created>
+      <option name="number" value="00220" />
+      <option name="presentableId" value="LOCAL-00220" />
+      <option name="project" value="LOCAL" />
+      <updated>1727846050790</updated>
+    </task>
+    <option name="localTasksCounter" value="221" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -573,7 +573,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_gyro.py</url>
-          <line>850</line>
+          <line>860</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
       </breakpoints>

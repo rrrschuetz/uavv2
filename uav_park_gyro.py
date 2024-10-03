@@ -42,10 +42,10 @@ MOTOR_FACTOR = 0.3
 MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
-PARK_STEER = 1.4
+PARK_STEER = 1.5
 PARK_FIX_STEER = 0.3
 
-BLUE_LINE_PARKING_COUNT = 4
+BLUE_LINE_PARKING_COUNT = 2
 
 # Global variables
 Glidar_string = ""
@@ -247,13 +247,13 @@ def navigate(sock, narrow=False):
             min_index = i + window_size // 2  # Center of the window
             min_angle = angles[min_index]
         if i < LIDAR_LEN // 2:
-            if 0 < trimmed_mean_distance < left_min_distance:
-                left_min_distance = trimmed_mean_distance
-                left_min_angle = angles[i + window_size // 2]
-        else:
             if 0 < trimmed_mean_distance < right_min_distance:
                 right_min_distance = trimmed_mean_distance
                 right_min_angle = angles[i + window_size // 2]
+        else:
+            if 0 < trimmed_mean_distance < left_min_distance:
+                left_min_distance = trimmed_mean_distance
+                left_min_angle = angles[i + window_size // 2]
 
     front_distance = np.mean(valid_distances[LIDAR_LEN // 2 - window_size // 2:LIDAR_LEN // 2 + window_size // 2])
 
@@ -717,52 +717,63 @@ def gyro_thread():
     except KeyboardInterrupt:
         print("Stopping data read.")
 
-def add_angles(angle1,angle2):
-    sum = (angle1+angle2) % 360
-    return sum if sum >= 0 else sum + 360
+
+def yaw_difference(yaw1, yaw2):
+    """Calculate the shortest difference between two yaw angles in degrees."""
+    diff = yaw2 - yaw1
+    while diff > 180:
+        diff -= 360
+    while diff < -180:
+        diff += 360
+    return diff
+
 
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.35):
     position = navigate(sock)
     left_angle = position['left_min_angle']
     right_angle = position['right_min_angle']
+    front_distance = position['front_distance']
+    distance2stop = front_distance - stop_distance
     yaw_init = Gyaw
-    if 85 > left_angle > 5:
-        yaw_delta = left_angle
-        # print(f"Steer left {steer:.2f}")
-    if 95 < right_angle < 175:
-        yaw_delta = right_angle - 180
-        # print(f"Steer right {steer:.2f}")
+    yaw_delta_r = right_angle if 90 >= right_angle > 0 else 90
+    yaw_delta_l = left_angle - 180 if 180 >= left_angle > 90 else -90
+    yaw_delta = yaw_delta_l if abs(yaw_delta_l) < abs(yaw_delta_r) else yaw_delta_r
+    print(f"left_angle: {left_angle:.2f} right_angle: {right_angle:.2f} yaw_delta: {yaw_delta:.2f}")
 
-    while shared_race_mode.value == 2 and abs(Gyaw-yaw_init) < abs(yaw_delta) and abs(distance2stop) > 0.05:
+    while shared_race_mode.value == 2 and \
+           (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
         position = navigate(sock)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
         sign = 1.0 if distance2stop >= 0 else -1.0
         drive = PARK_SPEED * sign
-        steer = -PARK_STEER * (yaw_delta - (Gyaw - yaw_init)) / 90
+        steer = -PARK_STEER * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
         steer = max(min(steer, 1), -1) * sign
-        print(f"Steer {steer:.2f} Drive {drive:.2f} Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:.2f}")
+        print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
+              f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:.2f} \\"
+              f"front_distance: {front_distance:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
 
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
-    print(f"Car aligned: angle_gap {angle_gap:.2f} front distance {front_distance:.2f}")
+    print(f"Car aligned")
 
 
 def align_angular(pca, angle, shared_race_mode):
     global Gyaw
     yaw_init = Gyaw
     print(f"Car alignment: initial angle {yaw_init:.2f} delta angle {angle:.2f}")
-    while shared_race_mode.value == 2 and abs(Gyaw - yaw_init) < abs(angle-5):
-        print(f"Car orthogonal alignment: angle {Gyaw - yaw_init:.2f}")
-        steer = PARK_STEER * (angle - Gyaw + yaw_init) / angle
+    while shared_race_mode.value == 2 and abs(yaw_difference(Gyaw, yaw_init)) < abs(angle):
+        print(f"Car orthogonal alignment: angle {yaw_difference(Gyaw, yaw_init):.2f}")
+        steer = PARK_STEER * (angle - yaw_difference(Gyaw, yaw_init)) / angle
         steer = max(min(steer, 1), -1)
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.1)
     set_servo_angle(pca, 12, SERVO_BASIS)
+    print(f"Car final angle {Gyaw:.2f}")
 
 
 def park(pca, sock, shared_race_mode):
@@ -773,19 +784,19 @@ def park(pca, sock, shared_race_mode):
     set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
     time.sleep(0.2)
 
-    while True:
-        position = navigate(sock)
-        if position['front_distance'] < 0.10: break
-        set_servo_angle(pca, 12, SERVO_BASIS)
-        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+    #while True:
+    #    position = navigate(sock)
+    #    if position['front_distance'] < 0.10: break
+    #    set_servo_angle(pca, 12, SERVO_BASIS)
+    #    set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
-    set_servo_angle(pca, 11, 1.4)
-    time.sleep(5)
-    set_servo_angle(pca, 11, 0.0)
+    #set_servo_angle(pca, 11, 1.4)
+    #time.sleep(5)
+    #set_servo_angle(pca, 11, 0.0)
 
 
 def main():
