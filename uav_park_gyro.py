@@ -728,7 +728,7 @@ def yaw_difference(yaw1, yaw2):
     return diff
 
 
-def align_parallel(pca, sock, shared_race_mode, stop_distance=1.35):
+def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     position = navigate(sock)
     left_angle = position['left_min_angle']
     right_angle = position['right_min_angle']
