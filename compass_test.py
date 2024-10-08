@@ -1,89 +1,91 @@
-import smbus
-import time
+import machine
+import sys
 import math
+from time import sleep
 
-# Define the I2C bus number (1 on most Raspberry Pi models)
-I2C_BUS = 1
-SENSOR_ADDRESS = 0x0D
+pinSDA = machine.Pin(20)
+pinSCL = machine.Pin(21)
+QMC5883L_ADDR = 0x0D
+i2c = machine.I2C(0, freq=2000000, scl=pinSCL, sda=pinSDA)
+devices = i2c.scan()
 
-bus = smbus.SMBus(I2C_BUS)
+if not (QMC5883L_ADDR in devices):
+    print("Not found GY-271 (QMC5883L)!")
+    sys.exit(1)
 
-# Register definitions for QMC5883L
-REG_CONTROL_1 = 0x09
-REG_DATA_X_LSB = 0x00
+############## Control Registers
+RegCTRL1 = 0x09  # Control Register--> MSB(OSR:2,RNG:2,ODR:2,MODE:2)LSB
+RegCTRL2 = 0x0A  # Control Register2--> MSB(Soft_RS:1,Rol_PNT:1,none:5,INT_ENB:1)LSB
+RegFBR = 0x0B  # SET/RESET Period Register--> MSB(FBR:8)LSB
 
-bus.write_byte_data(SENSOR_ADDRESS, REG_CONTROL_1, 0x1D)
-
-# Calibration values (set these manually after rotating the sensor in all directions)
-# Replace these with actual min/max values after calibration
-X_min = 2161
-X_max = 2322
-Y_min = 1640
-Y_max = 2517
-Z_min = 2182
-Z_max = 2437
-
-
-def read_raw_data(register):
-    low_byte = bus.read_byte_data(SENSOR_ADDRESS, register)
-    high_byte = bus.read_byte_data(SENSOR_ADDRESS, register + 1)
-    value = (high_byte << 8) | low_byte
-    if value > 32767:
-        value -= 65536
-    return value
-
-
-def read_magnetometer_data():
-    x = read_raw_data(REG_DATA_X_LSB)
-    y = read_raw_data(REG_DATA_X_LSB + 2)
-    z = read_raw_data(REG_DATA_X_LSB + 4)
-    return x, y, z
+############## Control Register Value 
+Mode_Standby = 0b00000000
+Mode_Continuous = 0b00000001
+ODR_10Hz = 0b00000000
+ODR_50Hz = 0b00000100
+ODR_100Hz = 0b00001000
+ODR_200Hz = 0b00001100
+RNG_2G = 0b00000000
+RNG_8G = 0b00010000
+OSR_512 = 0b00000000
+OSR_256 = 0b01000000
+OSR_128 = 0b10000000
+OSR_64 = 0b11000000
 
 
-def calibrate(x, y, z):
-    # Apply calibration to raw data to adjust for hard/soft iron distortions
-    x_offset = (X_max + X_min) / 2
-    y_offset = (Y_max + Y_min) / 2
-    z_offset = (Z_max + Z_min) / 2
-
-    x_range = (X_max - X_min) / 2
-    y_range = (Y_max - Y_min) / 2
-    z_range = (Z_max - Z_min) / 2
-
-    x_cal = (x - x_offset) / x_range
-    y_cal = (y - y_offset) / y_range
-    z_cal = (z - z_offset) / z_range
-
-    return x_cal, y_cal, z_cal
+def twos_comp(val, bits):
+    """compute the 2's complement of int value val"""
+    if (val & (1 << (bits - 1))) != 0:  # if sign bit is set e.g., 8bit: 128-255
+        val = val - (1 << bits)  # compute negative value
+    return val  # return positive value as is
 
 
-def calculate_heading(x, y):
-    heading_radians = math.atan2(y, x)
-    heading_degrees = math.degrees(heading_radians)
-    if heading_degrees < 0:
-        heading_degrees += 360
-    return heading_degrees
+def get_bearing_raw(x, y):
+    """Horizontal bearing (in degrees) from magnetic value X and Y."""
+    if x is None or y is None:
+        return None
+    else:
+        b = math.degrees(math.atan2(y, x))
+        if b < 0:
+            b += 360
+        return round(b)
 
 
-try:
-    while True:
-        x, y, z = read_magnetometer_data()
-        #X_min = min(x, X_min)
-        #X_max = max(x, X_max)
-        #Y_min = min(y, Y_min)
-        #Y_max = max(y, Y_max)
-        #Z_min = min(z, Z_min)
-        #Z_max = max(z, Z_max)
-        #print(f"X: {X_min,X_max}, Y: {Y_min,Y_max}, Z: {Z_min,Z_max}")
+########### Init
+ctrl1 = bytearray([Mode_Continuous | ODR_100Hz | RNG_2G | OSR_512])
+i2c.writeto_mem(QMC5883L_ADDR, RegCTRL1, ctrl1)
+i2c.writeto_mem(QMC5883L_ADDR, RegFBR, b'\x01')
 
-        # Calibrate magnetometer data
-        x_cal, y_cal, z_cal = calibrate(x, y, z)
+while True:
+    ########### Read
+    buffer = i2c.readfrom_mem(QMC5883L_ADDR, 0, 14)
+    xLo = buffer[0]
+    xHi = buffer[1] << 8
+    yLo = buffer[2]
+    yHi = buffer[3] << 8
+    zLo = buffer[4]
+    zHi = buffer[5] << 8
+    x = bin(xLo + xHi)[2:]
+    y = bin(yLo + yHi)[2:]
+    z = bin(zLo + zHi)[2:]
+    compass_status = buffer[6]
+    tLo = buffer[7]  # LSD
+    tHi = buffer[8] << 8  # MSD
+    compass_mode = buffer[9]
+    chipID = buffer[13]
 
-        # Calculate heading from calibrated data
-        heading = calculate_heading(x_cal, y_cal)
+    ########### Convert
+    ##### raw magnetic
+    x_raw = twos_comp(int(x, 2), len(x))
+    y_raw = twos_comp(int(y, 2), len(y))
+    z_raw = twos_comp(int(z, 2), len(z))
 
-        print(f"Heading: {heading:.2f} degrees")
+    ########### Temperature
+    T = bin(tLo + tHi)[2:]
+    temperature = round((((twos_comp(int(T, 2), len(T))) / 100) + 37.6), 2)
 
-        time.sleep(0.1)
-except KeyboardInterrupt:
-    print("Measurement stopped by user")
+    ########### Show result
+    print(f'Bearing: {get_bearing_raw(x_raw, y_raw)}{chr(176)}  Temperature: {"%.1f" % temperature}{chr(176)}C')
+
+    sleep(0.25)
+
