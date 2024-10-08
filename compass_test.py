@@ -68,6 +68,6 @@ try:
         print(f"Heading: {heading:.2f} degrees")
 
         # Wait before reading again
-        time.sleep(1)
+        time.sleep(0.1)
 except KeyboardInterrupt:
     print("Measurement stopped by user")
