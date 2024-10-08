@@ -12,7 +12,7 @@ import qmc5883l as qmc5883
 
 i2c = board.I2C()
 qmc = qmc5883.QMC5883L(i2c)
-
+qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
 
 def vector_2_degrees(x, y):
     angle = degrees(atan2(y, x))
