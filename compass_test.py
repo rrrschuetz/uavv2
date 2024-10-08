@@ -1,5 +1,6 @@
 import smbus
 import time
+import math
 
 # Define the I2C bus number (1 on most Raspberry Pi models)
 I2C_BUS = 1
@@ -41,13 +42,30 @@ def read_magnetometer_data():
     return x, y, z
 
 
+def calculate_heading(x, y):
+    """Calculate heading (0 to 360 degrees) from X and Y magnetometer data."""
+    heading_radians = math.atan2(y, x)  # Calculate the heading in radians
+
+    # Convert radians to degrees
+    heading_degrees = math.degrees(heading_radians)
+
+    # Normalize the heading to range 0-360 degrees
+    if heading_degrees < 0:
+        heading_degrees += 360
+
+    return heading_degrees
+
+
 try:
     while True:
         # Read magnetometer data
         x, y, z = read_magnetometer_data()
 
-        # Print the raw values
-        print(f"X: {x}, Y: {y}, Z: {z}")
+        # Calculate heading from X and Y data
+        heading = calculate_heading(x, y)
+
+        # Print the heading
+        print(f"Heading: {heading:.2f} degrees")
 
         # Wait before reading again
         time.sleep(1)
