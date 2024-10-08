@@ -16,12 +16,12 @@ bus.write_byte_data(SENSOR_ADDRESS, REG_CONTROL_1, 0x1D)
 
 # Calibration values (set these manually after rotating the sensor in all directions)
 # Replace these with actual min/max values after calibration
-X_min = -500
-X_max = 500
-Y_min = -500
-Y_max = 500
-Z_min = -500
-Z_max = 500
+X_min = 5000
+X_max = 0
+Y_min = 5000
+Y_max = 0
+Z_min = 5000
+Z_max = 0
 
 
 def read_raw_data(register):
@@ -68,15 +68,22 @@ def calculate_heading(x, y):
 try:
     while True:
         x, y, z = read_magnetometer_data()
+        X_min = min(x, X_min)
+        X_max = max(x, X_max)
+        Y_min = min(y, Y_min)
+        Y_max = max(y, Y_max)
+        Z_min = min(z, Z_min)
+        Z_max = max(z, Z_max)
 
+        print(f"X: {X_min,X_max}, Y: {Y_min,Y_max}, Z: {Z_min,Z_max}")
         # Calibrate magnetometer data
-        x_cal, y_cal, z_cal = calibrate(x, y, z)
+        #x_cal, y_cal, z_cal = calibrate(x, y, z)
 
         # Calculate heading from calibrated data
-        heading = calculate_heading(x_cal, y_cal)
+        #heading = calculate_heading(x_cal, y_cal)
 
-        print(f"Heading: {heading:.2f} degrees")
+        #print(f"Heading: {heading:.2f} degrees")
 
-        time.sleep(1)
+        time.sleep(0.1)
 except KeyboardInterrupt:
     print("Measurement stopped by user")
