@@ -13,7 +13,7 @@ qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
 # Initialize serial connection for WT61 (gyroscope)
 SERIAL_PORT = "/dev/ttyAMA0"  # Adjust if needed
 BAUD_RATE = 115200
-TIMEOUT = 0.1
+TIMEOUT = 0.5
 
 # Create a serial object for the gyroscope
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT)
@@ -36,19 +36,21 @@ def get_magnetometer_heading():
 # Get gyroscope yaw data from WT61
 def get_gyro_yaw():
     buff = bytearray()
-    data_type = None
     yaw = None
 
     if ser.in_waiting:
         data = ser.read(ser.in_waiting)
         for byte in data:
             buff.append(byte)
-            if len(buff) >= 11:
-                if buff[0] == 0x55 and buff[1] == 0x53:  # Check for angle data packet
-                    _, _, _, yaw = struct.unpack('<hhh', buff[2:8])
-                    yaw = yaw / 32768.0 * 180  # Convert to degrees
-                buff = buff[11:]  # Clear buffer for next packet
-
+            if len(buff) >= 11:  # Ensure we have enough data for a full packet (11 bytes)
+                if buff[0] == 0x55 and buff[1] == 0x53:  # Check for correct start of packet and type
+                    try:
+                        _, _, _, yaw = struct.unpack('<hhh', buff[2:8])
+                        yaw = yaw / 32768.0 * 180  # Convert to degrees
+                    except struct.error as e:
+                        print(f"Unpacking error: {e}")
+                    finally:
+                        buff = buff[11:]  # Remove processed packet from the buffer
     return yaw
 
 # Rolling average for smoothing
