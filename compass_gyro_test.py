@@ -47,8 +47,15 @@ def vector_2_degrees(x, y):
 
 
 def get_magnetometer_heading():
-    mag_x, mag_y, mag_z = qmc.magnetic
-    return mag_x, mag_y, mag_z
+    retries = 10  # Set a retry limit
+    for attempt in range(retries):
+        try:
+            mag_x, mag_y, mag_z = qmc.magnetic
+            return mag_x, mag_y, mag_z
+        except OSError as e:
+            print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
+            time.sleep(0.5)  # Wait before retrying
+    raise RuntimeError("Failed to read from magnetometer after multiple attempts")
 
 
 # Tilt compensation for magnetometer using pitch and roll
