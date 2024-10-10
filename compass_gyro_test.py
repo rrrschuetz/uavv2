@@ -111,17 +111,18 @@ def get_gyro_accel_data():
 
     if ser.in_waiting:
         data = ser.read(ser.in_waiting)
-        for byte in data:
-            buff.append(byte)
-            if len(buff) >= 11:
-                if buff[0] == 0x55:
-                    data_type, values = parse_wt61_data(buff[:11])
-                    if data_type == 0x51:  # Accelerometer data
-                        accel = [v / 32768.0 * 16 for v in values]  # Convert to G
-                    elif data_type == 0x53:  # Gyroscope angle data (roll, pitch, yaw)
-                        gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
-                        print(f"Data Type: {data_type} - Values: {values}")
+        buff.extend(data)
+        if len(buff) >= 11:
+            if buff[0] == 0x55:
+                data_type, values = parse_wt61_data(buff[:11])
+                if data_type == 0x51:  # Accelerometer data
+                    accel = [v / 32768.0 * 16 for v in values]  # Convert to G
+                elif data_type == 0x53:  # Gyroscope angle data (roll, pitch, yaw)
+                    gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
+                    print(f"Data Type: {data_type} - Values: {values}")
                 buff = buff[11:]
+            else:
+                buff = buff.pop(0)
 
     return gyro, accel
 
