@@ -1,6 +1,5 @@
 import time
 import math
-import numpy as np
 import board
 import qmc5883l as qmc5883
 import serial
@@ -25,6 +24,7 @@ heading_estimate = 0.0  # Initial heading estimate
 pitch_estimate = 0.0  # Initial pitch estimate
 roll_estimate = 0.0  # Initial roll estimate
 
+
 # Kalman filter function for yaw
 def kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P):
     P = P + Q  # Update process error covariance with process noise
@@ -32,7 +32,11 @@ def kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P):
     K = P / (P + R)  # Calculate Kalman gain
     heading_estimate = heading_predict + K * (mag_heading - heading_predict)  # Update estimate
     P = (1 - K) * P  # Update error covariance
+
+    # Normalize heading to stay within [0, 360) degrees
+    heading_estimate %= 360  # This will constrain heading between 0 and 360
     return heading_estimate, P
+
 
 # Get magnetometer heading
 def vector_2_degrees(x, y):
@@ -41,16 +45,19 @@ def vector_2_degrees(x, y):
         angle += 360
     return angle
 
+
 def get_magnetometer_heading():
     mag_x, mag_y, mag_z = qmc.magnetic
     return mag_x, mag_y, mag_z
 
+
 # Tilt compensation for magnetometer using pitch and roll
 def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
-    # Apply tilt compensation to magnetometer readings using pitch and roll
     mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
-    mag_y_comp = mag_x * math.sin(roll) * math.sin(pitch) + mag_y * math.cos(roll) - mag_z * math.sin(roll) * math.cos(pitch)
+    mag_y_comp = mag_x * math.sin(roll) * math.sin(pitch) + mag_y * math.cos(roll) - mag_z * math.sin(roll) * math.cos(
+        pitch)
     return mag_x_comp, mag_y_comp
+
 
 # Get gyroscope and accelerometer data from WT61
 def get_gyro_accel_data():
@@ -62,27 +69,28 @@ def get_gyro_accel_data():
         data = ser.read(ser.in_waiting)
         for byte in data:
             buff.append(byte)
-            if len(buff) >= 11:  # Ensure we have enough data for a full packet (11 bytes)
+            if len(buff) >= 11:
                 if buff[0] == 0x55:
                     try:
                         data_type = buff[1]
                         values = struct.unpack('<hhh', buff[2:8])
                         if data_type == 0x51:  # Accelerometer data
                             accel = [v / 32768.0 * 16 for v in values]  # Convert to G
-                        elif data_type == 0x53:  # Gyroscope angle data (roll, pitch, yaw)
+                        elif data_type == 0x52:  # Gyroscope angle data (roll, pitch, yaw)
                             gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
                     except struct.error as e:
                         print(f"Unpacking error: {e}")
                     finally:
-                        buff = buff[11:]  # Remove processed packet from the buffer
-
+                        buff = buff[11:]
     return gyro, accel
+
 
 # Compute pitch and roll from accelerometer data
 def compute_pitch_roll(accel_x, accel_y, accel_z):
-    pitch = math.atan2(accel_y, math.sqrt(accel_x**2 + accel_z**2))
+    pitch = math.atan2(accel_y, math.sqrt(accel_x ** 2 + accel_z ** 2))
     roll = math.atan2(-accel_x, accel_z)
     return pitch, roll
+
 
 # Main loop for Kalman filtering
 def main():
@@ -95,7 +103,6 @@ def main():
 
         if accel_data != (None, None, None):
             accel_x, accel_y, accel_z = accel_data
-
             # Calculate pitch and roll from accelerometer data
             pitch_estimate, roll_estimate = compute_pitch_roll(accel_x, accel_y, accel_z)
 
@@ -128,6 +135,7 @@ def main():
 
         # Update at 10Hz
         time.sleep(0.1)
+
 
 if __name__ == "__main__":
     main()
