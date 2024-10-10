@@ -62,22 +62,20 @@ def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
 def initialize_wt61():
     try:
         # Open serial connection to WT61
-        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
-            # Reset the buffer
-            ser.reset_input_buffer()
+        ser.reset_input_buffer()
 
-            # Send initialization commands if required by the WT61 (assuming commands are known)
-            # For example, sending 0xA5 and 0x54 to set up continuous output (this is just hypothetical)
-            init_command = bytes([0xA5, 0x54])
-            ser.write(init_command)
-            time.sleep(0.1)  # Small delay to allow sensor to process the command
+        # Send initialization commands if required by the WT61 (assuming commands are known)
+        # For example, sending 0xA5 and 0x54 to set up continuous output (this is just hypothetical)
+        init_command = bytes([0xA5, 0x54])
+        ser.write(init_command)
+        time.sleep(0.1)  # Small delay to allow sensor to process the command
 
-            print("Initialization command sent. Waiting for data...")
+        print("Initialization command sent. Waiting for data...")
 
-            # Read and print the response (if any) from WT61 for debugging purposes
-            response = ser.read(20)
-            if response:
-                print(f"Received response: {response.hex()}")
+        # Read and print the response (if any) from WT61 for debugging purposes
+        response = ser.read(20)
+        if response:
+            print(f"Received response: {response.hex()}")
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
@@ -117,6 +115,7 @@ def get_gyro_accel_data():
                         gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
                         print(f"Data Type: {data_type} - Values: {values}")
                 buff = buff[11:]
+
     return gyro, accel
 
 

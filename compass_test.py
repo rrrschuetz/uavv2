@@ -22,10 +22,13 @@ def vector_2_degrees(x, y):
 
 
 def get_heading(sensor):
-    mag_x, mag_y, _ = sensor.magnetic
+    try:
+        mag_x, mag_y, _ = sensor.magnetic
+    except ValueError:
+        return None
     return vector_2_degrees(mag_x, mag_y)
 
 
 while True:
     print("heading: {:.2f} degrees".format(get_heading(qmc)))
-    time.sleep(0.2)
+    time.sleep(0.5)

@@ -7,7 +7,7 @@
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Initial setup to read out lidar data">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compass_gyro_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/compass_gyro_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gyro_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/gyro_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compass_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/compass_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -133,14 +133,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00189" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1726298083329</created>
-      <option name="number" value="00189" />
-      <option name="presentableId" value="LOCAL-00189" />
-      <option name="project" value="LOCAL" />
-      <updated>1726298083329</updated>
     </task>
     <task id="LOCAL-00190" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -526,7 +518,15 @@
       <option name="project" value="LOCAL" />
       <updated>1728594081923</updated>
     </task>
-    <option name="localTasksCounter" value="238" />
+    <task id="LOCAL-00238" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1728594922628</created>
+      <option name="number" value="00238" />
+      <option name="presentableId" value="LOCAL-00238" />
+      <option name="project" value="LOCAL" />
+      <updated>1728594922628</updated>
+    </task>
+    <option name="localTasksCounter" value="239" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
