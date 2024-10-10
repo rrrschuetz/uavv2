@@ -58,6 +58,31 @@ def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
         pitch)
     return mag_x_comp, mag_y_comp
 
+
+def initialize_wt61():
+    try:
+        # Open serial connection to WT61
+        with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
+            # Reset the buffer
+            ser.reset_input_buffer()
+
+            # Send initialization commands if required by the WT61 (assuming commands are known)
+            # For example, sending 0xA5 and 0x54 to set up continuous output (this is just hypothetical)
+            init_command = bytes([0xA5, 0x54])
+            ser.write(init_command)
+            time.sleep(0.1)  # Small delay to allow sensor to process the command
+
+            print("Initialization command sent. Waiting for data...")
+
+            # Read and print the response (if any) from WT61 for debugging purposes
+            response = ser.read(20)
+            if response:
+                print(f"Received response: {response.hex()}")
+
+    except serial.SerialException as e:
+        print(f"Serial error: {e}")
+
+
 # Function to parse WT61 data
 def parse_wt61_data(data):
     # Check if length is correct
@@ -90,6 +115,7 @@ def get_gyro_accel_data():
                         accel = [v / 32768.0 * 16 for v in values]  # Convert to G
                     elif data_type == 0x53:  # Gyroscope angle data (roll, pitch, yaw)
                         gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
+                        print(f"Data Type: {data_type} - Values: {values}")
                 buff = buff[11:]
     return gyro, accel
 
@@ -105,6 +131,8 @@ def compute_pitch_roll(accel_x, accel_y, accel_z):
 def main():
     global heading_estimate, P, pitch_estimate, roll_estimate
     last_time = time.time()
+
+    initialize_wt61()
 
     while True:
         # Get gyroscope and accelerometer data

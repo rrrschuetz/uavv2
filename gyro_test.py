@@ -42,9 +42,11 @@ def read_gyro_data():
                                 if data_type == 0x53:  # Angle data
                                     print(f"Angle Data -> Roll: {val1 * 180:.2f}, Pitch: {val2 * 180:.2f}, Yaw: {val3 * 180:.2f} (degrees)")
                                 elif data_type == 0x51:  # Acceleration data
-                                    print(f"Acceleration Data -> X: {val1:.2f}, Y: {val2:.2f}, Z: {val3:.2f}")
+                                    #print(f"Acceleration Data -> X: {val1:.2f}, Y: {val2:.2f}, Z: {val3:.2f}")
+                                    pass
                                 elif data_type == 0x52:  # Gyroscope data
-                                    print(f"Gyro Data -> X: {val1:.2f}, Y: {val2:.2f}, Z: {val3:.2f}")
+                                    #print(f"Gyro Data -> X: {val1:.2f}, Y: {val2:.2f}, Z: {val3:.2f}")
+                                    pass
                             buff = buff[11:]
 
     except serial.SerialException as e:
