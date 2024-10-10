@@ -13,8 +13,12 @@ from multiprocessing import Process, Value
 import threading
 from collections import deque
 from adafruit_pca9685 import PCA9685
+import board
 from board import SCL, SDA
 import busio
+import time
+from math import atan2, degrees
+import qmc5883l as qmc5883
 import torch
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
@@ -52,6 +56,10 @@ Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
 Gyaw = 0.0
+
+i2c = board.I2C()
+qmc = qmc5883.QMC5883L(i2c)
+qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
 
 # Servo functions
 def set_servo_angle(pca, channel, angle):
@@ -727,6 +735,19 @@ def yaw_difference(yaw1, yaw2):
         diff += 360
     return diff
 
+def vector_2_degrees(x, y):
+    angle = degrees(atan2(y, x))
+    if angle < 0:
+        angle = angle + 360
+    return angle
+
+def get_heading(sensor):
+    try:
+        mag_x, mag_y, _ = sensor.magnetic
+    except ValueError:
+        return None
+    return vector_2_degrees(mag_x, mag_y)
+
 
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     position = navigate(sock)
@@ -739,6 +760,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     yaw_delta_l = left_angle - 180 if 180 >= left_angle > 90 else -90
     yaw_delta = yaw_delta_l if abs(yaw_delta_l) < abs(yaw_delta_r) else yaw_delta_r
     print(f"left_angle: {left_angle:.2f} right_angle: {right_angle:.2f} yaw_delta: {yaw_delta:.2f}")
+    print("heading: {:.2f} degrees".format(get_heading(qmc)))
 
     while shared_race_mode.value == 2 and \
            (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
