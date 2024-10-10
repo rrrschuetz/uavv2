@@ -58,6 +58,20 @@ def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
         pitch)
     return mag_x_comp, mag_y_comp
 
+# Function to parse WT61 data
+def parse_wt61_data(data):
+    # Check if length is correct
+    if len(data) == 11 and data[0] == 0x55:
+        if sum(data[0:-1]) & 0xFF == data[-1]:
+            data_type = data[1]
+            values = struct.unpack('<hhh', data[2:8])  # Convert data to three signed short values
+            return data_type, values
+        else:
+            #print(f"Checksum mismatch: calculated {calculated_checksum:02X}, received {received_checksum:02X}")
+            return None, (None, None, None)
+    else:
+        #print("Invalid data length")
+        return None, (None, None, None)
 
 # Get gyroscope and accelerometer data from WT61
 def get_gyro_accel_data():
@@ -71,17 +85,12 @@ def get_gyro_accel_data():
             buff.append(byte)
             if len(buff) >= 11:
                 if buff[0] == 0x55:
-                    try:
-                        data_type = buff[1]
-                        values = struct.unpack('<hhh', buff[2:8])
-                        if data_type == 0x51:  # Accelerometer data
-                            accel = [v / 32768.0 * 16 for v in values]  # Convert to G
-                        elif data_type == 0x52:  # Gyroscope angle data (roll, pitch, yaw)
-                            gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
-                    except struct.error as e:
-                        print(f"Unpacking error: {e}")
-                    finally:
-                        buff = buff[11:]
+                    data_type, values = parse_wt61_data(buff[:11])
+                    if data_type == 0x51:  # Accelerometer data
+                        accel = [v / 32768.0 * 16 for v in values]  # Convert to G
+                    elif data_type == 0x53:  # Gyroscope angle data (roll, pitch, yaw)
+                        gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
+                buff = buff[11:]
     return gyro, accel
 
 
