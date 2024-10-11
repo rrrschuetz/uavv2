@@ -20,6 +20,7 @@ import time
 from math import atan2, degrees
 import qmc5883l as qmc5883
 import torch
+
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
@@ -56,6 +57,11 @@ Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
 Gyaw = 0.0
+Gpitch = 0.0
+Groll = 0.0
+Gaccel_x = 0.0
+Gaccel_y = 0.0
+Gaccel_z = 0.0
 
 i2c = board.I2C()
 qmc = qmc5883.QMC5883L(i2c)
@@ -66,8 +72,6 @@ Q = 0.1  # Process noise covariance
 R = 1.0  # Measurement noise covariance
 P = 1.0  # Estimation error covariance
 heading_estimate = 0.0  # Initial heading estimate
-pitch_estimate = 0.0  # Initial pitch estimate
-roll_estimate = 0.0  # Initial roll estimate
 
 
 # Servo functions
@@ -683,10 +687,10 @@ def parse_wt61_data(data):
     if len(data) == 11 and data[0] == 0x55 and sum(data[0:-1]) & 0xFF == data[-1]:
         data_type = data[1]
         values = struct.unpack('<hhh', data[2:8])  # Convert data to three signed short values
-        return data_type, values[0] / 32768.0, values[1] / 32768.0, values[2] / 32768.0
+        return data_type, values
     else:
         #print("Invalid data package")
-        return None, None, None, None
+        return None, (None, None, None)
 
 def initialize_wt61():
     try:
@@ -718,14 +722,18 @@ def gyro_thread():
             while True:
                 if ser.in_waiting:
                     data = ser.read(ser.in_waiting)
-                    for byte in data:
-                        buff.append(byte)
-                        if len(buff) >= 11:  # Assuming each packet length is 11 for now
-                            if buff[0] == 0x55:  # Start of packet as per device protocol
-                                data_type, val1, val2, val3 = parse_wt61_data(buff[:11])
-                                if data_type == 0x53:  # Angle data
-                                    Gyaw = val3 * 180
-                            buff = buff[11:]
+                    buff.extend(data)
+                    if len(buff) >= 11:
+                        if buff[0] == 0x55:
+                            data_type, values = parse_wt61_data(buff[:11])
+                            if data_type == 0x51:  # Accelerometer data
+                                Gaccel = [v / 32768.0 * 16 for v in values]  # Convert to G
+                            elif data_type == 0x53:  # Gyroscope angle data (roll, pitch, yaw)
+                                Ggyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
+                            #print(f"Data Type: {data_type} - Values: {values}")
+                        buff = buff[11:]
+                    else:
+                        buff = buff.pop(0)
                 else:
                     time.sleep(0.02)
 
@@ -867,7 +875,8 @@ def park(pca, sock, shared_race_mode):
 
 
 def main():
-    global heading_estimate, P, pitch_estimate, roll_estimate
+    global heading_estimate, P
+    global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
 
     print("Starting the UAV program...")
     # Create shared variables
@@ -956,6 +965,8 @@ def main():
             last_time = time.time()
             while True:
                 #print("heading: {:.2f} degrees".format(get_heading(qmc)))
+
+                pitch_estimate, roll_estimate = compute_pitch_roll(Gaccel_x, Gaccel_y, Gaccel_z)
 
                 # Get the magnetometer heading (absolute heading)
                 mag_x, mag_y, mag_z = get_magnetometer_heading()

@@ -117,9 +117,10 @@ def get_gyro_accel_data():
                 data_type, values = parse_wt61_data(buff[:11])
                 if data_type == 0x51:  # Accelerometer data
                     accel = [v / 32768.0 * 16 for v in values]  # Convert to G
+                    Gaccel_x, Gaccel_y, Gaccel_z = accel
                 elif data_type == 0x53:  # Gyroscope angle data (roll, pitch, yaw)
                     gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
-                    print(f"Data Type: {data_type} - Values: {values}")
+                    Groll, Gpitch, Gyaw = gyro
                 buff = buff[11:]
             else:
                 buff = buff.pop(0)
