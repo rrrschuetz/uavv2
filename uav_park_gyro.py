@@ -577,6 +577,8 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
                 if current_time - last_blue_line_time >= 3 and abs(Gyaw-yaw_last) > 10:
                     print(f"Blue line count: {shared_blue_line_count.value+1} \\"
                           f"time: {current_time-last_blue_line_time:.2f} yaw gain: {abs(Gyaw-yaw_last):.2f}")
+                    print("Kalman Filtered Heading: {:.2f} degrees".format(get_kalman_heading()))
+                    print("Raw Heading: {:.2f} degrees".format(get_heading(qmc)))
                     last_blue_line_time = current_time
                     yaw_last = Gyaw
                     shared_blue_line_count.value += 1
@@ -977,17 +979,12 @@ def main():
             # gyro_thread_instance.join()
             # xbox_controller_process_instance.join()
 
-            shared_race_mode.value = 2
-
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
 
-            print("Kalman Filtered Heading: {:.2f} degrees".format(get_kalman_heading()))
-            print("Raw Heading: {:.2f} degrees".format(get_heading(qmc)))
-
-            #print("Starting the parking procedure")
-            #park(pca, sock, shared_race_mode)
+            print("Starting the parking procedure")
+            park(pca, sock, shared_race_mode)
 
             shared_race_mode.value = 0
             shared_blue_line_count.value = 0
