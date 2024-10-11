@@ -61,6 +61,15 @@ i2c = board.I2C()
 qmc = qmc5883.QMC5883L(i2c)
 qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
 
+# Kalman filter parameters
+Q = 0.1  # Process noise covariance
+R = 1.0  # Measurement noise covariance
+P = 1.0  # Estimation error covariance
+heading_estimate = 0.0  # Initial heading estimate
+pitch_estimate = 0.0  # Initial pitch estimate
+roll_estimate = 0.0  # Initial roll estimate
+
+
 # Servo functions
 def set_servo_angle(pca, channel, angle):
     pulse_min = 260  # Pulse width for 0 degrees
@@ -735,18 +744,56 @@ def yaw_difference(yaw1, yaw2):
         diff += 360
     return diff
 
-def vector_2_degrees(x, y):
-    angle = degrees(atan2(y, x))
-    if angle < 0:
-        angle = angle + 360
-    return angle
-
 def get_heading(sensor):
     try:
         mag_x, mag_y, _ = sensor.magnetic
     except ValueError:
         return None
-    return vector_2_degrees(mag_x, mag_y)
+    return vector_2_degrees(mag_x, mag_y)# Kalman filter function for yaw
+
+def kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P):
+    P = P + Q  # Update process error covariance with process noise
+    heading_predict = heading_estimate + gyro_heading_change  # Predict the new heading
+    K = P / (P + R)  # Calculate Kalman gain
+    heading_estimate = heading_predict + K * (mag_heading - heading_predict)  # Update estimate
+    P = (1 - K) * P  # Update error covariance
+
+    # Normalize heading to stay within [0, 360) degrees
+    heading_estimate %= 360  # This will constrain heading between 0 and 360
+    return heading_estimate, P
+
+# Get magnetometer heading
+def vector_2_degrees(x, y):
+    angle = math.degrees(math.atan2(y, x))
+    if angle < 0:
+        angle += 360
+    return angle
+
+
+def get_magnetometer_heading():
+    retries = 10  # Set a retry limit
+    for attempt in range(retries):
+        try:
+            mag_x, mag_y, mag_z = qmc.magnetic
+            return mag_x, mag_y, mag_z
+        except OSError as e:
+            print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
+            time.sleep(0.5)  # Wait before retrying
+    raise RuntimeError("Failed to read from magnetometer after multiple attempts")
+
+
+# Tilt compensation for magnetometer using pitch and roll
+def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
+    mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
+    mag_y_comp = mag_x * math.sin(roll) * math.sin(pitch) + mag_y * math.cos(roll) - mag_z * math.sin(roll) * math.cos(
+        pitch)
+    return mag_x_comp, mag_y_comp
+
+# Compute pitch and roll from accelerometer data
+def compute_pitch_roll(accel_x, accel_y, accel_z):
+    pitch = math.atan2(accel_y, math.sqrt(accel_x ** 2 + accel_z ** 2))
+    roll = math.atan2(-accel_x, accel_z)
+    return pitch, roll
 
 
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
@@ -821,6 +868,8 @@ def park(pca, sock, shared_race_mode):
 
 
 def main():
+    global heading_estimate, P, pitch_estimate, roll_estimate
+
     print("Starting the UAV program...")
     # Create shared variables
     shared_GX = Value('d', 0.0)  # 'd' for double precision float
@@ -905,9 +954,33 @@ def main():
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
 
+            last_time = time.time()
             while True:
-                print("heading: {:.2f} degrees".format(get_heading(qmc)))
+                #print("heading: {:.2f} degrees".format(get_heading(qmc)))
+
+                # Get the magnetometer heading (absolute heading)
+                mag_x, mag_y, mag_z = get_magnetometer_heading()
+
+                # Tilt compensate the magnetometer data
+                mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z, pitch_estimate, roll_estimate)
+
+                # Calculate the magnetometer heading
+                mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
+
+                # Calculate time difference for integrating gyroscope data
+                current_time = time.time()
+                dt = current_time - last_time
+                last_time = current_time
+
+                gyro_heading_change = Gyaw * dt
+
+                # Apply Kalman filter to fuse magnetometer and gyroscope data
+                heading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P)
+
+                # Print the stable, filtered heading
+                print(f"Kalman Filtered Heading: {heading_estimate:.2f} degrees")
                 time.sleep(0.1)
+
 
             print("Starting the parking procedure")
             park(pca, sock, shared_race_mode)
