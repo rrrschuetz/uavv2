@@ -760,7 +760,6 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     yaw_delta_l = left_angle - 180 if 180 >= left_angle > 90 else -90
     yaw_delta = yaw_delta_l if abs(yaw_delta_l) < abs(yaw_delta_r) else yaw_delta_r
     print(f"left_angle: {left_angle:.2f} right_angle: {right_angle:.2f} yaw_delta: {yaw_delta:.2f}")
-    print("heading: {:.2f} degrees".format(get_heading(qmc)))
 
     while shared_race_mode.value == 2 and \
            (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
@@ -900,9 +899,15 @@ def main():
             # gyro_thread_instance.join()
             # xbox_controller_process_instance.join()
 
+            shared_race_mode.value = 2
+
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
+
+            while True:
+                print("heading: {:.2f} degrees".format(get_heading(qmc)))
+                time.sleep(0.1)
 
             print("Starting the parking procedure")
             park(pca, sock, shared_race_mode)
