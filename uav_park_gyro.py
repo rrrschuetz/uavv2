@@ -2,10 +2,8 @@ import socket
 import struct
 import serial
 import pygame
-import time
 import numpy as np
 from scipy.ndimage import median_filter
-from scipy.spatial import distance_matrix
 from scipy.stats import trim_mean
 import cv2
 from picamera2 import Picamera2
@@ -17,7 +15,7 @@ import board
 from board import SCL, SDA
 import busio
 import time
-from math import atan2, degrees
+import math
 import qmc5883l as qmc5883
 import torch
 
@@ -802,6 +800,29 @@ def compute_pitch_roll(accel_x, accel_y, accel_z):
     roll = math.atan2(-accel_x, accel_z)
     return pitch, roll
 
+def get_kalman_heading():
+    global heading_estimate, P
+    global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
+
+    last_time = time.time()
+    for i in range(10):
+        pitch_estimate, roll_estimate = compute_pitch_roll(Gaccel_x, Gaccel_y, Gaccel_z)
+        # Get the magnetometer heading (absolute heading)
+        mag_x, mag_y, mag_z = get_magnetometer_heading()
+        # Tilt compensate the magnetometer data
+        mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z, pitch_estimate, roll_estimate)
+        # Calculate the magnetometer heading
+        mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
+        # Calculate time difference for integrating gyroscope data
+        current_time = time.time()
+        dt = current_time - last_time
+        last_time = current_time
+        gyro_heading_change = Gyaw * dt
+
+        # Apply Kalman filter to fuse magnetometer and gyroscope data
+        heading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P)
+
+    return heading_estimate
 
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     position = navigate(sock)
@@ -962,38 +983,11 @@ def main():
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
 
-            last_time = time.time()
-            while True:
-                #print("heading: {:.2f} degrees".format(get_heading(qmc)))
+            print("Kalman Filtered Heading: {:.2f} degrees".format(get_kalman_heading()))
+            print("Raw Heading: {:.2f} degrees".format(get_heading(qmc)))
 
-                pitch_estimate, roll_estimate = compute_pitch_roll(Gaccel_x, Gaccel_y, Gaccel_z)
-
-                # Get the magnetometer heading (absolute heading)
-                mag_x, mag_y, mag_z = get_magnetometer_heading()
-
-                # Tilt compensate the magnetometer data
-                mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z, pitch_estimate, roll_estimate)
-
-                # Calculate the magnetometer heading
-                mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-
-                # Calculate time difference for integrating gyroscope data
-                current_time = time.time()
-                dt = current_time - last_time
-                last_time = current_time
-
-                gyro_heading_change = Gyaw * dt
-
-                # Apply Kalman filter to fuse magnetometer and gyroscope data
-                heading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P)
-
-                # Print the stable, filtered heading
-                print(f"Kalman Filtered Heading: {heading_estimate:.2f} degrees")
-                time.sleep(0.1)
-
-
-            print("Starting the parking procedure")
-            park(pca, sock, shared_race_mode)
+            #print("Starting the parking procedure")
+            #park(pca, sock, shared_race_mode)
 
             shared_race_mode.value = 0
             shared_blue_line_count.value = 0
