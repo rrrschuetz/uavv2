@@ -769,7 +769,6 @@ def vector_2_degrees(x, y):
         angle += 360
     return angle
 
-
 def get_magnetometer_heading():
     retries = 10  # Set a retry limit
     for attempt in range(retries):
@@ -781,12 +780,12 @@ def get_magnetometer_heading():
             time.sleep(0.5)  # Wait before retrying
     raise RuntimeError("Failed to read from magnetometer after multiple attempts")
 
-
 # Tilt compensation for magnetometer using pitch and roll
 def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
     mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
-    mag_y_comp = mag_x * math.sin(roll) * math.sin(pitch) + mag_y * math.cos(roll) - mag_z * math.sin(roll) * math.cos(
-        pitch)
+    mag_y_comp = (mag_x * math.sin(roll) * math.sin(pitch)
+                  + mag_y * math.cos(roll)
+                  - mag_z * math.sin(roll) * math.cos(pitch))
     return mag_x_comp, mag_y_comp
 
 # Compute pitch and roll from accelerometer data
