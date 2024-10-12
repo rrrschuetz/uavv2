@@ -47,7 +47,7 @@ MOTOR_FACTOR = 0.3
 MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
-PARK_STEER = 1.5
+PARK_STEER = 2.5
 PARK_FIX_STEER = 0.3
 
 BLUE_LINE_PARKING_COUNT = 4
@@ -63,6 +63,7 @@ Gaccel_x = 0.0
 Gaccel_y = 0.0
 Gaccel_z = 0.0
 Gheading_estimate = 0.0  # Initial heading estimate
+Gheading_start = 0.0
 
 i2c = board.I2C()
 qmc = qmc5883.QMC5883L(i2c)
@@ -822,7 +823,7 @@ def gyro_thread():
                     Gheading_estimate = mag_heading
                     #print(f"Gyro heading change: {gyro_heading_change:.2f}")
                     #print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
-                    time.sleep(0.02)
+                    time.sleep(0.01)
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
@@ -841,7 +842,9 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     yaw_delta_r = right_angle if 90 >= right_angle > 0 else 90
     yaw_delta_l = left_angle - 180 if 180 >= left_angle > 90 else -90
     yaw_delta = yaw_delta_l if abs(yaw_delta_l) < abs(yaw_delta_r) else yaw_delta_r
-    print(f"left_angle: {left_angle:.2f} right_angle: {right_angle:.2f} yaw_delta: {yaw_delta:.2f}")
+    print(f"LID left_angle: {left_angle:.2f} right_angle: {right_angle:.2f} yaw_delta: {yaw_delta:.2f}")
+    yaw_delta = (Gheading_estimate % 90) - (Gheading_start % 90)
+    print(f"LID yaw_delta: {yaw_delta:.2f}")
 
     while shared_race_mode.value == 2 and \
            (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
@@ -874,13 +877,14 @@ def align_angular(pca, angle, shared_race_mode):
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-        time.sleep(0.1)
+        #time.sleep(0.1)
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car final angle {Gyaw:.2f}")
 
 
 def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
+    time.sleep(5)
     align_angular(pca, 80 if Gclock_wise else -80, shared_race_mode)
 
     correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
@@ -903,7 +907,7 @@ def park(pca, sock, shared_race_mode):
 
 
 def main():
-    global Gheading_estimate
+    global Gheading_estimate, Gheading_start
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
 
     print("Starting the UAV program...")
@@ -975,7 +979,10 @@ def main():
     camera_thread_instance.start()
     gyro_thread_instance.start()
     xbox_controller_process_instance.start()
-    print("All processes have started")
+
+    time.sleep(5)
+    Gheading_start = Gheading_estimate
+    print(f"All processes have started: {Gheading_start:.2f} degrees")
 
     try:
         while True:
@@ -1004,7 +1011,9 @@ def main():
             #    time.sleep(1)
 
             print("Starting the parking procedure")
-            #park(pca, sock, shared_race_mode)
+            print(f"Heading estimate: {Gheading_estimate %90:.2f}")
+            print(f"Heading start: {Gheading_start%90:.2f}")
+            park(pca, sock, shared_race_mode)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
             set_servo_angle(pca, 12, SERVO_BASIS)
@@ -1012,6 +1021,7 @@ def main():
             shared_race_mode.value = 0
             shared_blue_line_count.value = 0
             print("Parking completed")
+            break
 
     except KeyboardInterrupt:
         picam0.stop()
