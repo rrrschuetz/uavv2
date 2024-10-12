@@ -818,7 +818,7 @@ def gyro_thread():
                     # Apply Kalman filter to fuse magnetometer and gyroscope data
                     Gheading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, Gheading_estimate, P)
                     #print(f"Gyro heading change: {gyro_heading_change:.2f}")
-                    #print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
+                    print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
                     time.sleep(0.02)
 
     except serial.SerialException as e:
@@ -981,16 +981,16 @@ def main():
             # gyro_thread_instance.join()
             # xbox_controller_process_instance.join()
 
-            #shared_race_mode.value = 2
+            shared_race_mode.value = 2
 
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
 
-            #while True:
-            #    print(f"Kalman Filtered Heading: {Gheading_estimate:.2f} degrees")
-            #    print(f"Yaw: {Gyaw:.2f}")
-            #    time.sleep(1)
+            while True:
+                print(f"Kalman Filtered Heading: {Gheading_estimate:.2f} degrees")
+                print(f"Yaw: {Gyaw:.2f}")
+                time.sleep(1)
 
             print("Starting the parking procedure")
             #park(pca, sock, shared_race_mode)
