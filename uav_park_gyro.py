@@ -1,5 +1,7 @@
 import socket
 import struct
+from http.cookiejar import cut_port_re
+
 import serial
 import pygame
 import numpy as np
@@ -816,9 +818,10 @@ def gyro_thread():
                     # Calculate the magnetometer heading
                     mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
                     # Apply Kalman filter to fuse magnetometer and gyroscope data
-                    Gheading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, Gheading_estimate, P)
+                    #Gheading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, Gheading_estimate, P)
+                    Gheading_estimate = mag_heading
                     #print(f"Gyro heading change: {gyro_heading_change:.2f}")
-                    print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
+                    #print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
                     time.sleep(0.02)
 
     except serial.SerialException as e:
@@ -987,9 +990,17 @@ def main():
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
 
+            time.sleep(5)
+            start_yaw = Gyaw
+            if start_yaw < 0:
+                start_yaw += 360
+            start_mag = Gheading_estimate
             while True:
-                print(f"Kalman Filtered Heading: {Gheading_estimate:.2f} degrees")
-                print(f"Yaw: {Gyaw:.2f}")
+                print(f"K: {Gheading_estimate:.2f} / {(Gheading_estimate-start_mag)/360:2.f}")
+                current_yaw = Gyaw
+                if current_yaw < 0:
+                    current_yaw += 360
+                print(f"Y: {current_yaw:.2f} / {(current_yaw-start_yaw)/360:2.f}")
                 time.sleep(1)
 
             print("Starting the parking procedure")
