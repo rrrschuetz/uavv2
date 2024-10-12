@@ -715,7 +715,7 @@ def initialize_wt61():
 
 
 def gyro_thread():
-    global Gyaw
+    global Gyaw, Gaccel_x, Gaccel_y, Gaccel_z
     buff = bytearray()
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
@@ -728,10 +728,13 @@ def gyro_thread():
                         if buff[0] == 0x55:
                             data_type, values = parse_wt61_data(buff[:11])
                             if data_type == 0x51:  # Accelerometer data
-                                Gaccel = [v / 32768.0 * 16 for v in values]  # Convert to G
+                                accel = [v / 32768.0 * 16 for v in values]  # Convert to G
+                                Gaccel_x, Gaccel_y, Gaccel_z = accel
+                                print(f"Data Type: {data_type} - Values: {values}")
                             elif data_type == 0x53:  # Gyroscope angle data (roll, pitch, yaw)
-                                Ggyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
-                            #print(f"Data Type: {data_type} - Values: {values}")
+                                gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
+                                Gyaw = gyro[2]
+                                print(f"Data Type: {data_type} - Values: {values}")
                         buff = buff[11:]
                     else:
                         buff = buff.pop(0)
@@ -828,6 +831,7 @@ def get_kalman_heading():
     return heading_estimate
 
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
+    global Gyaw
     position = navigate(sock)
     left_angle = position['left_min_angle']
     right_angle = position['right_min_angle']
@@ -980,9 +984,17 @@ def main():
             # gyro_thread_instance.join()
             # xbox_controller_process_instance.join()
 
+            shared_race_mode.value = 2
+
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
+
+            while True:
+                print("Kalman Filtered Heading: {:.2f} degrees".format(get_kalman_heading()))
+                print("Raw Heading: {:.2f} degrees".format(get_heading(qmc)))
+                print(f"Yaw: {Gyaw:.2f}")
+                time.sleep(1)
 
             print("Starting the parking procedure")
             #park(pca, sock, shared_race_mode)

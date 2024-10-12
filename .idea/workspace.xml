@@ -136,14 +136,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00201" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1727458942950</created>
-      <option name="number" value="00201" />
-      <option name="presentableId" value="LOCAL-00201" />
-      <option name="project" value="LOCAL" />
-      <updated>1727458942950</updated>
-    </task>
     <task id="LOCAL-00202" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
       <created>1727459766294</created>
@@ -528,7 +520,15 @@
       <option name="project" value="LOCAL" />
       <updated>1728686989253</updated>
     </task>
-    <option name="localTasksCounter" value="250" />
+    <task id="LOCAL-00250" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1728714544997</created>
+      <option name="number" value="00250" />
+      <option name="presentableId" value="LOCAL-00250" />
+      <option name="project" value="LOCAL" />
+      <updated>1728714544997</updated>
+    </task>
+    <option name="localTasksCounter" value="251" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -576,7 +576,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_gyro.py</url>
-          <line>962</line>
+          <line>965</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
