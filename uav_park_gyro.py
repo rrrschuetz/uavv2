@@ -715,7 +715,7 @@ def initialize_wt61():
 
 
 def gyro_thread():
-    global Gyaw, Gaccel_x, Gaccel_y, Gaccel_z
+    global Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z
     buff = bytearray()  # Buffer to store incoming serial data
 
     try:
@@ -748,7 +748,7 @@ def gyro_thread():
                             # Handle gyroscope data (0x53)
                             elif data_type == 0x53:
                                 gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
-                                Gyaw = gyro[2]
+                                Gpitch, Groll, Gyaw = gyro
                                 #print(f"Gyroscope Data: {gyro}")
 
                         else:
@@ -822,27 +822,20 @@ def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
                   - mag_z * math.sin(roll) * math.cos(pitch))
     return mag_x_comp, mag_y_comp
 
-# Compute pitch and roll from accelerometer data
-def compute_pitch_roll(accel_x, accel_y, accel_z):
-    pitch = math.atan2(accel_y, math.sqrt(accel_x ** 2 + accel_z ** 2))
-    roll = math.atan2(-accel_x, accel_z)
-    return pitch, roll
-
 def get_kalman_heading():
     global heading_estimate, P
-    global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
+    global Gpitch, Groll, Gyaw
 
     last_time = time.time()
     for i in range(10):
-        pitch_estimate, roll_estimate = compute_pitch_roll(Gaccel_x, Gaccel_y, Gaccel_z)
-        print(f"Pitch: {math.degrees(pitch_estimate):.2f}, Roll: {math.degrees(roll_estimate):.2f}")
+        print(f"Pitch: {Gpitch:.2f}, Roll: {Groll:.2f}")
         # Get the magnetometer heading (absolute heading)
         mag_x, mag_y, mag_z = get_magnetometer_heading()
         # Tilt compensate the magnetometer data
-        mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z, pitch_estimate, roll_estimate)
-        print(f"Mag X: {mag_x_comp:.2f}, Mag Y: {mag_y_comp:.2f}")
+        mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z, math.radians(Gpitch), math.radians(Groll))
         # Calculate the magnetometer heading
         mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
+        print(f"Compensated magnetometer heading: {mag_heading:.2f}")
         # Calculate time difference for integrating gyroscope data
         current_time = time.time()
         dt = current_time - last_time
