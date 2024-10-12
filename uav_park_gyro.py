@@ -60,16 +60,11 @@ Groll = 0.0
 Gaccel_x = 0.0
 Gaccel_y = 0.0
 Gaccel_z = 0.0
+Gheading_estimate = 0.0  # Initial heading estimate
 
 i2c = board.I2C()
 qmc = qmc5883.QMC5883L(i2c)
 qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
-
-# Kalman filter parameters
-Q = 0.1  # Process noise covariance
-R = 1.0  # Measurement noise covariance
-P = 1.0  # Estimation error covariance
-Gheading_estimate = 0.0  # Initial heading estimate
 
 
 # Servo functions
@@ -694,7 +689,10 @@ def yaw_difference(yaw1, yaw2):
     return diff
 
 def kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P):
-    global Q, R
+    # Kalman filter parameters
+    Q = 0.05  # Process noise covariance / stable gyroscope
+    R = 0.2  # Measurement noise covariance / noise magnetometer
+
     P = P + Q  # Update process error covariance with process noise
     heading_predict = heading_estimate + gyro_heading_change  # Predict the new heading
     K = P / (P + R)  # Calculate Kalman gain
@@ -766,11 +764,15 @@ def initialize_wt61():
 def gyro_thread():
     global Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_estimate, P
     buff = bytearray()  # Buffer to store incoming serial data
+    P = 1.0  # Initial process error covariance
 
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
             ser.reset_input_buffer()  # Clear old data at the start
+            last_yaw = Gyaw
+
             while True:
+
                 if ser.in_waiting:
                     # Read all available data and append it to the buffer
                     data = ser.read(ser.in_waiting)
@@ -805,6 +807,8 @@ def gyro_thread():
                             buff.pop(0)  # Remove one byte and continue checking
 
                 else:
+                    gyro_heading_change = yaw_difference(last_yaw, Gyaw)
+                    last_yaw = Gyaw
                     #print(f"Pitch: {Gpitch:.2f}, Roll: {Groll:.2f}")
                     # Get the magnetometer heading (absolute heading)
                     mag_x, mag_y, mag_z = get_magnetometer_heading()
@@ -813,10 +817,10 @@ def gyro_thread():
                         math.radians(Gpitch),math.radians(Groll))
                     # Calculate the magnetometer heading
                     mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-                    gyro_heading_change = Gyaw if Gyaw >= 0 else Gyaw + 360
                     # Apply Kalman filter to fuse magnetometer and gyroscope data
                     Gheading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, Gheading_estimate, P)
-                    print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
+                    #print(f"Gyro heading change: {gyro_heading_change:.2f}")
+                    #print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
                     time.sleep(0.02)
 
     except serial.SerialException as e:
