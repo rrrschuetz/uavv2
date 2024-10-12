@@ -69,7 +69,7 @@ qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
 Q = 0.1  # Process noise covariance
 R = 1.0  # Measurement noise covariance
 P = 1.0  # Estimation error covariance
-heading_estimate = 0.0  # Initial heading estimate
+Gheading_estimate = 0.0  # Initial heading estimate
 
 
 # Servo functions
@@ -684,6 +684,55 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
         time.sleep(1 / 30)
 
 
+def yaw_difference(yaw1, yaw2):
+    """Calculate the shortest difference between two yaw angles in degrees."""
+    diff = yaw2 - yaw1
+    while diff > 180:
+        diff -= 360
+    while diff < -180:
+        diff += 360
+    return diff
+
+def kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P):
+    global Q, R
+    P = P + Q  # Update process error covariance with process noise
+    heading_predict = heading_estimate + gyro_heading_change  # Predict the new heading
+    K = P / (P + R)  # Calculate Kalman gain
+    heading_estimate = heading_predict + K * (mag_heading - heading_predict)  # Update estimate
+    P = (1 - K) * P  # Update error covariance
+
+    # Normalize heading to stay within [0, 360) degrees
+    heading_estimate %= 360  # This will constrain heading between 0 and 360
+    return heading_estimate, P
+
+# Get magnetometer heading
+def vector_2_degrees(x, y):
+    angle = math.degrees(math.atan2(y, x))
+    if angle < 0:
+        angle += 360
+    return angle
+
+def get_magnetometer_heading():
+    retries = 10  # Set a retry limit
+    for attempt in range(retries):
+        try:
+            mag_x, mag_y, mag_z = qmc.magnetic
+            #mag_x, mag_y, mag_z = (0,0,0)
+            return mag_x, mag_y, mag_z
+        except OSError as e:
+            print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
+            time.sleep(0.5)  # Wait before retrying
+    return 0,0,0
+    #raise RuntimeError("Failed to read from magnetometer after multiple attempts")
+
+# Tilt compensation for magnetometer using pitch and roll
+def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
+    mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
+    mag_y_comp = (mag_x * math.sin(roll) * math.sin(pitch)
+                  + mag_y * math.cos(roll)
+                  - mag_z * math.sin(roll) * math.cos(pitch))
+    return mag_x_comp, mag_y_comp
+
 def parse_wt61_data(data):
     if len(data) == 11 and data[0] == 0x55 and sum(data[0:-1]) & 0xFF == data[-1]:
         data_type = data[1]
@@ -715,7 +764,7 @@ def initialize_wt61():
 
 
 def gyro_thread():
-    global Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z
+    global Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_estimate, P
     buff = bytearray()  # Buffer to store incoming serial data
 
     try:
@@ -756,96 +805,25 @@ def gyro_thread():
                             buff.pop(0)  # Remove one byte and continue checking
 
                 else:
-                    # Optional: Short sleep to avoid CPU starvation, but keep it minimal
-                    time.sleep(0.02)  # Small sleep to prevent overloading the CPU
+                    #print(f"Pitch: {Gpitch:.2f}, Roll: {Groll:.2f}")
+                    # Get the magnetometer heading (absolute heading)
+                    mag_x, mag_y, mag_z = get_magnetometer_heading()
+                    # Tilt compensate the magnetometer data
+                    mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z,
+                        math.radians(Gpitch),math.radians(Groll))
+                    # Calculate the magnetometer heading
+                    mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
+                    gyro_heading_change = Gyaw if Gyaw >= 0 else Gyaw + 360
+                    # Apply Kalman filter to fuse magnetometer and gyroscope data
+                    Gheading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, Gheading_estimate, P)
+                    print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
+                    time.sleep(0.02)
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
     except KeyboardInterrupt:
         print("Stopping data read.")
 
-
-
-def yaw_difference(yaw1, yaw2):
-    """Calculate the shortest difference between two yaw angles in degrees."""
-    diff = yaw2 - yaw1
-    while diff > 180:
-        diff -= 360
-    while diff < -180:
-        diff += 360
-    return diff
-
-def get_heading():
-    try:
-        #mag_x, mag_y, _ = qmc.magnetic
-        mag_x, mag_y, _ = (0,0,0)
-    except ValueError:
-        return None
-    return vector_2_degrees(mag_x, mag_y)# Kalman filter function for yaw
-
-def kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P):
-    P = P + Q  # Update process error covariance with process noise
-    heading_predict = heading_estimate + gyro_heading_change  # Predict the new heading
-    K = P / (P + R)  # Calculate Kalman gain
-    heading_estimate = heading_predict + K * (mag_heading - heading_predict)  # Update estimate
-    P = (1 - K) * P  # Update error covariance
-
-    # Normalize heading to stay within [0, 360) degrees
-    heading_estimate %= 360  # This will constrain heading between 0 and 360
-    return heading_estimate, P
-
-# Get magnetometer heading
-def vector_2_degrees(x, y):
-    angle = math.degrees(math.atan2(y, x))
-    if angle < 0:
-        angle += 360
-    return angle
-
-def get_magnetometer_heading():
-    retries = 10  # Set a retry limit
-    for attempt in range(retries):
-        try:
-            mag_x, mag_y, mag_z = qmc.magnetic
-            #mag_x, mag_y, mag_z = (0,0,0)
-            return mag_x, mag_y, mag_z
-        except OSError as e:
-            print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
-            time.sleep(0.5)  # Wait before retrying
-    return 0,0,0
-    #raise RuntimeError("Failed to read from magnetometer after multiple attempts")
-
-# Tilt compensation for magnetometer using pitch and roll
-def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
-    mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
-    mag_y_comp = (mag_x * math.sin(roll) * math.sin(pitch)
-                  + mag_y * math.cos(roll)
-                  - mag_z * math.sin(roll) * math.cos(pitch))
-    return mag_x_comp, mag_y_comp
-
-def get_kalman_heading():
-    global heading_estimate, P
-    global Gpitch, Groll, Gyaw
-
-    last_time = time.time()
-    for i in range(10):
-        print(f"Pitch: {Gpitch:.2f}, Roll: {Groll:.2f}")
-        # Get the magnetometer heading (absolute heading)
-        mag_x, mag_y, mag_z = get_magnetometer_heading()
-        # Tilt compensate the magnetometer data
-        mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z, math.radians(Gpitch), math.radians(Groll))
-        # Calculate the magnetometer heading
-        mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-        print(f"Compensated magnetometer heading: {mag_heading:.2f}")
-        # Calculate time difference for integrating gyroscope data
-        current_time = time.time()
-        dt = current_time - last_time
-        last_time = current_time
-        gyro_heading_change = (Gyaw if Gyaw >= 0 else Gyaw + 360) * dt
-
-        # Apply Kalman filter to fuse magnetometer and gyroscope data
-        heading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P)
-
-    return heading_estimate
 
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     global Gyaw
@@ -920,7 +898,7 @@ def park(pca, sock, shared_race_mode):
 
 
 def main():
-    global heading_estimate, P
+    global Gheading_estimate
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
 
     print("Starting the UAV program...")
@@ -1008,8 +986,7 @@ def main():
                 # print(f"Race mode: {shared_race_mode.value}")
 
             while True:
-                print("Kalman Filtered Heading: {:.2f} degrees".format(get_kalman_heading()))
-                print("Raw Heading: {:.2f} degrees".format(get_heading()))
+                print(f"Kalman Filtered Heading: {Gheading_estimate:.2f} degrees")
                 print(f"Yaw: {Gyaw:.2f}")
                 time.sleep(1)
 
