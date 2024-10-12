@@ -716,35 +716,54 @@ def initialize_wt61():
 
 def gyro_thread():
     global Gyaw, Gaccel_x, Gaccel_y, Gaccel_z
-    buff = bytearray()
+    buff = bytearray()  # Buffer to store incoming serial data
+
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
-            ser.reset_input_buffer()  # Clear any old data from the input buffer
+            ser.reset_input_buffer()  # Clear old data at the start
             while True:
                 if ser.in_waiting:
+                    # Read all available data and append it to the buffer
                     data = ser.read(ser.in_waiting)
-                    buff.extend(data)
-                    if len(buff) >= 11:
-                        if buff[0] == 0x55:
-                            data_type, values = parse_wt61_data(buff[:11])
-                            if data_type == 0x51:  # Accelerometer data
+                    buff.extend(data)  # Add data to the buffer
+
+                    # Process all available packets in the buffer
+                    while len(buff) >= 11:  # While we have at least one full packet
+                        #print(f"Buffer size before processing: {len(buff)}")
+
+                        if buff[0] == 0x55 and buff[1] in [0x51,0x53]:  # Valid start byte for packet
+                            packet = buff[:11]  # Get a full 11-byte packet
+                            buff = buff[11:]  # Remove the processed packet from the buffer
+
+                            # Parse the packet
+                            data_type, values = parse_wt61_data(packet)
+                            #print(f"Data type: {data_type}, Values: {values}")
+
+                            # Handle accelerometer data (0x51)
+                            if data_type == 0x51:
                                 accel = [v / 32768.0 * 16 for v in values]  # Convert to G
                                 Gaccel_x, Gaccel_y, Gaccel_z = accel
-                                print(f"Data Type: {data_type} - Values: {values}")
-                            elif data_type == 0x53:  # Gyroscope angle data (roll, pitch, yaw)
+                                #print(f"Accelerometer Data: {accel}")
+
+                            # Handle gyroscope data (0x53)
+                            elif data_type == 0x53:
                                 gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
                                 Gyaw = gyro[2]
-                                print(f"Data Type: {data_type} - Values: {values}")
-                        buff = buff[11:]
-                    else:
-                        buff = buff.pop(0)
+                                #print(f"Gyroscope Data: {gyro}")
+
+                        else:
+                            #print(f"Invalid start bytes: {buff[0]} {buff[1]}")
+                            buff.pop(0)  # Remove one byte and continue checking
+
                 else:
-                    time.sleep(0.02)
+                    # Optional: Short sleep to avoid CPU starvation, but keep it minimal
+                    time.sleep(0.02)  # Small sleep to prevent overloading the CPU
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
     except KeyboardInterrupt:
         print("Stopping data read.")
+
 
 
 def yaw_difference(yaw1, yaw2):
@@ -756,9 +775,10 @@ def yaw_difference(yaw1, yaw2):
         diff += 360
     return diff
 
-def get_heading(sensor):
+def get_heading():
     try:
-        mag_x, mag_y, _ = sensor.magnetic
+        #mag_x, mag_y, _ = qmc.magnetic
+        mag_x, mag_y, _ = (0,0,0)
     except ValueError:
         return None
     return vector_2_degrees(mag_x, mag_y)# Kalman filter function for yaw
@@ -786,11 +806,13 @@ def get_magnetometer_heading():
     for attempt in range(retries):
         try:
             mag_x, mag_y, mag_z = qmc.magnetic
+            #mag_x, mag_y, mag_z = (0,0,0)
             return mag_x, mag_y, mag_z
         except OSError as e:
             print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
             time.sleep(0.5)  # Wait before retrying
-    raise RuntimeError("Failed to read from magnetometer after multiple attempts")
+    return 0,0,0
+    #raise RuntimeError("Failed to read from magnetometer after multiple attempts")
 
 # Tilt compensation for magnetometer using pitch and roll
 def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
@@ -813,17 +835,19 @@ def get_kalman_heading():
     last_time = time.time()
     for i in range(10):
         pitch_estimate, roll_estimate = compute_pitch_roll(Gaccel_x, Gaccel_y, Gaccel_z)
+        print(f"Pitch: {math.degrees(pitch_estimate):.2f}, Roll: {math.degrees(roll_estimate):.2f}")
         # Get the magnetometer heading (absolute heading)
         mag_x, mag_y, mag_z = get_magnetometer_heading()
         # Tilt compensate the magnetometer data
         mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z, pitch_estimate, roll_estimate)
+        print(f"Mag X: {mag_x_comp:.2f}, Mag Y: {mag_y_comp:.2f}")
         # Calculate the magnetometer heading
         mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
         # Calculate time difference for integrating gyroscope data
         current_time = time.time()
         dt = current_time - last_time
         last_time = current_time
-        gyro_heading_change = Gyaw * dt
+        gyro_heading_change = (Gyaw if Gyaw >= 0 else Gyaw + 360) * dt
 
         # Apply Kalman filter to fuse magnetometer and gyroscope data
         heading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P)
@@ -992,7 +1016,7 @@ def main():
 
             while True:
                 print("Kalman Filtered Heading: {:.2f} degrees".format(get_kalman_heading()))
-                print("Raw Heading: {:.2f} degrees".format(get_heading(qmc)))
+                print("Raw Heading: {:.2f} degrees".format(get_heading()))
                 print(f"Yaw: {Gyaw:.2f}")
                 time.sleep(1)
 
