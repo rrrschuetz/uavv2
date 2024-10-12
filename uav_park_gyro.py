@@ -50,7 +50,7 @@ PARK_SPEED = -0.55
 PARK_STEER = 1.5
 PARK_FIX_STEER = 0.3
 
-BLUE_LINE_PARKING_COUNT = 2
+BLUE_LINE_PARKING_COUNT = 4
 
 # Global variables
 Glidar_string = ""
@@ -574,7 +574,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
                 if current_time - last_blue_line_time >= 3 and abs(Gyaw-yaw_last) > 10:
                     print(f"Blue line count: {shared_blue_line_count.value+1} \\"
                           f"time: {current_time-last_blue_line_time:.2f} yaw, gain: {Gyaw:.2f},{abs(Gyaw-yaw_last):.2f}")
-                    print(f"Kalman filtered heading: {Gheading_estimate:.2f} degrees")
+                    print(f"Heading: {Gheading_estimate:.2f} degrees")
                     last_blue_line_time = current_time
                     yaw_last = Gyaw
                     shared_blue_line_count.value += 1
@@ -984,27 +984,30 @@ def main():
             # gyro_thread_instance.join()
             # xbox_controller_process_instance.join()
 
-            shared_race_mode.value = 2
+            #shared_race_mode.value = 2
 
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
 
-            time.sleep(5)
-            start_yaw = Gyaw
-            if start_yaw < 0:
-                start_yaw += 360
-            start_mag = Gheading_estimate
-            while True:
-                print(f"K: {Gheading_estimate:.2f} / {(Gheading_estimate-start_mag)/360:2.f}")
-                current_yaw = Gyaw
-                if current_yaw < 0:
-                    current_yaw += 360
-                print(f"Y: {current_yaw:.2f} / {(current_yaw-start_yaw)/360:2.f}")
-                time.sleep(1)
+            #time.sleep(5)
+            #start_yaw = Gyaw
+            #if start_yaw < 0:
+            #    start_yaw += 360
+            #start_mag = Gheading_estimate
+            #while True:
+            #    print(f"K: {Gheading_estimate:.2f} / {(Gheading_estimate-start_mag)/360:.2f}")
+            #    current_yaw = Gyaw
+            #    if current_yaw < 0:
+            #        current_yaw += 360
+            #    print(f"Y: {current_yaw:.2f} / {(current_yaw-start_yaw)/360:.2f}")
+            #    time.sleep(1)
 
             print("Starting the parking procedure")
             #park(pca, sock, shared_race_mode)
+
+            set_motor_speed(pca, 13, MOTOR_BASIS)
+            set_servo_angle(pca, 12, SERVO_BASIS)
 
             shared_race_mode.value = 0
             shared_blue_line_count.value = 0
