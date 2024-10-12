@@ -884,7 +884,6 @@ def align_angular(pca, angle, shared_race_mode):
 
 def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
-    time.sleep(5)
     align_angular(pca, 80 if Gclock_wise else -80, shared_race_mode)
 
     correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
