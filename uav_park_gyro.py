@@ -823,7 +823,7 @@ def gyro_thread():
                     Gheading_estimate = mag_heading
                     #print(f"Gyro heading change: {gyro_heading_change:.2f}")
                     #print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
-                    time.sleep(0.01)
+                    time.sleep(0.005)
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
@@ -877,24 +877,25 @@ def align_angular(pca, angle, shared_race_mode):
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-        #time.sleep(0.1)
+        time.sleep(0.01)
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car final angle {Gyaw:.2f}")
 
 
 def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
-    align_angular(pca, 80 if Gclock_wise else -80, shared_race_mode)
+    align_angular(pca, 75 if Gclock_wise else -75, shared_race_mode)
 
     correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
     set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
     time.sleep(0.2)
+    print(f"Car final heading: {(Gyaw % 90) - (Gheading_start % 90):.2f}")
 
-    #while True:
-    #    position = navigate(sock)
-    #    if position['front_distance'] < 0.10: break
-    #    set_servo_angle(pca, 12, SERVO_BASIS)
-    #    set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+    while True:
+        position = navigate(sock)
+        if position['front_distance'] < 0.10: break
+        set_servo_angle(pca, 12, SERVO_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
