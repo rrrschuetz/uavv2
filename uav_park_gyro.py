@@ -497,7 +497,7 @@ def detect_and_label_blobs(image):
     line_contours = []
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area < 3000:  # Skip small contours that could be noise, adjust as needed
+        if area < 2500:  # Skip small contours that could be noise, adjust as needed
             continue
         # Approximate the contour to a polygon with fewer vertices
         epsilon = 0.4 * cv2.arcLength(contour, True)
@@ -505,7 +505,7 @@ def detect_and_label_blobs(image):
         # Check if the approximated contour is a line (2 vertices)
         if len(approx) == 2:
             line_contours.append(contour)
-            print(f"Line detected: {area} pixels")
+            #print(f"Line detected: {area} pixels")
             continue
 
     # Draw the filtered line contours
@@ -861,6 +861,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
               f"front_distance: {front_distance:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
+        time.sleep(0.01)
 
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
