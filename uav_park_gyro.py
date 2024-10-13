@@ -497,7 +497,7 @@ def detect_and_label_blobs(image):
     line_contours = []
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area < 6000:  # Skip small contours that could be noise, adjust as needed
+        if area < 3000:  # Skip small contours that could be noise, adjust as needed
             continue
         # Approximate the contour to a polygon with fewer vertices
         epsilon = 0.4 * cv2.arcLength(contour, True)
