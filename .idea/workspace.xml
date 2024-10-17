@@ -136,30 +136,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00218" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1727800928235</created>
-      <option name="number" value="00218" />
-      <option name="presentableId" value="LOCAL-00218" />
-      <option name="project" value="LOCAL" />
-      <updated>1727800928235</updated>
-    </task>
-    <task id="LOCAL-00219" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1727812183877</created>
-      <option name="number" value="00219" />
-      <option name="presentableId" value="LOCAL-00219" />
-      <option name="project" value="LOCAL" />
-      <updated>1727812183877</updated>
-    </task>
-    <task id="LOCAL-00220" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1727846050790</created>
-      <option name="number" value="00220" />
-      <option name="presentableId" value="LOCAL-00220" />
-      <option name="project" value="LOCAL" />
-      <updated>1727846050790</updated>
-    </task>
     <task id="LOCAL-00221" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
       <created>1727945882260</created>
@@ -528,7 +504,31 @@
       <option name="project" value="LOCAL" />
       <updated>1728807672129</updated>
     </task>
-    <option name="localTasksCounter" value="267" />
+    <task id="LOCAL-00267" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1728809152891</created>
+      <option name="number" value="00267" />
+      <option name="presentableId" value="LOCAL-00267" />
+      <option name="project" value="LOCAL" />
+      <updated>1728809152891</updated>
+    </task>
+    <task id="LOCAL-00268" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1729185545236</created>
+      <option name="number" value="00268" />
+      <option name="presentableId" value="LOCAL-00268" />
+      <option name="project" value="LOCAL" />
+      <updated>1729185545236</updated>
+    </task>
+    <task id="LOCAL-00269" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1729190733089</created>
+      <option name="number" value="00269" />
+      <option name="presentableId" value="LOCAL-00269" />
+      <option name="project" value="LOCAL" />
+      <updated>1729190733089</updated>
+    </task>
+    <option name="localTasksCounter" value="270" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -576,7 +576,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_gyro.py</url>
-          <line>973</line>
+          <line>979</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">

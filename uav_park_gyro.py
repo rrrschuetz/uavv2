@@ -584,7 +584,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
                     yaw_last = Gyaw
                     shared_blue_line_count.value += 1
 
-            if parking_lot and shared_blue_line_count.value == BLUE_LINE_PARKING_COUT:
+            if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
                 parking_lot_reached = True
             if parking_lot_reached and shared_blue_line_count.value > BLUE_LINE_PARKING_COUNT:
                 shared_race_mode.value = 2
@@ -858,7 +858,10 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         position = navigate(sock)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
-        sign = 1.0 if distance2stop >= 0 else -1.0
+        if distance2stop < 0 and abs(yaw_difference(Gyaw, yaw_init)) >= abs(yaw_delta):
+            sign = -1.0
+        else:
+            sign = 1.0
         drive = PARK_SPEED * sign
         steer = -PARK_STEER * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
         steer = max(min(steer, 1), -1) * sign
@@ -1022,7 +1025,7 @@ def main():
             #print("Starting the parking procedure")
             #print(f"Heading estimate: {Gheading_estimate %90:.2f}")
             #print(f"Heading start: {Gheading_start%90:.2f}")
-            #park(pca, sock, shared_race_mode)
+            park(pca, sock, shared_race_mode)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
             set_servo_angle(pca, 12, SERVO_BASIS)
