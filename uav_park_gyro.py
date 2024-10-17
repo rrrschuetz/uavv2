@@ -1,6 +1,5 @@
 import socket
 import struct
-from http.cookiejar import cut_port_re
 
 import serial
 import pygame
