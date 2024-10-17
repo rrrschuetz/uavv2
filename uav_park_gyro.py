@@ -49,7 +49,7 @@ PARK_SPEED = -0.55
 PARK_STEER = 2.5
 PARK_FIX_STEER = 0.3
 
-BLUE_LINE_PARKING_COUNT = 4
+BLUE_LINE_PARKING_COUNT = 3
 
 # Global variables
 Glidar_string = ""
@@ -496,7 +496,7 @@ def detect_and_label_blobs(image):
     line_contours = []
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area < 2500:  # Skip small contours that could be noise, adjust as needed
+        if area < 1500:  # Skip small contours that could be noise, adjust as needed
             continue
         # Approximate the contour to a polygon with fewer vertices
         epsilon = 0.4 * cv2.arcLength(contour, True)
@@ -522,8 +522,11 @@ def detect_and_label_blobs(image):
     # Find and filter contours for magenta blobs
     contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
-        magenta_rectangle = True
-        cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
+        area = cv2.contourArea(contour)
+        if area > 5000:
+            print(f"Magenta rectangle detected: {area} pixels")
+            magenta_rectangle = True
+            cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
 
     # Add timestamp in the lower left corner
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
@@ -554,6 +557,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
 
     last_blue_line_time = time.time()
     yaw_last = Gyaw
+    parking_lot_reached = False
 
     try:
         while True and shared_race_mode.value != 2:
@@ -580,7 +584,9 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
                     yaw_last = Gyaw
                     shared_blue_line_count.value += 1
 
-            if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
+            if parking_lot and shared_blue_line_count.value == BLUE_LINE_PARKING_COUT:
+                parking_lot_reached = True
+            if parking_lot_reached and shared_blue_line_count.value > BLUE_LINE_PARKING_COUNT:
                 shared_race_mode.value = 2
                 print(f"Parking initiated: Blue line count: {shared_blue_line_count.value}")
 
@@ -825,6 +831,7 @@ def gyro_thread():
                     #print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
                     time.sleep(0.005)
 
+
     except serial.SerialException as e:
         print(f"Serial error: {e}")
     except KeyboardInterrupt:
@@ -1012,18 +1019,17 @@ def main():
             #    print(f"Y: {current_yaw:.2f} / {(current_yaw-start_yaw)/360:.2f}")
             #    time.sleep(1)
 
-            print("Starting the parking procedure")
-            print(f"Heading estimate: {Gheading_estimate %90:.2f}")
-            print(f"Heading start: {Gheading_start%90:.2f}")
-            park(pca, sock, shared_race_mode)
+            #print("Starting the parking procedure")
+            #print(f"Heading estimate: {Gheading_estimate %90:.2f}")
+            #print(f"Heading start: {Gheading_start%90:.2f}")
+            #park(pca, sock, shared_race_mode)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
             set_servo_angle(pca, 12, SERVO_BASIS)
 
-            shared_race_mode.value = 0
-            shared_blue_line_count.value = 0
-            print("Parking completed")
-            break
+            #shared_race_mode.value = 0
+            #shared_blue_line_count.value = 0
+            #print("Parking completed")
 
     except KeyboardInterrupt:
         picam0.stop()
