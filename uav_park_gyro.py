@@ -1,6 +1,5 @@
 import socket
 import struct
-
 import serial
 import pygame
 import numpy as np
@@ -15,6 +14,7 @@ from adafruit_pca9685 import PCA9685
 import board
 from board import SCL, SDA
 import busio
+from gpiozero import Button
 import time
 import math
 import qmc5883l as qmc5883
@@ -31,6 +31,8 @@ Gclock_wise = False
 SERIAL_PORT = "/dev/ttyAMA0"  # or "/dev/ttyS0" if you have mapped accordingly
 BAUD_RATE = 115200
 TIMEOUT = 0.5  # Set a slightly longer timeout to ensure full packet reads
+
+SENSOR_PIN = 17
 
 LIDAR_LEN = 1620
 COLOR_LEN = 1280
@@ -63,6 +65,9 @@ Gaccel_y = 0.0
 Gaccel_z = 0.0
 Gheading_estimate = 0.0  # Initial heading estimate
 Gheading_start = 0.0
+
+shared_race_mode = Value('i', 0)
+shared_blue_line_count = Value('i', 0)
 
 i2c = board.I2C()
 qmc = qmc5883.QMC5883L(i2c)
@@ -616,7 +621,6 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
         if WRITE_CAMERA_MOVIE and video_writer.isOpened():
             video_writer.release()
 
-
 def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count):
     pygame.init()
     pygame.joystick.init()
@@ -918,16 +922,26 @@ def park(pca, sock, shared_race_mode):
     #set_servo_angle(pca, 11, 0.0)
 
 
+def sensor_callback():
+    global shared_race_mode, shared_blue_line_count
+    print("Race started")
+    shared_race_mode.value = 1
+    shared_blue_line_count.value = 0
+
+
 def main():
     global Gheading_estimate, Gheading_start
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
+    global shared_race_mdde, shared_blue_line_count
 
     print("Starting the UAV program...")
     # Create shared variables
     shared_GX = Value('d', 0.0)  # 'd' for double precision float
     shared_GY = Value('d', 0.0)
-    shared_race_mode = Value('i', 0)  # 'i' for integer
-    shared_blue_line_count = Value('i', 0)  # 'i' for integer
+
+    # Initialize touch button
+    sensor = Button(SENSOR_PIN)
+    sensor.when_pressed = sensor_callback
 
     # Initialize the I2C bus
     i2c = busio.I2C(SCL, SDA)

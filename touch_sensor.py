@@ -1,7 +1,4 @@
 
-# sudo apt-get install python3-gpiozero
-# LM 393 Speed Sensor
-
 from gpiozero import Button
 import time
 
@@ -9,9 +6,7 @@ import time
 SENSOR_PIN = 17
 
 def pulse_callback():
-    global pulse_count
     print ("Pulse detected")
-    pulse_count += 1
 
 # Set up the sensor input
 sensor = Button(SENSOR_PIN)
