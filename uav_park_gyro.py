@@ -501,7 +501,7 @@ def detect_and_label_blobs(image):
     line_contours = []
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area < 1500:  # Skip small contours that could be noise, adjust as needed
+        if area < 500:  # Skip small contours that could be noise, adjust as needed
             continue
         # Approximate the contour to a polygon with fewer vertices
         epsilon = 0.4 * cv2.arcLength(contour, True)
@@ -697,7 +697,7 @@ def yaw_difference(yaw1, yaw2):
         diff -= 360
     while diff < -180:
         diff += 360
-    print(f"yw1: {yaw1}, yw2: {yaw2}, diff: {diff}")
+    #print(f"yw1: {yaw1}, yw2: {yaw2}, diff: {diff}")
     return diff
 
 def kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P):
@@ -863,16 +863,13 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         position = navigate(sock)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
-        if distance2stop < 0 and abs(yaw_difference(Gyaw, yaw_init)) >= abs(yaw_delta):
-            sign = -1.0
-        else:
-            sign = 1.0
+        sign = - 1.0 if distance2stop < 0 else 1.0
         drive = PARK_SPEED * sign
-        steer = -PARK_STEER * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
+        steer = PARK_STEER * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
         steer = max(min(steer, 1), -1) * sign
         print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
               f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw, yaw_init)):.2f}  \\"
-              f"front_distance: {front_distance:.2f}")
+              f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.01)
@@ -1030,11 +1027,11 @@ def main():
             #    start_yaw += 360
             #start_mag = Gheading_estimate
             #while True:
-            #    print(f"K: {Gheading_estimate:.2f} / {(Gheading_estimate-start_mag)/360:.2f}")
+            #    print(f"K: {Gheading_estimate-start_mag:.2f} / {(Gheading_estimate-start_mag)/360:.2f}")
             #    current_yaw = Gyaw
             #    if current_yaw < 0:
             #        current_yaw += 360
-            #    print(f"Y: {current_yaw:.2f} / {(current_yaw-start_yaw)/360:.2f}")
+            #    #print(f"Y: {current_yaw-start_yaw:.2f} / {(current_yaw-start_yaw)/360:.2f}")
             #    time.sleep(1)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
