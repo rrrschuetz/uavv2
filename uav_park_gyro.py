@@ -866,11 +866,11 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
             sign = -1.0
         else:
             sign = 1.0
-        drive = -PARK_SPEED * sign
+        drive = PARK_SPEED * sign
         steer = -PARK_STEER * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
         steer = max(min(steer, 1), -1) * sign
         print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
-              f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {yaw_delta - yaw_difference(Gyaw, yaw_init):.2f}  \\"
+              f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_delta - yaw_difference(Gyaw, yaw_init)):.2f}  \\"
               f"front_distance: {front_distance:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
