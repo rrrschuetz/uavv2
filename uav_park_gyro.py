@@ -925,8 +925,8 @@ def park(pca, sock, shared_race_mode):
 def sensor_callback():
     global shared_race_mode, shared_blue_line_count
     print("Race started")
-    shared_race_mode.value = 1
-    shared_blue_line_count.value = 0
+    #shared_race_mode.value = 1
+    #shared_blue_line_count.value = 0
 
 
 def main():
