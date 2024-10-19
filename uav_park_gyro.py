@@ -697,6 +697,7 @@ def yaw_difference(yaw1, yaw2):
         diff -= 360
     while diff < -180:
         diff += 360
+    print(f"yw1: {yaw1}, yw2: {yaw2}, diff: {diff}")
     return diff
 
 def kalman_filter(gyro_heading_change, mag_heading, heading_estimate, P):
@@ -870,7 +871,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         steer = -PARK_STEER * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
         steer = max(min(steer, 1), -1) * sign
         print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
-              f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_delta - yaw_difference(Gyaw, yaw_init)):.2f}  \\"
+              f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw, yaw_init)):.2f}  \\"
               f"front_distance: {front_distance:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
@@ -1042,7 +1043,7 @@ def main():
             print("Starting the parking procedure")
             print(f"Heading estimate: {Gheading_estimate %90:.2f}")
             print(f"Heading start: {Gheading_start%90:.2f}")
-            time.sleep(5)
+            time.sleep(10)
             park(pca, sock, shared_race_mode)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
