@@ -1002,7 +1002,7 @@ def main():
                                              args=(sock, pca, shared_GX, shared_GY, shared_race_mode))
     camera_thread_instance = threading.Thread(target=camera_thread,
                                               args=(pca, picam0, picam1, shared_race_mode, shared_blue_line_count))
-    gyro_thread_instance = threading.Thread(target=gyro_thread,args=(shared_race_mdde))
+    gyro_thread_instance = threading.Thread(target=gyro_thread,args=(shared_race_mode))
 
     xbox_controller_process_instance = Process(target=xbox_controller_process,
                                                args=(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count))
