@@ -562,7 +562,7 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
         max_frame_count = 2000  # Maximum number of frames per video file
 
     last_blue_line_time = time.time()
-    yaw_last = Gyaw
+    yaw_last = Gyaw.value
     parking_lot_reached = False
 
     try:
@@ -582,12 +582,13 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
 
             if blue_line and shared_race_mode.value == 1:
                 current_time = time.time()
-                if current_time - last_blue_line_time >= 3 and abs(Gyaw-yaw_last) > 10:
+                if current_time - last_blue_line_time >= 3 and abs(Gyaw.value-yaw_last) > 10:
                     print(f"Blue line count: {shared_blue_line_count.value+1} \\"
-                          f"time: {current_time-last_blue_line_time:.2f} yaw, gain: {Gyaw:.2f},{abs(Gyaw-yaw_last):.2f}")
-                    print(f"Heading: {Gheading_estimate:.2f} degrees")
+                          f"time: {current_time-last_blue_line_time:.2f} \\"
+                          f"yaw, gain: {Gyaw.value:.2f},{abs(Gyaw.value-yaw_last):.2f}")
+                    print(f"Heading: {Gheading_estimate.value:.2f} degrees")
                     last_blue_line_time = current_time
-                    yaw_last = Gyaw
+                    yaw_last = Gyaw.value
                     shared_blue_line_count.value += 1
 
             if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
@@ -832,31 +833,34 @@ def gyro_process(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_est
                     mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
 
                     # Apply Kalman filter to fuse magnetometer and gyroscope data
-                    Gheading_estimate.value, P = kalman_filter(
-                        gyro_heading_change, mag_heading, Gheading_estimate.value, P)
+                    #Gheading_estimate.value, P = kalman_filter(
+                    #    gyro_heading_change, mag_heading, Gheading_estimate.value, P)
+                    Gheading_estimate.value = mag_heading
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
     except KeyboardInterrupt:
         print("Stopping data read.")
 
+
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
-    global Gyaw
+    global Gyaw, Gheading_estimate, Gheading_start
+
     position = navigate(sock)
     left_angle = position['left_min_angle']
     right_angle = position['right_min_angle']
     front_distance = position['front_distance']
     distance2stop = front_distance - stop_distance
-    yaw_init = Gyaw
+    yaw_init = Gyaw.value
     yaw_delta_r = right_angle if 90 >= right_angle > 0 else 90
     yaw_delta_l = left_angle - 180 if 180 >= left_angle > 90 else -90
     yaw_delta = yaw_delta_l if abs(yaw_delta_l) < abs(yaw_delta_r) else yaw_delta_r
     print(f"LID left_angle: {left_angle:.2f} right_angle: {right_angle:.2f} yaw_delta: {yaw_delta:.2f}")
-    yaw_delta =  (Gheading_estimate % 90) - (Gheading_start % 90)
+    yaw_delta =  (Gheading_estimate.value % 90) - (Gheading_start % 90)
     print(f"LID yaw_delta: {yaw_delta:.2f}")
 
     while shared_race_mode.value == 2 and \
-           (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
+           (abs(yaw_difference(Gyaw.value, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
         position = navigate(sock)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
@@ -878,11 +882,12 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
 
 def align_angular(pca, angle, shared_race_mode):
     global Gyaw
-    yaw_init = Gyaw
+
+    yaw_init = Gyaw.value
     print(f"Car alignment: initial angle {yaw_init:.2f} delta angle {angle:.2f}")
-    while shared_race_mode.value == 2 and abs(yaw_difference(Gyaw, yaw_init)) < abs(angle):
-        print(f"Car orthogonal alignment: angle {yaw_difference(Gyaw, yaw_init):.2f}")
-        steer = PARK_STEER * (angle - yaw_difference(Gyaw, yaw_init)) / angle
+    while shared_race_mode.value == 2 and abs(yaw_difference(Gyaw.value, yaw_init)) < abs(angle):
+        print(f"Car orthogonal alignment: angle {yaw_difference(Gyaw.value, yaw_init):.2f}")
+        steer = PARK_STEER * (angle - yaw_difference(Gyaw.value, yaw_init)) / angle
         steer = max(min(steer, 1), -1)
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
@@ -1007,14 +1012,6 @@ def main():
     Gheading_start = Gheading_estimate.value
     print(f"All processes have started: {Gheading_start:.2f} degrees")
 
-    Gheading_values = []
-    while True:
-        Gheading_start = Gheading_estimate.value
-        Gheading_values.append(Gheading_start)
-        if len(Gheading_values) > 1:
-            print(f"All processes have started: {Gheading_start:.2f} ERR {statistics.stdev(Gheading_values):.2f}")
-        time.sleep(0.2)
-
     try:
         while True:
             # lidar_thread_instance.join()
@@ -1022,24 +1019,24 @@ def main():
             # gyro_process_instance.join()
             # xbox_controller_process_instance.join()
 
-            #shared_race_mode.value = 2
+            shared_race_mode.value = 2
 
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
 
-            #time.sleep(5)
-            #start_yaw = Gyaw
-            #if start_yaw < 0:
-            #    start_yaw += 360
-            #start_mag = Gheading_estimate
-            #while True:
-            #    print(f"K: {Gheading_estimate-start_mag:.2f} / {(Gheading_estimate-start_mag)/360:.2f}")
-            #    current_yaw = Gyaw
-            #    if current_yaw < 0:
-            #        current_yaw += 360
-            #    #print(f"Y: {current_yaw-start_yaw:.2f} / {(current_yaw-start_yaw)/360:.2f}")
-            #    time.sleep(1)
+            time.sleep(5)
+            start_yaw = Gyaw.value
+            if start_yaw < 0:
+                start_yaw += 360
+            start_mag = Gheading_estimate.value
+            while True:
+                print(f"K: {Gheading_estimate.value-start_mag:.2f} / {(Gheading_estimate.value-start_mag)/360:.2f}")
+                current_yaw = Gyaw.value
+                if current_yaw < 0:
+                    current_yaw += 360
+                #print(f"Y: {current_yaw-start_yaw:.2f} / {(current_yaw-start_yaw)/360:.2f}")
+                time.sleep(1)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
             set_servo_angle(pca, 12, SERVO_BASIS)
