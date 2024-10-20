@@ -565,54 +565,58 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
     parking_lot_reached = False
 
     try:
-        while shared_race_mode.value == 1:
-            start_time = time.time()
-            image0 = picam0.capture_array()
-            image1 = picam1.capture_array()
-            image0_flipped = cv2.flip(image0, -1)
-            image1_flipped = cv2.flip(image1, -1)
-            combined_image = np.hstack((image0_flipped, image1_flipped))
-            cropped_image = combined_image[frame_height:, :]
-            Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(cropped_image)
+        while True:
+            if shared_race_mode.value == 1:
+                start_time = time.time()
+                image0 = picam0.capture_array()
+                image1 = picam1.capture_array()
+                image0_flipped = cv2.flip(image0, -1)
+                image1_flipped = cv2.flip(image1, -1)
+                combined_image = np.hstack((image0_flipped, image1_flipped))
+                cropped_image = combined_image[frame_height:, :]
+                Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(cropped_image)
 
-            if Gclock_wise:
-                Gx_coords = Gx_coords * -1.0
-            Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
+                if Gclock_wise:
+                    Gx_coords = Gx_coords * -1.0
+                Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-            if blue_line and shared_race_mode.value == 1:
-                current_time = time.time()
-                if current_time - last_blue_line_time >= 3:
-                    print(f"Blue line count: {shared_blue_line_count.value+1} \\"
-                          f"time: {current_time-last_blue_line_time:.2f} seconds")
-                    last_blue_line_time = current_time
-                    shared_blue_line_count.value += 1
+                if blue_line and shared_race_mode.value == 1:
+                    current_time = time.time()
+                    if current_time - last_blue_line_time >= 3:
+                        print(f"Blue line count: {shared_blue_line_count.value+1} \\"
+                              f"time: {current_time-last_blue_line_time:.2f} seconds")
+                        last_blue_line_time = current_time
+                        shared_blue_line_count.value += 1
 
-            if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
-                parking_lot_reached = True
-            if parking_lot_reached and shared_blue_line_count.value > BLUE_LINE_PARKING_COUNT:
-                shared_race_mode.value = 2
-                print(f"Parking initiated: Blue line count: {shared_blue_line_count.value}")
-                set_motor_speed(pca, 13, MOTOR_BASIS)
-                set_servo_angle(pca, 12, SERVO_BASIS)
+                if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
+                    parking_lot_reached = True
+                if parking_lot_reached and shared_blue_line_count.value > BLUE_LINE_PARKING_COUNT:
+                    shared_race_mode.value = 2
+                    print(f"Parking initiated: Blue line count: {shared_blue_line_count.value}")
+                    set_motor_speed(pca, 13, MOTOR_BASIS)
+                    set_servo_angle(pca, 12, SERVO_BASIS)
 
-            # Save the image with labeled contours
-            if WRITE_CAMERA_IMAGE:
-                cv2.imwrite("labeled_image.jpg", image)
-                video_writer.write(image)
-                frame_count += 1
+                # Save the image with labeled contours
+                if WRITE_CAMERA_IMAGE:
+                    cv2.imwrite("labeled_image.jpg", image)
+                    video_writer.write(image)
+                    frame_count += 1
 
-                if frame_count > max_frame_count:
-                    video_writer.release()
-                    file_index += 1
-                    frame_count = 0
-                    video_filename = f"output_video_{file_index:03d}.avi"
-                    video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
+                    if frame_count > max_frame_count:
+                        video_writer.release()
+                        file_index += 1
+                        frame_count = 0
+                        video_filename = f"output_video_{file_index:03d}.avi"
+                        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
 
-            frame_time = time.time() - start_time
-            fps_list.append(1.0 / frame_time)
+                frame_time = time.time() - start_time
+                fps_list.append(1.0 / frame_time)
 
-            moving_avg_fps = sum(fps_list) / len(fps_list)
-            # print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
+                moving_avg_fps = sum(fps_list) / len(fps_list)
+                # print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
+
+        else:
+            time.sleep(0.1)
 
     except KeyboardInterrupt:
         print("Keyboard Interrupt detected, stopping video capture and saving...")
@@ -767,53 +771,57 @@ def gyro_thread(shared_race_mode):
             ser.reset_input_buffer()  # Clear old data at the start
             last_yaw = Gyaw  # Initial yaw without angle correction
 
-            while shared_race_mode.value != 1:
-                if ser.in_waiting:
-                    # Read all available data and append it to the buffer
-                    data = ser.read(ser.in_waiting)
-                    buff.extend(data)  # Add data to the buffer
+            while True:
+                if shared_race_mode.value != 1:
+                    if ser.in_waiting:
+                        # Read all available data and append it to the buffer
+                        data = ser.read(ser.in_waiting)
+                        buff.extend(data)  # Add data to the buffer
 
-                    # Process all available packets in the buffer
-                    while len(buff) >= 11:  # While we have at least one full packet
+                        # Process all available packets in the buffer
+                        while len(buff) >= 11:  # While we have at least one full packet
 
-                        if buff[0] == 0x55 and buff[1] in [0x51, 0x53]:  # Valid start byte for packet
-                            packet = buff[:11]  # Get a full 11-byte packet
-                            buff = buff[11:]  # Remove the processed packet from the buffer
+                            if buff[0] == 0x55 and buff[1] in [0x51, 0x53]:  # Valid start byte for packet
+                                packet = buff[:11]  # Get a full 11-byte packet
+                                buff = buff[11:]  # Remove the processed packet from the buffer
 
-                            # Increment packet counter and skip processing unless it's every 5th packet
-                            packet_counter += 1
-                            if packet_counter % 5 != 0:
-                                continue  # Skip this packet
+                                # Increment packet counter and skip processing unless it's every 5th packet
+                                packet_counter += 1
+                                if packet_counter % 5 != 0:
+                                    continue  # Skip this packet
 
-                            # Parse the packet
-                            data_type, values = parse_wt61_data(packet)
+                                # Parse the packet
+                                data_type, values = parse_wt61_data(packet)
 
-                            # Handle accelerometer data (0x51)
-                            if data_type == 0x51:
-                                accel = [v / 32768.0 * 16 for v in values]  # Convert to G
-                                Gaccel_x, Gaccel_y, Gaccel_z = accel
+                                # Handle accelerometer data (0x51)
+                                if data_type == 0x51:
+                                    accel = [v / 32768.0 * 16 for v in values]  # Convert to G
+                                    Gaccel_x, Gaccel_y, Gaccel_z = accel
 
-                            # Handle gyroscope data (0x53)
-                            elif data_type == 0x53:
-                                gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
-                                Gpitch, Groll, Gyaw = gyro
+                                # Handle gyroscope data (0x53)
+                                elif data_type == 0x53:
+                                    gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
+                                    Gpitch, Groll, Gyaw = gyro
 
-                        else:
-                            buff.pop(0)  # Remove one byte and continue checking
+                            else:
+                                buff.pop(0)  # Remove one byte and continue checking
+
+                    else:
+                        # Compute the yaw change without angle correction
+                        gyro_heading_change = yaw_difference(last_yaw, Gyaw)
+                        last_yaw = Gyaw
+
+                        # Get the magnetometer heading (absolute heading)
+                        mag_x, mag_y, mag_z = get_magnetometer_heading()
+                        # Tilt compensate the magnetometer data
+                        mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z,
+                            math.radians(Gpitch), math.radians(Groll))
+                        # Calculate the magnetometer heading
+                        mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
+                        Gheading_estimate = mag_heading
 
                 else:
-                    # Compute the yaw change without angle correction
-                    gyro_heading_change = yaw_difference(last_yaw, Gyaw)
-                    last_yaw = Gyaw
-
-                    # Get the magnetometer heading (absolute heading)
-                    mag_x, mag_y, mag_z = get_magnetometer_heading()
-                    # Tilt compensate the magnetometer data
-                    mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z,
-                        math.radians(Gpitch), math.radians(Groll))
-                    # Calculate the magnetometer heading
-                    mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-                    Gheading_estimate = mag_heading
+                    time.sleep(0.1)
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
