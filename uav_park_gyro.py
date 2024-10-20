@@ -840,7 +840,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     yaw_delta = yaw_delta_l if abs(yaw_delta_l) < abs(yaw_delta_r) else yaw_delta_r
     print(f"LID left_angle: {left_angle:.2f} right_angle: {right_angle:.2f} yaw_delta: {yaw_delta:.2f}")
     yaw_delta =  (Gheading_estimate.value % 90) - (Gheading_start % 90)
-    print(f"LID yaw_delta: {yaw_delta:.2f}")
+    print(f"LID Gheading_estimate {Gheading_estimate.value %90:.2f} yaw_delta: {yaw_delta:.2f}")
 
     while shared_race_mode.value == 2 and \
            (abs(yaw_difference(Gyaw.value, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
@@ -883,12 +883,31 @@ def align_angular(pca, angle, shared_race_mode):
 def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
     time.sleep(2)
-    align_angular(pca, 75 if Gclock_wise else -75, shared_race_mode)
+    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
+    set_motor_speed(pca, 13, MOTOR_BASIS)
+    set_servo_angle(pca, 12, SERVO_BASIS)
+    time.sleep(2)
+    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
+    set_motor_speed(pca, 13, MOTOR_BASIS)
+    set_servo_angle(pca, 12, SERVO_BASIS)
+    time.sleep(2)
+    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
+    set_motor_speed(pca, 13, MOTOR_BASIS)
+    set_servo_angle(pca, 12, SERVO_BASIS)
+    time.sleep(2)
+    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
+    set_motor_speed(pca, 13, MOTOR_BASIS)
+    set_servo_angle(pca, 12, SERVO_BASIS)
+    time.sleep(2)
+    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
+    set_motor_speed(pca, 13, MOTOR_BASIS)
+    set_servo_angle(pca, 12, SERVO_BASIS)
+    time.sleep(2)
 
     correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
     set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
     time.sleep(0.2)
-    print(f"Car final heading: {(Gyaw % 90) - (Gheading_start % 90):.2f}")
+    print(f"Car final heading: {(Gyaw.value % 90) - (Gheading_start % 90):.2f}")
 
     while True:
         position = navigate(sock)
@@ -908,8 +927,8 @@ def park(pca, sock, shared_race_mode):
 def sensor_callback():
     global shared_race_mode, shared_blue_line_count
     print("Race started")
-    #shared_race_mode.value = 1
-    #shared_blue_line_count.value = 0
+    shared_race_mode.value = 1
+    shared_blue_line_count.value = 0
 
 
 def main():
@@ -989,7 +1008,7 @@ def main():
     lidar_thread_instance.start()
     camera_thread_instance.start()
     gyro_process_instance.start()
-    xbox_controller_process_instance.start()
+    #xbox_controller_process_instance.start()
 
     time.sleep(5)
     Gheading_start = Gheading_estimate.value
