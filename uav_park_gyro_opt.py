@@ -799,7 +799,7 @@ def gyro_thread(shared_race_mode):
 
                                 # Increment packet counter and skip processing unless it's every 5th packet
                                 packet_counter += 1
-                                if packet_counter % 10 != 0:
+                                if packet_counter % 2 != 0:
                                     continue  # Skip this packet
 
                                 # Parse the packet
@@ -827,7 +827,8 @@ def gyro_thread(shared_race_mode):
                         # Calculate the magnetometer heading
                         mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
                         Gheading_estimate = mag_heading
-                        time.sleep(0.05)
+
+                    time.sleep(0.05)
 
                 else:
                     print("Gyro inactive")
