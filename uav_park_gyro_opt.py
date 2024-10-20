@@ -1035,7 +1035,7 @@ def main():
             #gyro_thread_instance.join()
             # xbox_controller_process_instance.join()
 
-            shared_race_mode.value = 2
+            #shared_race_mode.value = 2
 
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
@@ -1060,7 +1060,7 @@ def main():
             print("Starting the parking procedure")
             print(f"Heading estimate: {Gheading_estimate %90:.2f}")
             print(f"Heading start: {Gheading_start%90:.2f}")
-            #time.sleep(5)
+            time.sleep(5)
             park(pca, sock, shared_race_mode)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
