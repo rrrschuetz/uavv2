@@ -198,6 +198,7 @@ def decode_dense_mode_packet(packet):
 
 
 def full_scan(sock):
+    print("Full scan...")
     inf_threshold = 100  # Stop scanning when fewer than 100 np.inf values remain
     final_distances = np.full(LIDAR_LEN * 2, np.inf)  # Initialize with np.inf for missing values
     full_angle_range = np.linspace(0, 360, LIDAR_LEN * 2, endpoint=False)  # High-resolution angle range
@@ -259,8 +260,9 @@ def navigate(sock, narrow=False):
     interpolated_distances, angles = full_scan(sock)
     # Smooth the data using a median filter to reduce noise and outliers
     valid_distances = median_filter(interpolated_distances[:LIDAR_LEN], size=window_size)
+    front_distance = np.mean(valid_distances[LIDAR_LEN // 2 - window_size // 2:LIDAR_LEN // 2 + window_size // 2])
 
-    # Use the sliding window to compute the local robust minimum distance
+      # Use the sliding window to compute the local robust minimum distance
     for i in range(reduce, LIDAR_LEN - reduce - window_size + 1):
         window = valid_distances[i:i + window_size]
         trimmed_mean_distance = trim_mean(window, proportiontocut=0.1)
@@ -276,8 +278,6 @@ def navigate(sock, narrow=False):
             if 0 < trimmed_mean_distance < left_min_distance:
                 left_min_distance = trimmed_mean_distance
                 left_min_angle = angles[i + window_size // 2]
-
-    front_distance = np.mean(valid_distances[LIDAR_LEN // 2 - window_size // 2:LIDAR_LEN // 2 + window_size // 2])
 
     return {
         "min_distance": min_distance,
@@ -1060,7 +1060,7 @@ def main():
             print("Starting the parking procedure")
             print(f"Heading estimate: {Gheading_estimate %90:.2f}")
             print(f"Heading start: {Gheading_start%90:.2f}")
-            time.sleep(5)
+            #time.sleep(5)
             park(pca, sock, shared_race_mode)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
