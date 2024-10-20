@@ -542,7 +542,7 @@ def detect_and_label_blobs(image):
 
 
 def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count):
-    global Gcolor_string, Gx_coords, Gyaw
+    global Gcolor_string, Gx_coords
 
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = picam0.capture_array().shape
@@ -763,13 +763,16 @@ def initialize_wt61():
 
 
 def gyro_thread(shared_race_mode):
+    global Gaccel_x, Gaccel_y, Gaccel_z
+    global Gpitch, Groll, Gyaw
+    global Gheading_estimate, Gheading_start
+
     buff = bytearray()  # Buffer to store incoming serial data
     packet_counter = 0  # Counter to skip packets
 
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
             ser.reset_input_buffer()  # Clear old data at the start
-            last_yaw = Gyaw  # Initial yaw without angle correction
 
             while True:
                 if shared_race_mode.value != 1:
@@ -807,10 +810,6 @@ def gyro_thread(shared_race_mode):
                                 buff.pop(0)  # Remove one byte and continue checking
 
                     else:
-                        # Compute the yaw change without angle correction
-                        gyro_heading_change = yaw_difference(last_yaw, Gyaw)
-                        last_yaw = Gyaw
-
                         # Get the magnetometer heading (absolute heading)
                         mag_x, mag_y, mag_z = get_magnetometer_heading()
                         # Tilt compensate the magnetometer data
@@ -1002,7 +1001,7 @@ def main():
                                              args=(sock, pca, shared_GX, shared_GY, shared_race_mode))
     camera_thread_instance = threading.Thread(target=camera_thread,
                                               args=(pca, picam0, picam1, shared_race_mode, shared_blue_line_count))
-    gyro_thread_instance = threading.Thread(target=gyro_thread,args=(shared_race_mode))
+    gyro_thread_instance = threading.Thread(target=gyro_thread, args=(shared_race_mode, ))
 
     xbox_controller_process_instance = Process(target=xbox_controller_process,
                                                args=(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count))
