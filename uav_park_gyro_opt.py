@@ -827,7 +827,7 @@ def gyro_thread(shared_race_mode):
                         time.sleep(0.05)
 
                 else:
-                    print("Gyro inactive, reset serial buffer")
+                    print("Gyro inactive")
                     time.sleep(1.0)
 
                 old_race_mode = shared_race_mode.value
