@@ -562,7 +562,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
         max_frame_count = 2000  # Maximum number of frames per video file
 
     last_blue_line_time = time.time()
-    yaw_last = Gyaw
     parking_lot_reached = False
 
     try:
@@ -582,13 +581,10 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
 
             if blue_line and shared_race_mode.value == 1:
                 current_time = time.time()
-                if current_time - last_blue_line_time >= 3 and abs(Gyaw-yaw_last) > 10:
+                if current_time - last_blue_line_time >= 3:
                     print(f"Blue line count: {shared_blue_line_count.value+1} \\"
-                          f"time: {current_time-last_blue_line_time:.2f} \\"
-                          f"yaw, gain: {Gyaw:.2f},{abs(Gyaw-yaw_last):.2f}")
-                    print(f"Heading: {Gheading_estimate:.2f} degrees")
+                          f"time: {current_time-last_blue_line_time:.2f} seconds")
                     last_blue_line_time = current_time
-                    yaw_last = Gyaw
                     shared_blue_line_count.value += 1
 
             if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
@@ -787,7 +783,7 @@ def gyro_thread(shared_race_mode):
 
                             # Increment packet counter and skip processing unless it's every 5th packet
                             packet_counter += 1
-                            if packet_counter % 1 != 0:
+                            if packet_counter % 5 != 0:
                                 continue  # Skip this packet
 
                             # Parse the packet
