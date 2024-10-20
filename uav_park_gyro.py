@@ -541,7 +541,7 @@ def detect_and_label_blobs(image):
     return x_coords, blue_line, magenta_rectangle, image
 
 
-def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
+def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count):
     global Gcolor_string, Gx_coords, Gyaw
 
     fps_list = deque(maxlen=10)
@@ -596,6 +596,8 @@ def camera_thread(picam0, picam1, shared_race_mode, shared_blue_line_count):
             if parking_lot_reached and shared_blue_line_count.value > BLUE_LINE_PARKING_COUNT:
                 shared_race_mode.value = 2
                 print(f"Parking initiated: Blue line count: {shared_blue_line_count.value}")
+                set_motor_speed(pca, 13, MOTOR_BASIS)
+                set_servo_angle(pca, 12, SERVO_BASIS)
 
             # Save the image with labeled contours
             if WRITE_CAMERA_IMAGE:
@@ -850,7 +852,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         steer = PARK_STEER * (yaw_delta - yaw_difference(Gyaw.value, yaw_init)) / 90
         steer = max(min(steer, 1), -1) * sign
         print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
-              f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw.value, yaw_init)):.2f}  \\"
+              f"Gyaw: {Gyaw.value:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw.value, yaw_init)):.2f}  \\"
               f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
@@ -977,7 +979,7 @@ def main():
     lidar_thread_instance = threading.Thread(target=lidar_thread,
                                              args=(sock, pca, shared_GX, shared_GY, shared_race_mode))
     camera_thread_instance = threading.Thread(target=camera_thread,
-                                              args=(picam0, picam1, shared_race_mode, shared_blue_line_count))
+                                              args=(pca, picam0, picam1, shared_race_mode, shared_blue_line_count))
 
     gyro_process_instance = Process(target=gyro_process,
                                     args=(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_estimate))
