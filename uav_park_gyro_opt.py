@@ -1030,9 +1030,9 @@ def main():
 
     try:
         while True:
-            # lidar_thread_instance.join()
-            # camera_thread_instance.join()
-            # gyro_thread_instance.join()
+            #lidar_thread_instance.join()
+            #camera_thread_instance.join()
+            #gyro_thread_instance.join()
             # xbox_controller_process_instance.join()
 
             shared_race_mode.value = 2
