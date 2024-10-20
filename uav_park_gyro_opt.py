@@ -697,7 +697,6 @@ def yaw_difference(yaw1, yaw2):
         diff -= 360
     while diff < -180:
         diff += 360
-    #print(f"yw1: {yaw1}, yw2: {yaw2}, diff: {diff}")
     return diff
 
 
