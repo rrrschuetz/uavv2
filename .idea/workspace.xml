@@ -133,14 +133,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00233" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1728426598180</created>
-      <option name="number" value="00233" />
-      <option name="presentableId" value="LOCAL-00233" />
-      <option name="project" value="LOCAL" />
-      <updated>1728426598180</updated>
-    </task>
     <task id="LOCAL-00234" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
       <created>1728449435414</created>
@@ -525,7 +517,15 @@
       <option name="project" value="LOCAL" />
       <updated>1729416023107</updated>
     </task>
-    <option name="localTasksCounter" value="282" />
+    <task id="LOCAL-00282" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1729416816981</created>
+      <option name="number" value="00282" />
+      <option name="presentableId" value="LOCAL-00282" />
+      <option name="project" value="LOCAL" />
+      <updated>1729416816981</updated>
+    </task>
+    <option name="localTasksCounter" value="283" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -573,7 +573,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_gyro.py</url>
-          <line>991</line>
+          <line>996</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -583,7 +583,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_gyro.py</url>
-          <line>997</line>
+          <line>1002</line>
           <option name="timeStamp" value="9" />
         </line-breakpoint>
       </breakpoints>
