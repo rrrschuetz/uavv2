@@ -351,14 +351,18 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 X = steering_commands[0, 0]  # Extract GX (first element of the output)
                 Y = steering_commands[0, 1]  # Extract GY (second element of the output)
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
-                    if Gclock_wise:
-                        X = -X
-                    set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
-                    set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
+                    if Gclock_wise:  X = -X
+                    if shared_race_mode.value == 1:
+                        set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
+                        set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
+                    else:
+                        set_motor_speed(pca, 13, MOTOR_BASIS)
+                        set_servo_angle(pca, 12, SERVO_BASIS)
                 else:
                     print("Invalid steering commands:", X, Y)
 
         elif shared_race_mode.value == 2:
+            print("Lidar inactve")
             time.sleep(1)
 
         frame_time = time.time() - start_time
