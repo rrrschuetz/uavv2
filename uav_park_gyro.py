@@ -774,7 +774,6 @@ def initialize_wt61():
         print(f"Serial error: {e}")
 
 
-# Function to run as a separate process
 def gyro_process(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_estimate):
     buff = bytearray()  # Buffer to store incoming serial data
     P = 1.0  # Initial process error covariance
@@ -783,7 +782,7 @@ def gyro_process(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_est
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
             ser.reset_input_buffer()  # Clear old data at the start
-            last_yaw = Gyaw.value
+            last_yaw = Gyaw.value  # Initial yaw without angle correction
 
             while True:
                 if ser.in_waiting:
@@ -820,6 +819,7 @@ def gyro_process(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_est
                             buff.pop(0)  # Remove one byte and continue checking
 
                 else:
+                    # Compute the yaw change without angle correction
                     gyro_heading_change = yaw_difference(last_yaw, Gyaw.value)
                     last_yaw = Gyaw.value
 
@@ -830,10 +830,10 @@ def gyro_process(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_est
                         math.radians(Gpitch.value), math.radians(Groll.value))
                     # Calculate the magnetometer heading
                     mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
+
                     # Apply Kalman filter to fuse magnetometer and gyroscope data
                     Gheading_estimate.value, P = kalman_filter(
                         gyro_heading_change, mag_heading, Gheading_estimate.value, P)
-                    #Gheading_estimate.value = mag_heading
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
