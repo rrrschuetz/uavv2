@@ -822,10 +822,12 @@ def gyro_thread(shared_race_mode):
                         # Calculate the magnetometer heading
                         mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
                         Gheading_estimate = mag_heading
+                        time.sleep(0.05)
 
                 else:
-                    print("Gyro inactive")
+                    print("Gyro inactive, reset serial buffer")
                     time.sleep(1.0)
+                    ser.reset_input_buffer()
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
