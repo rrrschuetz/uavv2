@@ -16,7 +16,7 @@ from board import SCL, SDA
 import busio
 from gpiozero import Button
 import time
-import math
+import math, statistics
 import qmc5883l as qmc5883
 import torch
 
@@ -57,13 +57,14 @@ BLUE_LINE_PARKING_COUNT = 3
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
-Gyaw = 0.0
-Gpitch = 0.0
-Groll = 0.0
-Gaccel_x = 0.0
-Gaccel_y = 0.0
-Gaccel_z = 0.0
-Gheading_estimate = 0.0  # Initial heading estimate
+
+Gpitch = Value('d', 0.0)
+Groll = Value('d', 0.0)
+Gyaw = Value('d', 0.0)
+Gaccel_x = Value('d', 0.0)
+Gaccel_y = Value('d', 0.0)
+Gaccel_z = Value('d', 0.0)
+Gheading_estimate = Value('d', 0.0)
 Gheading_start = 0.0
 
 shared_race_mode = Value('i', 0)
@@ -501,7 +502,7 @@ def detect_and_label_blobs(image):
     line_contours = []
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area < 500:  # Skip small contours that could be noise, adjust as needed
+        if area < 1500:  # Skip small contours that could be noise, adjust as needed
             continue
         # Approximate the contour to a polygon with fewer vertices
         epsilon = 0.4 * cv2.arcLength(contour, True)
@@ -773,18 +774,18 @@ def initialize_wt61():
         print(f"Serial error: {e}")
 
 
-def gyro_thread():
-    global Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_estimate, P
+# Function to run as a separate process
+def gyro_process(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_estimate):
     buff = bytearray()  # Buffer to store incoming serial data
     P = 1.0  # Initial process error covariance
+    packet_counter = 0  # Counter to skip packets
 
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
             ser.reset_input_buffer()  # Clear old data at the start
-            last_yaw = Gyaw
+            last_yaw = Gyaw.value
 
             while True:
-
                 if ser.in_waiting:
                     # Read all available data and append it to the buffer
                     data = ser.read(ser.in_waiting)
@@ -792,56 +793,51 @@ def gyro_thread():
 
                     # Process all available packets in the buffer
                     while len(buff) >= 11:  # While we have at least one full packet
-                        #print(f"Buffer size before processing: {len(buff)}")
 
-                        if buff[0] == 0x55 and buff[1] in [0x51,0x53]:  # Valid start byte for packet
+                        if buff[0] == 0x55 and buff[1] in [0x51, 0x53]:  # Valid start byte for packet
                             packet = buff[:11]  # Get a full 11-byte packet
                             buff = buff[11:]  # Remove the processed packet from the buffer
 
+                            # Increment packet counter and skip processing unless it's every 5th packet
+                            packet_counter += 1
+                            if packet_counter % 5 != 0:
+                                continue  # Skip this packet
+
                             # Parse the packet
                             data_type, values = parse_wt61_data(packet)
-                            #print(f"Data type: {data_type}, Values: {values}")
 
                             # Handle accelerometer data (0x51)
                             if data_type == 0x51:
                                 accel = [v / 32768.0 * 16 for v in values]  # Convert to G
-                                Gaccel_x, Gaccel_y, Gaccel_z = accel
-                                #print(f"Accelerometer Data: {accel}")
+                                Gaccel_x.value, Gaccel_y.value, Gaccel_z.value = accel
 
                             # Handle gyroscope data (0x53)
                             elif data_type == 0x53:
                                 gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
-                                Gpitch, Groll, Gyaw = gyro
-                                #print(f"Gyroscope Data: {gyro}")
+                                Gpitch.value, Groll.value, Gyaw.value = gyro
 
                         else:
-                            #print(f"Invalid start bytes: {buff[0]} {buff[1]}")
                             buff.pop(0)  # Remove one byte and continue checking
 
                 else:
-                    gyro_heading_change = yaw_difference(last_yaw, Gyaw)
-                    last_yaw = Gyaw
-                    #print(f"Pitch: {Gpitch:.2f}, Roll: {Groll:.2f}")
+                    gyro_heading_change = yaw_difference(last_yaw, Gyaw.value)
+                    last_yaw = Gyaw.value
+
                     # Get the magnetometer heading (absolute heading)
                     mag_x, mag_y, mag_z = get_magnetometer_heading()
                     # Tilt compensate the magnetometer data
                     mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z,
-                        math.radians(Gpitch),math.radians(Groll))
+                        math.radians(Gpitch.value), math.radians(Groll.value))
                     # Calculate the magnetometer heading
                     mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
                     # Apply Kalman filter to fuse magnetometer and gyroscope data
-                    #Gheading_estimate, P = kalman_filter(gyro_heading_change, mag_heading, Gheading_estimate, P)
-                    Gheading_estimate = mag_heading
-                    #print(f"Gyro heading change: {gyro_heading_change:.2f}")
-                    #print(f"Compensated / Kalman filtered magnetometer heading: {mag_heading:.2f} / {Gheading_estimate:.2f} degrees")
-                    time.sleep(0.005)
-
+                    Gheading_estimate.value, P = kalman_filter(
+                        gyro_heading_change, mag_heading, Gheading_estimate.value, P)
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
     except KeyboardInterrupt:
         print("Stopping data read.")
-
 
 def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     global Gyaw
@@ -990,29 +986,39 @@ def main():
     picam0.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
     picam1.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
 
-    # Start processes
+    # Start threads and processes
     lidar_thread_instance = threading.Thread(target=lidar_thread,
                                              args=(sock, pca, shared_GX, shared_GY, shared_race_mode))
     camera_thread_instance = threading.Thread(target=camera_thread,
                                               args=(picam0, picam1, shared_race_mode, shared_blue_line_count))
-    gyro_thread_instance = threading.Thread(target=gyro_thread,args=())
+
+    gyro_process_instance = Process(target=gyro_process,
+                                    args=(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_estimate))
     xbox_controller_process_instance = Process(target=xbox_controller_process,
                                                args=(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count))
 
     lidar_thread_instance.start()
     camera_thread_instance.start()
-    gyro_thread_instance.start()
+    gyro_process_instance.start()
     xbox_controller_process_instance.start()
 
     time.sleep(5)
     Gheading_start = Gheading_estimate
     print(f"All processes have started: {Gheading_start:.2f} degrees")
 
+    Gheading_values = []
+    while True:
+        Gheading_start = Gheading_estimate
+        Gheading_values.append(Gheading_start)
+        if len(Gheading_values) > 1:
+            print(f"All processes have started: {Gheading_start:.2f} ERR {statistics.stdev(Gheading_values)}")
+        time.sleep(0.2)
+
     try:
         while True:
             # lidar_thread_instance.join()
             # camera_thread_instance.join()
-            # gyro_thread_instance.join()
+            # gyro_process_instance.join()
             # xbox_controller_process_instance.join()
 
             #shared_race_mode.value = 2
