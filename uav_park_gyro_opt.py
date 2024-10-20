@@ -773,6 +773,7 @@ def gyro_thread(shared_race_mode):
 
     buff = bytearray()  # Buffer to store incoming serial data
     packet_counter = 0  # Counter to skip packets
+    old_race_mode = 0  # Previous
 
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
@@ -780,6 +781,7 @@ def gyro_thread(shared_race_mode):
 
             while True:
                 if shared_race_mode.value != 1:
+                    if old_race_mode != 1: ser.reset_input_buffer()
                     if ser.in_waiting:
                         # Read all available data and append it to the buffer
                         data = ser.read(ser.in_waiting)
@@ -827,7 +829,8 @@ def gyro_thread(shared_race_mode):
                 else:
                     print("Gyro inactive, reset serial buffer")
                     time.sleep(1.0)
-                    ser.reset_input_buffer()
+
+                old_race_mode = shared_race_mode.value
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
