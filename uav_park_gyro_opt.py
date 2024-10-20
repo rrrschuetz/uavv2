@@ -780,8 +780,11 @@ def gyro_thread(shared_race_mode):
             ser.reset_input_buffer()  # Clear old data at the start
 
             while True:
-                if shared_race_mode.value != 1:
-                    if old_race_mode != 1: ser.reset_input_buffer()
+                if shared_race_mode.value in [0, 2]:
+                    if old_race_mode == 1:
+                        ser.reset_input_buffer()
+                        print("Serial buffer reset")
+
                     if ser.in_waiting:
                         # Read all available data and append it to the buffer
                         data = ser.read(ser.in_waiting)
@@ -796,7 +799,7 @@ def gyro_thread(shared_race_mode):
 
                                 # Increment packet counter and skip processing unless it's every 5th packet
                                 packet_counter += 1
-                                if packet_counter % 5 != 0:
+                                if packet_counter % 10 != 0:
                                     continue  # Skip this packet
 
                                 # Parse the packet
@@ -1032,7 +1035,7 @@ def main():
             # gyro_thread_instance.join()
             # xbox_controller_process_instance.join()
 
-            #shared_race_mode.value = 2
+            shared_race_mode.value = 2
 
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
