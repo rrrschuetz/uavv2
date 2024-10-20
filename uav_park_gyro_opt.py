@@ -48,7 +48,8 @@ MOTOR_FACTOR = 0.3
 MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
-PARK_STEER = 2.5
+PARK_STEER_ANGULAR = 2.5
+PARK_STEER_PARALLEL = 5.0
 PARK_FIX_STEER = 0.3
 
 BLUE_LINE_PARKING_COUNT = 3
@@ -864,7 +865,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         distance2stop = front_distance - stop_distance
         sign = - 1.0 if distance2stop < 0 else 1.0
         drive = PARK_SPEED * sign
-        steer = PARK_STEER * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
+        steer = PARK_STEER_PARALLEL * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
         steer = max(min(steer, 1), -1) * sign
         print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
               f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw, yaw_init)):.2f}  \\"
@@ -885,7 +886,7 @@ def align_angular(pca, angle, shared_race_mode):
     print(f"Car alignment: initial angle {yaw_init:.2f} delta angle {angle:.2f}")
     while shared_race_mode.value == 2 and abs(yaw_difference(Gyaw, yaw_init)) < abs(angle):
         print(f"Car orthogonal alignment: angle {yaw_difference(Gyaw, yaw_init):.2f}")
-        steer = PARK_STEER * (angle - yaw_difference(Gyaw, yaw_init)) / angle
+        steer = PARK_STEER_ANGULAR * (angle - yaw_difference(Gyaw, yaw_init)) / angle
         steer = max(min(steer, 1), -1)
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
@@ -898,26 +899,7 @@ def align_angular(pca, angle, shared_race_mode):
 def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
     time.sleep(2)
-    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
-    set_motor_speed(pca, 13, MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
-    time.sleep(2)
-    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
-    set_motor_speed(pca, 13, MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
-    time.sleep(2)
-    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
-    set_motor_speed(pca, 13, MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
-    time.sleep(2)
-    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
-    set_motor_speed(pca, 13, MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
-    time.sleep(2)
-    align_angular(pca, 15 if Gclock_wise else -15, shared_race_mode)
-    set_motor_speed(pca, 13, MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
-    time.sleep(2)
+    align_angular(pca, 75 if Gclock_wise else -75, shared_race_mode)
 
     correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
     set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
