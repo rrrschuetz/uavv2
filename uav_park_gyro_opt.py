@@ -616,7 +616,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 # print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
 
         else:
-            time.sleep(0.1)
+            time.sleep(1.0)
 
     except KeyboardInterrupt:
         print("Keyboard Interrupt detected, stopping video capture and saving...")
@@ -820,7 +820,8 @@ def gyro_thread(shared_race_mode):
                         Gheading_estimate = mag_heading
 
                 else:
-                    time.sleep(0.1)
+                    print("Gyro inactive")
+                    time.sleep(1.0)
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
