@@ -800,7 +800,7 @@ def gyro_process(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_est
 
                             # Increment packet counter and skip processing unless it's every 5th packet
                             packet_counter += 1
-                            if packet_counter % 5 != 0:
+                            if packet_counter % 1 != 0:
                                 continue  # Skip this packet
 
                             # Parse the packet
@@ -833,6 +833,7 @@ def gyro_process(Gpitch, Groll, Gyaw, Gaccel_x, Gaccel_y, Gaccel_z, Gheading_est
                     # Apply Kalman filter to fuse magnetometer and gyroscope data
                     Gheading_estimate.value, P = kalman_filter(
                         gyro_heading_change, mag_heading, Gheading_estimate.value, P)
+                    #Gheading_estimate.value = mag_heading
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
@@ -1003,15 +1004,15 @@ def main():
     xbox_controller_process_instance.start()
 
     time.sleep(5)
-    Gheading_start = Gheading_estimate
+    Gheading_start = Gheading_estimate.value
     print(f"All processes have started: {Gheading_start:.2f} degrees")
 
     Gheading_values = []
     while True:
-        Gheading_start = Gheading_estimate
+        Gheading_start = Gheading_estimate.value
         Gheading_values.append(Gheading_start)
         if len(Gheading_values) > 1:
-            print(f"All processes have started: {Gheading_start:.2f} ERR {statistics.stdev(Gheading_values)}")
+            print(f"All processes have started: {Gheading_start:.2f} ERR {statistics.stdev(Gheading_values):.2f}")
         time.sleep(0.2)
 
     try:
