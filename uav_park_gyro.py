@@ -877,7 +877,7 @@ def align_angular(pca, angle, shared_race_mode):
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.01)
     set_servo_angle(pca, 12, SERVO_BASIS)
-    print(f"Car final angle {Gyaw:.2f}")
+    print(f"Car final angle {Gyaw.value:.2f}")
 
 
 def park(pca, sock, shared_race_mode):
@@ -1027,7 +1027,7 @@ def main():
             print("Starting the parking procedure")
             print(f"Heading estimate: {Gheading_estimate.value %90:.2f}")
             print(f"Heading start: {Gheading_start%90:.2f}")
-            time.sleep(10)
+            time.sleep(5)
             park(pca, sock, shared_race_mode)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
