@@ -780,7 +780,7 @@ def gyro_thread(shared_race_mode):
             ser.reset_input_buffer()  # Clear old data at the start
 
             while True:
-                if shared_race_mode.value in [0, 2]:
+                if shared_race_mode.value in [0,2]:
                     if old_race_mode == 1:
                         ser.reset_input_buffer()
                         print("Serial buffer reset")
@@ -799,7 +799,7 @@ def gyro_thread(shared_race_mode):
 
                                 # Increment packet counter and skip processing unless it's every 5th packet
                                 packet_counter += 1
-                                if packet_counter % 2 != 0:
+                                if packet_counter % 5 != 0:
                                     continue  # Skip this packet
 
                                 # Parse the packet
@@ -827,8 +827,7 @@ def gyro_thread(shared_race_mode):
                         # Calculate the magnetometer heading
                         mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
                         Gheading_estimate = mag_heading
-
-                    time.sleep(0.05)
+                        time.sleep(0.05)
 
                 else:
                     print("Gyro inactive")
