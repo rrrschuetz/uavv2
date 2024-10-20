@@ -198,7 +198,6 @@ def decode_dense_mode_packet(packet):
 
 
 def full_scan(sock):
-    print("Full scan...")
     inf_threshold = 100  # Stop scanning when fewer than 100 np.inf values remain
     final_distances = np.full(LIDAR_LEN * 2, np.inf)  # Initialize with np.inf for missing values
     full_angle_range = np.linspace(0, 360, LIDAR_LEN * 2, endpoint=False)  # High-resolution angle range
@@ -619,8 +618,9 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 moving_avg_fps = sum(fps_list) / len(fps_list)
                 # print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
 
-        else:
-            time.sleep(1.0)
+            else:
+                print("Camera inactive")
+                time.sleep(1.0)
 
     except KeyboardInterrupt:
         print("Keyboard Interrupt detected, stopping video capture and saving...")
