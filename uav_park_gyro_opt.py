@@ -570,7 +570,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
 
     try:
         while True:
-            if shared_race_mode.value == 1:
+            if shared_race_mode.value in [0,1]:
                 start_time = time.time()
                 image0 = picam0.capture_array()
                 image1 = picam1.capture_array()
