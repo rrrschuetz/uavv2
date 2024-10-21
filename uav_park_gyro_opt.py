@@ -1004,7 +1004,7 @@ def main():
     lidar_thread_instance.start()
     camera_thread_instance.start()
     gyro_thread_instance.start()
-    #xbox_controller_process_instance.start()
+    xbox_controller_process_instance.start()
 
     time.sleep(5)
     Gheading_start = Gheading_estimate
@@ -1015,7 +1015,7 @@ def main():
             #lidar_thread_instance.join()
             #camera_thread_instance.join()
             #gyro_thread_instance.join()
-            # xbox_controller_process_instance.join()
+            #xbox_controller_process_instance.join()
 
             #shared_race_mode.value = 2
 
