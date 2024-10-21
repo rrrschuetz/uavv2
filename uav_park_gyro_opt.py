@@ -892,7 +892,7 @@ def align_angular(pca, angle, shared_race_mode):
         drive = PARK_SPEED
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
-        time.sleep(0.01)
+        time.sleep(0.05)
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car final angle {Gyaw:.2f}")
 
@@ -1005,7 +1005,7 @@ def main():
     lidar_thread_instance.start()
     camera_thread_instance.start()
     gyro_thread_instance.start()
-    xbox_controller_process_instance.start()
+    #xbox_controller_process_instance.start()
 
     time.sleep(5)
     Gheading_start = Gheading_estimate
