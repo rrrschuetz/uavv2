@@ -765,6 +765,12 @@ def initialize_wt61():
     except serial.SerialException as e:
         print(f"Serial error: {e}")
 
+def orientation(angle):
+    mod = angle % 90
+    if 0 <= mod < 45:
+        return mod
+    else:
+        return mod - 90
 
 def gyro_thread(shared_race_mode):
     global Gaccel_x, Gaccel_y, Gaccel_z
@@ -854,8 +860,8 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     yaw_delta_l = left_angle - 180 if 180 >= left_angle > 90 else -90
     yaw_delta = yaw_delta_l if abs(yaw_delta_l) < abs(yaw_delta_r) else yaw_delta_r
     print(f"LID left_angle: {left_angle:.2f} right_angle: {right_angle:.2f} yaw_delta: {yaw_delta:.2f}")
-    yaw_delta =  (Gheading_estimate % 90) - (Gheading_start % 90)
-    print(f"LID Gheading_estimate {Gheading_estimate %90:.2f} yaw_delta: {yaw_delta:.2f}")
+    yaw_delta =  orientation(Gheading_estimate) - orientation(Gheading_start)
+    print(f"LID Gheading_estimate {orientation(Gheading_estimate):.2f} yaw_delta: {yaw_delta:.2f}")
 
     while shared_race_mode.value == 2 and \
            (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
@@ -905,7 +911,7 @@ def park(pca, sock, shared_race_mode):
     correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
     set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
     time.sleep(0.2)
-    print(f"Car final heading: {(Gyaw % 90) - (Gheading_start % 90):.2f}")
+    print(f"Car final heading: {orientation(Gyaw) - orientation(Gheading_start):.2f}")
 
     while True:
         position = navigate(sock)
@@ -1041,8 +1047,8 @@ def main():
             set_servo_angle(pca, 12, SERVO_BASIS)
 
             print("Starting the parking procedure")
-            print(f"Heading estimate: {Gheading_estimate %90:.2f}")
-            print(f"Heading start: {Gheading_start%90:.2f}")
+            print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
+            print(f"Heading start: {orientation(Gheading_start):.2f}")
             time.sleep(5)
             park(pca, sock, shared_race_mode)
 
