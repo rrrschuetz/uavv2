@@ -49,7 +49,7 @@ MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
 PARK_STEER = 2.5
-PARK_FIX_STEER = 0.3
+PARK_FIX_STEER = 0.5
 
 BLUE_LINE_PARKING_COUNT = 3
 
@@ -533,7 +533,7 @@ def detect_and_label_blobs(image):
     for contour in contours:
         area = cv2.contourArea(contour)
         if area > 5000:
-            print(f"Magenta rectangle detected: {area} pixels")
+            #print(f"Magenta rectangle detected: {area} pixels")
             magenta_rectangle = True
             cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
 
@@ -899,7 +899,7 @@ def align_angular(pca, angle, shared_race_mode):
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
-    set_servo_angle(pca, 12, SERVO_BASIS)
+    set_servo_angle(pca, 13, MOTOR_BASIS)
     print(f"Car final angle {Gyaw:.2f}")
 
 
