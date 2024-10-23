@@ -917,7 +917,7 @@ def park(pca, sock, shared_race_mode):
         position = navigate(sock)
         if position['front_distance'] < 0.10: break
         set_servo_angle(pca, 12, SERVO_BASIS)
-        set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * 0.2 * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
@@ -1011,7 +1011,7 @@ def main():
     lidar_thread_instance.start()
     camera_thread_instance.start()
     gyro_thread_instance.start()
-    #xbox_controller_process_instance.start()
+    xbox_controller_process_instance.start()
 
     time.sleep(5)
     Gheading_start = Gheading_estimate
