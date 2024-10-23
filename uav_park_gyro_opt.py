@@ -368,7 +368,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
         fps_list.append(1.0 / frame_time)
 
         moving_avg_fps = sum(fps_list) / len(fps_list)
-        print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
+        #print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
 
 
 # Camera functions
@@ -616,7 +616,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 fps_list.append(1.0 / frame_time)
 
                 moving_avg_fps = sum(fps_list) / len(fps_list)
-                print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
+                #print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
 
             else:
                 print("Camera inactive")
