@@ -619,7 +619,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 #print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
 
             else:
-                print("Camera inactive")
+                #print("Camera inactive")
                 time.sleep(1.0)
 
     except KeyboardInterrupt:
@@ -836,7 +836,7 @@ def gyro_thread(shared_race_mode):
                         time.sleep(0.1)
 
                 else:
-                    print("Gyro inactive")
+                    #print("Gyro inactive")
                     time.sleep(1.0)
 
                 old_race_mode = shared_race_mode.value
