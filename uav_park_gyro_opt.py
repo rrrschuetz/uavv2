@@ -534,7 +534,7 @@ def detect_and_label_blobs(image):
     for contour in contours:
         area = cv2.contourArea(contour)
         if area > 5000:
-            #print(f"Magenta rectangle detected: {area} pixels")
+            print(f"Magenta rectangle detected: {area} pixels")
             magenta_rectangle = True
             cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
 
