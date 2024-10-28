@@ -50,6 +50,7 @@ MOTOR_BASIS = 0.1
 PARK_SPEED = -0.55
 PARK_STEER = 2.5
 PARK_FIX_STEER = 0.5
+PARK_ANGLE = 60
 
 BLUE_LINE_PARKING_COUNT = 3
 
@@ -906,7 +907,7 @@ def align_angular(pca, angle, shared_race_mode):
 def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
     time.sleep(2)
-    align_angular(pca, 75 if Gclock_wise else -75, shared_race_mode)
+    align_angular(pca, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
 
     correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
     set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
