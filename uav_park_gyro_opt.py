@@ -498,7 +498,7 @@ def detect_and_label_blobs(image):
     # Detect blue lines
     blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
     blue_mask = remove_small_contours(blue_mask)
-    cv2.imwrite('blue_mask.jpg', blue_mask)
+    #cv2.imwrite('blue_mask.jpg', blue_mask)
 
     contours, _ = cv2.findContours(blue_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -527,7 +527,7 @@ def detect_and_label_blobs(image):
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
     magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
-    cv2.imwrite('magenta_mask.jpg', magenta_mask)
+    #cv2.imwrite('magenta_mask.jpg', magenta_mask)
 
     # Find and filter contours for magenta blobs
     contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
