@@ -44,13 +44,13 @@ WRITE_CAMERA_MOVIE = True
 
 SERVO_FACTOR = 0.4
 SERVO_BASIS = 0.55
-MOTOR_FACTOR = 0.3
+MOTOR_FACTOR = 0.3 # 0.3
 MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
 PARK_STEER = 2.5
 PARK_FIX_STEER = 0.5
-PARK_ANGLE = 60
+PARK_ANGLE = 85
 
 BLUE_LINE_PARKING_COUNT = 3
 
@@ -534,7 +534,7 @@ def detect_and_label_blobs(image):
     for contour in contours:
         area = cv2.contourArea(contour)
         if area > 5000:
-            print(f"Magenta rectangle detected: {area} pixels")
+            #print(f"Magenta rectangle detected: {area} pixels")
             magenta_rectangle = True
             cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
 
@@ -897,8 +897,8 @@ def align_angular(pca, angle, shared_race_mode):
         dyn_steer = 1 - abs(yaw_difference(Gyaw, yaw_init)) / abs(angle)
         steer = max(min(PARK_STEER * dyn_steer, 1), -1)
         if angle > 0: steer = -steer
-        drive = PARK_SPEED
-        print(f"Steer {steer:.2f} Drive {drive:.2f}")
+        drive = PARK_SPEED * max(dyn_steer, 0.5)
+        print(f"dyn_steer {dyn_steer:.2f} Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
@@ -911,9 +911,9 @@ def park(pca, sock, shared_race_mode):
     time.sleep(2)
     align_angular(pca, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
 
-    correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
-    set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
-    time.sleep(0.2)
+    #correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
+    #set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
+    #time.sleep(0.2)
     print(f"Car final heading: {orientation(Gyaw) - orientation(Gheading_start):.2f}")
 
     #while True:
