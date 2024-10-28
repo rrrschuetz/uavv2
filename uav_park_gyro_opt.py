@@ -894,9 +894,9 @@ def align_angular(pca, angle, shared_race_mode):
     print(f"Car alignment: initial angle {yaw_init:.2f} delta angle {angle:.2f}")
     while shared_race_mode.value == 2 and abs(yaw_difference(Gyaw, yaw_init)) < abs(angle):
         print(f"Car orthogonal alignment: angle {yaw_difference(Gyaw, yaw_init):.2f}")
-        dyn_steer = abs(abs(angle) - abs(yaw_difference(Gyaw, yaw_init))) / abs(angle)
+        dyn_steer = 1 - abs(yaw_difference(Gyaw, yaw_init)) / abs(angle)
         steer = max(min(PARK_STEER * dyn_steer, 1), -1)
-        if angle < 0: steer = -steer
+        if angle > 0: steer = -steer
         drive = PARK_SPEED * dyn_steer
         print(f"Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
