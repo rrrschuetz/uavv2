@@ -362,7 +362,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                     print("Invalid steering commands:", X, Y)
 
         elif shared_race_mode.value == 2:
-            print("Lidar inactve")
+            #print("Lidar inactve")
             time.sleep(1)
 
         frame_time = time.time() - start_time
@@ -914,11 +914,11 @@ def park(pca, sock, shared_race_mode):
     time.sleep(0.2)
     print(f"Car final heading: {orientation(Gyaw) - orientation(Gheading_start):.2f}")
 
-    while True:
-        position = navigate(sock)
-        if position['front_distance'] < 0.10: break
-        set_servo_angle(pca, 12, SERVO_BASIS)
-        set_motor_speed(pca, 13, PARK_SPEED * 0.2 * MOTOR_FACTOR + MOTOR_BASIS)
+    #while True:
+    #    position = navigate(sock)
+    #    if position['front_distance'] < 0.10: break
+    #    set_servo_angle(pca, 12, SERVO_BASIS)
+    #    set_motor_speed(pca, 13, PARK_SPEED * 0.2 * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
