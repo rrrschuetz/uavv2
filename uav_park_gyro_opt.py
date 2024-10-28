@@ -39,8 +39,8 @@ COLOR_LEN = 1280
 ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
 
-WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = False
+WRITE_CAMERA_IMAGE = True
+WRITE_CAMERA_MOVIE = True
 
 SERVO_FACTOR = 0.4
 SERVO_BASIS = 0.55
@@ -897,7 +897,7 @@ def align_angular(pca, angle, shared_race_mode):
         dyn_steer = 1 - abs(yaw_difference(Gyaw, yaw_init)) / abs(angle)
         steer = max(min(PARK_STEER * dyn_steer, 1), -1)
         if angle > 0: steer = -steer
-        drive = PARK_SPEED * dyn_steer
+        drive = PARK_SPEED
         print(f"Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
