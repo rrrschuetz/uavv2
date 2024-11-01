@@ -50,7 +50,7 @@ MOTOR_BASIS = 0.1
 PARK_SPEED = -0.55
 PARK_STEER = 2.5
 PARK_FIX_STEER = 0.5
-PARK_ANGLE = 85
+PARK_ANGLE = 90
 
 BLUE_LINE_PARKING_COUNT = 3
 
@@ -916,11 +916,13 @@ def park(pca, sock, shared_race_mode):
     #time.sleep(0.2)
     print(f"Car final heading: {orientation(Gyaw) - orientation(Gheading_start):.2f}")
 
+
     while True:
         position = navigate(sock)
+        print(f"Front distance: {position['front_distance']:.2f}")
         if position['front_distance'] < 0.10: break
         set_servo_angle(pca, 12, SERVO_BASIS)
-        set_motor_speed(pca, 13, PARK_SPEED * 0.2 * MOTOR_FACTOR + MOTOR_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
