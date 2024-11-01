@@ -940,10 +940,7 @@ def sensor_callback():
 
 
 def get_clock_wise(sock):
-    position = navigate(sock)
-    left_angle = position['left_min_angle']
-    right_angle = position['right_min_angle']
-    return left_angle > right_angle
+    return False
 
 
 def main():
