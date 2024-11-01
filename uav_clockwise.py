@@ -39,8 +39,8 @@ COLOR_LEN = 1280
 ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
 
-WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = False
+WRITE_CAMERA_IMAGE = True
+WRITE_CAMERA_MOVIE = True
 
 SERVO_FACTOR = 0.4
 SERVO_BASIS = 0.55
@@ -543,7 +543,7 @@ def detect_and_label_blobs(image):
             blue_orientation = "DOWN"
 
         # Draw the most significant line for visualization
-        cv2.line(image, tuple(point1), tuple(point2), (255, 255, 255), 2)
+        cv2.line(image, tuple(point1), tuple(point2), (255, 0, 0), 2)
 
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
