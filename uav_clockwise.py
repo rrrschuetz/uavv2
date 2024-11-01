@@ -44,7 +44,7 @@ WRITE_CAMERA_MOVIE = False
 
 SERVO_FACTOR = 0.4
 SERVO_BASIS = 0.55
-MOTOR_FACTOR = 0.32 # 0.3
+MOTOR_FACTOR = 0.3 # 0.3
 MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
@@ -908,7 +908,7 @@ def align_angular(pca, angle, shared_race_mode):
 
 def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
-    time.sleep(2)
+    #time.sleep(2)
     align_angular(pca, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
 
     #correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
@@ -916,11 +916,11 @@ def park(pca, sock, shared_race_mode):
     #time.sleep(0.2)
     print(f"Car final heading: {orientation(Gyaw) - orientation(Gheading_start):.2f}")
 
-    #while True:
-    #    position = navigate(sock)
-    #    if position['front_distance'] < 0.10: break
-    #    set_servo_angle(pca, 12, SERVO_BASIS)
-    #    set_motor_speed(pca, 13, PARK_SPEED * 0.2 * MOTOR_FACTOR + MOTOR_BASIS)
+    while True:
+        position = navigate(sock)
+        if position['front_distance'] < 0.10: break
+        set_servo_angle(pca, 12, SERVO_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * 0.2 * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
@@ -1039,19 +1039,6 @@ def main():
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
                 # print(f"Race mode: {shared_race_mode.value}")
-
-            #time.sleep(5)
-            #start_yaw = Gyaw
-            #if start_yaw < 0:
-            #    start_yaw += 360
-            #start_mag = Gheading_estimate
-            #while True:
-            #    print(f"K: {Gheading_estimate-start_mag:.2f} / {(Gheading_estimate-start_mag)/360:.2f}")
-            #    current_yaw = Gyaw
-            #    if current_yaw < 0:
-            #        current_yaw += 360
-            #    #print(f"Y: {current_yaw-start_yaw:.2f} / {(current_yaw-start_yaw)/360:.2f}")
-            #    time.sleep(1)
 
             set_motor_speed(pca, 13, MOTOR_BASIS)
             set_servo_angle(pca, 12, SERVO_BASIS)
