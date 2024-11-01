@@ -908,21 +908,15 @@ def align_angular(pca, angle, shared_race_mode):
 
 def park(pca, sock, shared_race_mode):
     align_parallel(pca, sock, shared_race_mode)
-    #time.sleep(2)
     align_angular(pca, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
-
-    #correct = PARK_FIX_STEER if Gclock_wise else -PARK_FIX_STEER
-    #set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR * correct)
-    #time.sleep(0.2)
     print(f"Car final heading: {orientation(Gyaw) - orientation(Gheading_start):.2f}")
-
 
     while True:
         position = navigate(sock)
         print(f"Front distance: {position['front_distance']:.2f}")
         if position['front_distance'] < 0.10: break
         set_servo_angle(pca, 12, SERVO_BASIS)
-        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * 0.8 * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
