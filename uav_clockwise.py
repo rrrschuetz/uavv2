@@ -433,6 +433,7 @@ def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle
 
 def detect_and_label_blobs(image):
     blue_line = False
+    blue_line_orientation = ""
     magenta_rectangle = False
 
     hsv = preprocess_image(image)
@@ -543,7 +544,7 @@ def detect_and_label_blobs(image):
             blue_orientation = "DOWN"
 
         # Draw the most significant line for visualization
-        cv2.line(image, tuple(point1), tuple(point2), (255, 0, 0), 2)
+        cv2.line(image, tuple(point1), tuple(point2), (0, 255, 0), 2)
 
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)

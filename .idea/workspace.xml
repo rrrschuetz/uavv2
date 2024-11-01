@@ -136,22 +136,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00293" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1729444662206</created>
-      <option name="number" value="00293" />
-      <option name="presentableId" value="LOCAL-00293" />
-      <option name="project" value="LOCAL" />
-      <updated>1729444662206</updated>
-    </task>
-    <task id="LOCAL-00294" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1729444987161</created>
-      <option name="number" value="00294" />
-      <option name="presentableId" value="LOCAL-00294" />
-      <option name="project" value="LOCAL" />
-      <updated>1729444987161</updated>
-    </task>
     <task id="LOCAL-00295" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
       <created>1729445834591</created>
@@ -528,7 +512,23 @@
       <option name="project" value="LOCAL" />
       <updated>1730482844347</updated>
     </task>
-    <option name="localTasksCounter" value="342" />
+    <task id="LOCAL-00342" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1730484962098</created>
+      <option name="number" value="00342" />
+      <option name="presentableId" value="LOCAL-00342" />
+      <option name="project" value="LOCAL" />
+      <updated>1730484962098</updated>
+    </task>
+    <task id="LOCAL-00343" summary="Initial setup to read out lidar data">
+      <option name="closed" value="true" />
+      <created>1730500181298</created>
+      <option name="number" value="00343" />
+      <option name="presentableId" value="LOCAL-00343" />
+      <option name="project" value="LOCAL" />
+      <updated>1730500181298</updated>
+    </task>
+    <option name="localTasksCounter" value="344" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
