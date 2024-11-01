@@ -433,7 +433,7 @@ def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle
 
 def detect_and_label_blobs(image):
     blue_line = False
-    blue_line_orientation = ""
+    blue_orientation = ""
     magenta_rectangle = False
 
     hsv = preprocess_image(image)
