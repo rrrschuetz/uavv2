@@ -44,7 +44,7 @@ WRITE_CAMERA_MOVIE = False
 
 SERVO_FACTOR = 0.4
 SERVO_BASIS = 0.55
-MOTOR_FACTOR = 0.3 # 0.3
+MOTOR_FACTOR = 0.35 # 0.3
 MOTOR_BASIS = 0.1
 
 PARK_SPEED = -0.55
@@ -897,7 +897,7 @@ def align_angular(pca, angle, shared_race_mode):
         dyn_steer = 1 - abs(yaw_difference(Gyaw, yaw_init)) / abs(angle)
         steer = max(min(PARK_STEER * dyn_steer, 1), -1)
         if angle > 0: steer = -steer
-        drive = PARK_SPEED * max(dyn_steer, 0.6)
+        drive = PARK_SPEED * max(dyn_steer, 0.5)
         print(f"dyn_steer {dyn_steer:.2f} Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
