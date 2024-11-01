@@ -536,13 +536,14 @@ def detect_and_label_blobs(image):
         # Retrieve endpoints of the line
         point1 = most_significant_line[0][0]
         point2 = most_significant_line[1][0]
+        #print(f"Blue line endpoints: {point1}, {point2}")
 
         # Determine the orientation of the line based on endpoint positions
-        if point1[0] < point2[0] and point1[1] > point2[1]:
-            blue_orientation = "UP"
-        elif point1[0] > point2[0] and point1[1] < point2[1]:
-            blue_orientation = "DOWN"
-        print(f"Blue line orientation: {blue_orientation}")
+        if point1[0] < point2[0]:
+            blue_orientation = "UP" if point1[1] < point2[1] else "DOWN"
+        elif point1[0] > point2[0]:
+            blue_orientation = "UP" if point2[1] > point1[1] else "DOWN"
+        #print(f"Blue line orientation: {blue_orientation}")
 
         # Draw the most significant line for visualization
         cv2.line(image, tuple(point1), tuple(point2), (0, 0, 255), 5)
