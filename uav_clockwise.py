@@ -542,9 +542,10 @@ def detect_and_label_blobs(image):
             blue_orientation = "UP"
         elif point1[0] > point2[0] and point1[1] < point2[1]:
             blue_orientation = "DOWN"
+        print(f"Blue line orientation: {blue_orientation}")
 
         # Draw the most significant line for visualization
-        cv2.line(image, tuple(point1), tuple(point2), (0, 255, 0), 2)
+        cv2.line(image, tuple(point1), tuple(point2), (0, 0, 255), 5)
 
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
