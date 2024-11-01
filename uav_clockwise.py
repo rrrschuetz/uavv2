@@ -3,7 +3,6 @@ import struct
 import serial
 import pygame
 import numpy as np
-from botocore.endpoint_provider import GET_ATTR_RE
 from scipy.ndimage import median_filter
 from scipy.stats import trim_mean
 import cv2
