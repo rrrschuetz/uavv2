@@ -515,7 +515,7 @@ def detect_and_label_blobs(image):
         if area < 1500:
             continue
         # Approximate the contour to a line
-        epsilon = 0.4 * cv2.arcLength(contour, True)
+        epsilon = 0.2 * cv2.arcLength(contour, True)   # 0.4
         approx = cv2.approxPolyDP(contour, epsilon, True)
         if len(approx) == 2:
             line_contours.append(contour)
@@ -571,6 +571,7 @@ def detect_and_label_blobs(image):
 
 def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count):
     global Gcolor_string, Gx_coords
+    global Gblue_orientation
 
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = picam0.capture_array().shape
@@ -608,14 +609,15 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     Gx_coords = Gx_coords * -1.0
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if blue_line and shared_race_mode.value == 1:
+                if blue_line:
                     Gblue_orientation = blue_orientation
-                    current_time = time.time()
-                    if current_time - last_blue_line_time >= 3:
-                        print(f"Blue line count: {shared_blue_line_count.value+1} \\"
-                              f"time: {current_time-last_blue_line_time:.2f} seconds")
-                        last_blue_line_time = current_time
-                        shared_blue_line_count.value += 1
+                    if shared_race_mode.value == 1:
+                        current_time = time.time()
+                        if current_time - last_blue_line_time >= 3:
+                            print(f"Blue line count: {shared_blue_line_count.value+1} \\"
+                                  f"time: {current_time-last_blue_line_time:.2f} seconds")
+                            last_blue_line_time = current_time
+                            shared_blue_line_count.value += 1
 
                 if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
                     parking_lot_reached = True
@@ -960,6 +962,8 @@ def sensor_callback():
 
 
 def get_clock_wise():
+    global Gblue_orientation, Gclock_wise
+    print(f"Blue orientation: {Gblue_orientation}")
     if Gblue_orientation == "UP":
         Gclock_wise = False
         return True
@@ -970,7 +974,7 @@ def get_clock_wise():
         return False
 
 def main():
-    global Gheading_estimate, Gheading_start
+    global Gheading_estimate, Gheading_start, Gclock_wise
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
     global shared_race_mode, shared_blue_line_count
 
@@ -1051,8 +1055,8 @@ def main():
     Gheading_start = Gheading_estimate
     print(f"All processes have started: {Gheading_start:.2f} degrees")
 
-    print(f"{get_clock_wise()}")
-    print(f"Clockwise: {Gclock_wise}")
+    result = get_clock_wise()
+    print(f"{result} Clockwise: {Gclock_wise}")
 
     try:
         while True:
