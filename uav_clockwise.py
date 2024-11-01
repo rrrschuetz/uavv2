@@ -58,6 +58,7 @@ BLUE_LINE_PARKING_COUNT = 3
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
+Gblue_orientation = ""
 
 Gpitch = 0.0
 Groll = 0.0
@@ -502,20 +503,25 @@ def detect_and_label_blobs(image):
 
     contours, _ = cv2.findContours(blue_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Filter contours to detect lines
+    # Filter and analyze contours to detect the most significant line
     line_contours = []
+    most_significant_line = None
+    max_line_length = 0
+    line_orientation = None  # None by default
+
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area < 1500:  # Skip small contours that could be noise, adjust as needed
+        if area < 1500:
             continue
-        # Approximate the contour to a polygon with fewer vertices
+        # Approximate the contour to a line
         epsilon = 0.4 * cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
-        # Check if the approximated contour is a line (2 vertices)
         if len(approx) == 2:
             line_contours.append(contour)
-            #print(f"Line detected: {area} pixels")
-            continue
+            line_length = cv2.arcLength(approx, True)
+            if line_length > max_line_length:
+                max_line_length = line_length
+                most_significant_line = approx
 
     # Draw the filtered line contours
     if line_contours:
@@ -523,6 +529,21 @@ def detect_and_label_blobs(image):
             cv2.drawContours(image, [line_contour], -1, (0, 255, 255), 2)  # Draw contours in blue
         blue_line = True
         # print(f"Detected {len(line_contours)} straight blue line(s)")
+
+    # If a significant line is found, determine its orientation
+    if most_significant_line is not None:
+        # Retrieve endpoints of the line
+        point1 = most_significant_line[0][0]
+        point2 = most_significant_line[1][0]
+
+        # Determine the orientation of the line based on endpoint positions
+        if point1[0] < point2[0] and point1[1] > point2[1]:
+            blue_orientation = "UP"
+        elif point1[0] > point2[0] and point1[1] < point2[1]:
+            blue_orientation = "DOWN"
+
+        # Draw the most significant line for visualization
+        cv2.line(image, tuple(point1), tuple(point2), (255, 255, 255), 2)
 
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
@@ -542,7 +563,7 @@ def detect_and_label_blobs(image):
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
     cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
-    return x_coords, blue_line, magenta_rectangle, image
+    return x_coords, blue_line, magenta_rectangle, blue_orientation, image
 
 
 def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count):
@@ -578,13 +599,14 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 image1_flipped = cv2.flip(image1, -1)
                 combined_image = np.hstack((image0_flipped, image1_flipped))
                 cropped_image = combined_image[frame_height:, :]
-                Gx_coords, blue_line, parking_lot, image = detect_and_label_blobs(cropped_image)
+                Gx_coords, blue_line, parking_lot, blue_orientation, image = detect_and_label_blobs(cropped_image)
 
                 if Gclock_wise:
                     Gx_coords = Gx_coords * -1.0
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
                 if blue_line and shared_race_mode.value == 1:
+                    Gblue_orientation = blue_orientation
                     current_time = time.time()
                     if current_time - last_blue_line_time >= 3:
                         print(f"Blue line count: {shared_blue_line_count.value+1} \\"
@@ -934,9 +956,15 @@ def sensor_callback():
     shared_blue_line_count.value = 0
 
 
-def get_clock_wise(sock):
-    return False
-
+def get_clock_wise():
+    if Gblue_orientation == "UP":
+        Gclock_wise = False
+        return True
+    elif Gblue_orientation == "DOWN":
+        Gclock_wise = True
+        return True
+    else:
+        return False
 
 def main():
     global Gheading_estimate, Gheading_start
@@ -1016,11 +1044,11 @@ def main():
     gyro_thread_instance.start()
     xbox_controller_process_instance.start()
 
-    time.sleep(5)
+    time.sleep(2)
     Gheading_start = Gheading_estimate
     print(f"All processes have started: {Gheading_start:.2f} degrees")
 
-    Gclock_wise = get_clock_wise(sock)
+    print(f"{get_clock_wise()}")
     print(f"Clockwise: {Gclock_wise}")
 
     try:
