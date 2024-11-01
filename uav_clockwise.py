@@ -3,6 +3,7 @@ import struct
 import serial
 import pygame
 import numpy as np
+from botocore.endpoint_provider import GET_ATTR_RE
 from scipy.ndimage import median_filter
 from scipy.stats import trim_mean
 import cv2
@@ -938,6 +939,13 @@ def sensor_callback():
     shared_blue_line_count.value = 0
 
 
+def get_clock_wise(sock):
+    position = navigate(sock)
+    left_angle = position['left_min_angle']
+    right_angle = position['right_min_angle']
+    return left_angle > right_angle
+
+
 def main():
     global Gheading_estimate, Gheading_start
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
@@ -1019,6 +1027,9 @@ def main():
     time.sleep(5)
     Gheading_start = Gheading_estimate
     print(f"All processes have started: {Gheading_start:.2f} degrees")
+
+    Gclock_wise = get_clock_wise(sock)
+    print(f"Clockwise: {Gclock_wise}")
 
     try:
         while True:
