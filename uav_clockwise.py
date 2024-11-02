@@ -27,7 +27,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 #########################################
 Gclock_wise = False
 WRITE_CAMERA_IMAGE = True
-WRITE_CAMERA_MOVIE = True
+WRITE_CAMERA_MOVIE = False
 #########################################
 
 # Configuration for WT61 Gyroscope
