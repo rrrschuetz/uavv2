@@ -919,7 +919,7 @@ def park(pca, sock, shared_race_mode):
         print(f"Front distance: {position['front_distance']:.2f}")
         if position['front_distance'] < 0.10: break
         set_servo_angle(pca, 12, SERVO_BASIS)
-        set_motor_speed(pca, 13, PARK_SPEED * 0.8 * MOTOR_FACTOR + MOTOR_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
@@ -1036,7 +1036,7 @@ def main():
         while (shared_race_mode.value != 3):
             time.sleep(0.1)
         while not get_clock_wise():
-            set_motor_speed(pca, 13, PARK_SPEED * 0.8 * MOTOR_FACTOR + MOTOR_BASIS)
+            set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
             time.sleep(0.02)
         set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Clockwise: {Gclock_wise}")
