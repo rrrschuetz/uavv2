@@ -1031,12 +1031,9 @@ def main():
     Gheading_start = Gheading_estimate
     print(f"All processes have started: {Gheading_start:.2f} degrees")
 
-    result = get_clock_wise()
-    print(f"{result} Clockwise: {Gclock_wise}")
-
     try:
         set_servo_angle(pca, 12, SERVO_BASIS)
-        while shared_race_model.value != 3:
+        while (shared_race_mode.value != 3):
             time.sleep(0.1)
         while not get_clock_wise():
             set_motor_speed(pca, 13, PARK_SPEED * 0.8 * MOTOR_FACTOR + MOTOR_BASIS)
