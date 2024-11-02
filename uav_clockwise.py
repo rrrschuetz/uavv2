@@ -923,7 +923,7 @@ def align_angular(pca, angle, shared_race_mode):
         steer = max(min(PARK_STEER * dyn_steer, 1), -1)
         if angle > 0: steer = -steer
         drive = PARK_SPEED * max(dyn_steer, 0.5)
-        print(f"dyn_steer {dyn_steer:.2f} Steer {steer:.2f} Drive {drive:.2f}")
+        #print(f"dyn_steer {dyn_steer:.2f} Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
