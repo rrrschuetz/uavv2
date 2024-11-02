@@ -500,7 +500,7 @@ def detect_and_label_blobs(image):
     # Detect blue lines
     blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
     blue_mask = remove_small_contours(blue_mask)
-    #cv2.imwrite('blue_mask.jpg', blue_mask)
+    cv2.imwrite('blue_mask.jpg', blue_mask)
 
     most_significant_line = None
     max_line_length = 0
@@ -672,7 +672,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                 print(f"JOYBUTTONDOWN: button={event.button}")
                 if event.button == 0:  # A button
                     print("Race started")
-                    shared_race_mode.value = 1
+                    shared_race_mode.value = 3
                     shared_blue_line_count.value = 0
                 elif event.button == 1:  # B button
                     print("STOP")
@@ -933,7 +933,7 @@ def park(pca, sock, shared_race_mode):
 def sensor_callback():
     global shared_race_mode, shared_blue_line_count
     print("Race started")
-    shared_race_mode.value = 1
+    shared_race_mode.value = 3
     shared_blue_line_count.value = 0
 
 
@@ -1035,33 +1035,31 @@ def main():
     print(f"{result} Clockwise: {Gclock_wise}")
 
     try:
-        while True:
-            #lidar_thread_instance.join()
-            #camera_thread_instance.join()
-            #gyro_thread_instance.join()
-            #xbox_controller_process_instance.join()
+        set_servo_angle(pca, 12, SERVO_BASIS)
+        while shared_race_model.value != 3:
+            time.sleep(0.1)
+        while not get_clock_wise():
+            set_motor_speed(pca, 13, PARK_SPEED * 0.8 * MOTOR_FACTOR + MOTOR_BASIS)
+            time.sleep(0.1)
+        set_motor_speed(pca, 13, MOTOR_BASIS)
+        print(f"{result} Clockwise: {Gclock_wise}")
+        shared_race_mode.value = 1
 
-            #shared_race_mode.value = 2
+        while shared_race_mode.value != 2:
+            time.sleep(0.1)
 
-            while shared_race_mode.value != 2:
-                time.sleep(0.1)
-                # print(f"Race mode: {shared_race_mode.value}")
+        set_motor_speed(pca, 13, MOTOR_BASIS)
+        set_servo_angle(pca, 12, SERVO_BASIS)
 
-            set_motor_speed(pca, 13, MOTOR_BASIS)
-            set_servo_angle(pca, 12, SERVO_BASIS)
+        print("Starting the parking procedure")
+        print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
+        print(f"Heading start: {orientation(Gheading_start):.2f}")
+        time.sleep(5)
+        park(pca, sock, shared_race_mode)
 
-            print("Starting the parking procedure")
-            print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
-            print(f"Heading start: {orientation(Gheading_start):.2f}")
-            time.sleep(5)
-            park(pca, sock, shared_race_mode)
-
-            set_motor_speed(pca, 13, MOTOR_BASIS)
-            set_servo_angle(pca, 12, SERVO_BASIS)
-
-            shared_race_mode.value = 0
-            shared_blue_line_count.value = 0
-            print("Parking completed")
+        set_motor_speed(pca, 13, MOTOR_BASIS)
+        set_servo_angle(pca, 12, SERVO_BASIS)
+        print("Parking completed")
 
     except KeyboardInterrupt:
         picam0.stop()
