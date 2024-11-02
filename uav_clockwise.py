@@ -58,7 +58,7 @@ BLUE_LINE_PARKING_COUNT = 3
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
-Gblue_orientation = ""
+Gblue_orientation = None
 
 Gpitch = 0.0
 Groll = 0.0
@@ -586,7 +586,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
                 if blue_line:
-                    Gblue_orientation = blue_orientation
+                    if Gblue_orientation is None: Gblue_orientation = blue_orientation
                     if shared_race_mode.value == 1:
                         current_time = time.time()
                         if current_time - last_blue_line_time >= 3:
@@ -1039,7 +1039,7 @@ def main():
             set_motor_speed(pca, 13, PARK_SPEED * 0.8 * MOTOR_FACTOR + MOTOR_BASIS)
             time.sleep(0.1)
         set_motor_speed(pca, 13, MOTOR_BASIS)
-        print(f"{result} Clockwise: {Gclock_wise}")
+        print(f"Clockwise: {Gclock_wise}")
         shared_race_mode.value = 1
 
         while shared_race_mode.value != 2:
