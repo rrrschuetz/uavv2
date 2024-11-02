@@ -450,7 +450,7 @@ def detect_and_label_blobs(image):
     green_lower2 = np.array([70, 40, 40])
     green_upper2 = np.array([90, 255, 255])
 
-    blue_lower = np.array([100, 50, 50])  # HSV range for blue detection
+    blue_lower = np.array([100, 70, 50])  # HSV range for blue detection
     blue_upper = np.array([140, 255, 255])
 
     magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
@@ -502,51 +502,27 @@ def detect_and_label_blobs(image):
     blue_mask = remove_small_contours(blue_mask)
     #cv2.imwrite('blue_mask.jpg', blue_mask)
 
-    contours, _ = cv2.findContours(blue_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Filter and analyze contours to detect the most significant line
-    line_contours = []
     most_significant_line = None
     max_line_length = 0
-    line_orientation = None  # None by default
-
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area < 1500:
-            continue
-        # Approximate the contour to a line
-        epsilon = 0.2 * cv2.arcLength(contour, True)   # 0.4
-        approx = cv2.approxPolyDP(contour, epsilon, True)
-        if len(approx) == 2:
-            line_contours.append(contour)
-            line_length = cv2.arcLength(approx, True)
-            if line_length > max_line_length:
-                max_line_length = line_length
-                most_significant_line = approx
-
-    # Draw the filtered line contours
-    if line_contours:
-        for line_contour in line_contours:
-            cv2.drawContours(image, [line_contour], -1, (0, 255, 255), 2)  # Draw contours in blue
+    lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=50, minLineLength=100, maxLineGap=10)
+    if lines is not None:
         blue_line = True
-        # print(f"Detected {len(line_contours)} straight blue line(s)")
-
-    # If a significant line is found, determine its orientation
-    if most_significant_line is not None:
-        # Retrieve endpoints of the line
-        point1 = most_significant_line[0][0]
-        point2 = most_significant_line[1][0]
-        #print(f"Blue line endpoints: {point1}, {point2}")
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            len = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+            if len > max_line_length:
+                max_line_length = len
+                most_significant_line = line[0]
+        x1, y1, x2, y2 = most_significant_line
+        cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 5)
 
         # Determine the orientation of the line based on endpoint positions
-        if point1[0] < point2[0]:
-            blue_orientation = "UP" if point1[1] < point2[1] else "DOWN"
-        elif point1[0] > point2[0]:
-            blue_orientation = "UP" if point2[1] > point1[1] else "DOWN"
+        if x1 < x2:
+            blue_orientation = "UP" if y1 > y2 else "DOWN"
+        else:
+            blue_orientation = "UP" if y2 < y1 else "DOWN"
+        #print(f"Blue line endpoints: ({x1}, {y1}), ({x2}, {y2})")
         #print(f"Blue line orientation: {blue_orientation}")
-
-        # Draw the most significant line for visualization
-        cv2.line(image, tuple(point1), tuple(point2), (0, 0, 255), 5)
 
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
