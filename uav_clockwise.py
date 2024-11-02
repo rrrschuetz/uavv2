@@ -19,12 +19,15 @@ import time
 import math, statistics
 import qmc5883l as qmc5883
 import torch
+from sympy.codegen import Print
 
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
 Gclock_wise = False
+WRITE_CAMERA_IMAGE = True
+WRITE_CAMERA_MOVIE = True
 #########################################
 
 # Configuration for WT61 Gyroscope
@@ -38,9 +41,6 @@ LIDAR_LEN = 1620
 COLOR_LEN = 1280
 ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
-
-WRITE_CAMERA_IMAGE = True
-WRITE_CAMERA_MOVIE = True
 
 SERVO_FACTOR = 0.4
 SERVO_BASIS = 0.55
@@ -433,6 +433,7 @@ def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle
 
 def detect_and_label_blobs(image):
     blue_line = False
+    amber_line = False
     blue_orientation = ""
     magenta_rectangle = False
 
@@ -452,6 +453,9 @@ def detect_and_label_blobs(image):
 
     blue_lower = np.array([100, 70, 50])  # HSV range for blue detection
     blue_upper = np.array([140, 255, 255])
+
+    amber_lower = np.array([20, 100, 100])  # Lower bound for hue, saturation, and brightness
+    amber_upper = np.array([35, 255, 255])  # Upper bound for hue, saturation, and brightness
 
     magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
     magenta_upper = np.array([170, 255, 255])
@@ -497,10 +501,22 @@ def detect_and_label_blobs(image):
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
 
+    # Detect amber lines
+    amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
+    amber_mask = remove_small_contours(amber_mask)
+    cv2.imwrite('amber_mask.jpg', amber_mask)
+
+    lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=50, minLineLength=100, maxLineGap=10)
+    if lines is not None:
+        amber_line = True
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 5)
+
     # Detect blue lines
     blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
     blue_mask = remove_small_contours(blue_mask)
-    cv2.imwrite('blue_mask.jpg', blue_mask)
+    #cv2.imwrite('blue_mask.jpg', blue_mask)
 
     most_significant_line = None
     max_line_length = 0
@@ -542,7 +558,7 @@ def detect_and_label_blobs(image):
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
     cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
-    return x_coords, blue_line, magenta_rectangle, blue_orientation, image
+    return x_coords, amber_line, blue_line, magenta_rectangle, blue_orientation, image
 
 
 def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count):
@@ -561,12 +577,11 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
         video_filename = "output_video_000.avi"  # Output video file name
         fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
         video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
-
         frame_count = 0
         file_index = 0
         max_frame_count = 2000  # Maximum number of frames per video file
 
-    last_blue_line_time = time.time()
+    blue_lock = False
     parking_lot_reached = False
 
     try:
@@ -579,22 +594,22 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 image1_flipped = cv2.flip(image1, -1)
                 combined_image = np.hstack((image0_flipped, image1_flipped))
                 cropped_image = combined_image[frame_height:, :]
-                Gx_coords, blue_line, parking_lot, blue_orientation, image = detect_and_label_blobs(cropped_image)
+                Gx_coords, amber_line, blue_line, parking_lot, blue_orientation, image = detect_and_label_blobs(cropped_image)
 
                 if Gclock_wise:
                     Gx_coords = Gx_coords * -1.0
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if blue_line:
+                if amber_line:
+                    blue_lock = False
+                    print("Amber line detected")
+
+                if blue_line and not blue_lock:
                     if Gblue_orientation is None: Gblue_orientation = blue_orientation
                     if shared_race_mode.value == 1:
-                        current_time = time.time()
-                        if current_time - last_blue_line_time >= 3:
-                            print(f"Blue line count: {shared_blue_line_count.value+1} \\"
-                                  f"time: {current_time-last_blue_line_time:.2f} seconds \\"
-                                  f"parking_lot_reached: {parking_lot_reached}")
-                            last_blue_line_time = current_time
-                            shared_blue_line_count.value += 1
+                        print(f"Blue line count: {shared_blue_line_count.value+1} \\"
+                              f"parking_lot_reached: {parking_lot_reached}")
+                        shared_blue_line_count.value += 1
 
                 if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
                     parking_lot_reached = True
@@ -879,9 +894,9 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         if -PARK_FIX_STEER < steer < 0: steer = -PARK_FIX_STEER
         if 0 < steer < PARK_FIX_STEER: steer = PARK_FIX_STEER
         steer = max(min(steer, 1), -1) * sign
-        print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
-              f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw, yaw_init)):.2f}  \\"
-              f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
+        #print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
+        #      f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw, yaw_init)):.2f}  \\"
+        #      f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.01)
@@ -897,7 +912,7 @@ def align_angular(pca, angle, shared_race_mode):
     yaw_init = Gyaw
     print(f"Car alignment: initial angle {yaw_init:.2f} delta angle {angle:.2f}")
     while shared_race_mode.value == 2 and abs(yaw_difference(Gyaw, yaw_init)) < abs(angle):
-        print(f"Car orthogonal alignment: angle {yaw_difference(Gyaw, yaw_init):.2f}")
+        #print(f"Car orthogonal alignment: angle {yaw_difference(Gyaw, yaw_init):.2f}")
         dyn_steer = 1 - abs(yaw_difference(Gyaw, yaw_init)) / abs(angle)
         steer = max(min(PARK_STEER * dyn_steer, 1), -1)
         if angle > 0: steer = -steer
@@ -917,7 +932,7 @@ def park(pca, sock, shared_race_mode):
 
     while True:
         position = navigate(sock)
-        print(f"Front distance: {position['front_distance']:.2f}")
+        #print(f"Front distance: {position['front_distance']:.2f}")
         if position['front_distance'] < 0.10: break
         set_servo_angle(pca, 12, SERVO_BASIS)
         set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
