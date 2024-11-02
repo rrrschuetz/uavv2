@@ -19,7 +19,6 @@ import time
 import math, statistics
 import qmc5883l as qmc5883
 import torch
-from sympy.codegen import Print
 
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
@@ -27,7 +26,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 #########################################
 Gclock_wise = False
 WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = True
+WRITE_CAMERA_MOVIE = False
 #########################################
 
 # Configuration for WT61 Gyroscope
@@ -585,7 +584,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
         max_frame_count = 2000  # Maximum number of frames per video file
 
     blue_lock = False
-    amber_lock = False
     parking_lot_reached = False
 
     try:
@@ -604,13 +602,11 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     Gx_coords = Gx_coords * -1.0
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if amber_line and not amber_lock:
-                    amber_lock = True
+                if amber_line and not blue_line:
                     blue_lock = False
-                    print("Amber line detected")
+                    #print("Amber line but no blue line detected")
 
                 if blue_line and not blue_lock:
-                    amber_lock = False
                     blue_lock = True
                     if Gblue_orientation is None: Gblue_orientation = blue_orientation
                     if shared_race_mode.value == 1:
