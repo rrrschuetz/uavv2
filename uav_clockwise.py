@@ -454,8 +454,8 @@ def detect_and_label_blobs(image):
     blue_lower = np.array([100, 70, 50])  # HSV range for blue detection
     blue_upper = np.array([140, 255, 255])
 
-    amber_lower = np.array([10, 200, 130])  # Lower bound for hue, saturation, and brightness
-    amber_upper = np.array([20, 255, 200])  # Upper bound for hue, saturation, and brightness
+    amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
+    amber_upper = np.array([20, 255, 255])  # Upper bound for hue, saturation, and brightness
 
     magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
     magenta_upper = np.array([170, 255, 255])
@@ -472,10 +472,6 @@ def detect_and_label_blobs(image):
     # Apply morphological operations and remove small contours
     red_mask = remove_small_contours(apply_morphological_operations(red_mask))
     green_mask = remove_small_contours(apply_morphological_operations(green_mask))
-
-    # cv2.imwrite('red_mask.jpg', red_mask)
-    # cv2.imwrite('green_mask.jpg', green_mask)
-
     # Combine masks
     combined_mask = cv2.bitwise_or(red_mask, green_mask)
 
@@ -502,21 +498,21 @@ def detect_and_label_blobs(image):
                     (0, 255, 255), 2)
 
     # Detect amber lines
+    #print("Checking for amber lines")
     amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
     amber_mask = remove_small_contours(amber_mask)
-    cv2.imwrite('amber_mask.jpg', amber_mask)
 
-    lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=50, minLineLength=100, maxLineGap=10)
+    lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=200, minLineLength=200, maxLineGap=10)
     if lines is not None:
         amber_line = True
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 5)
+            cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
     # Detect blue lines
+    #print("Checking for blue lines")
     blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
     blue_mask = remove_small_contours(blue_mask)
-    #cv2.imwrite('blue_mask.jpg', blue_mask)
 
     most_significant_line = None
     max_line_length = 0
@@ -530,7 +526,7 @@ def detect_and_label_blobs(image):
                 max_line_length = len
                 most_significant_line = line[0]
         x1, y1, x2, y2 = most_significant_line
-        cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 5)
+        cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
         # Determine the orientation of the line based on endpoint positions
         if x1 < x2:
@@ -543,7 +539,6 @@ def detect_and_label_blobs(image):
     # Detect magenta parking lot
     magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
     magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
-    #cv2.imwrite('magenta_mask.jpg', magenta_mask)
 
     # Find and filter contours for magenta blobs
     contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -557,6 +552,14 @@ def detect_and_label_blobs(image):
     # Add timestamp in the lower left corner
     timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
     cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+
+    if WRITE_CAMERA_IMAGE:
+        cv2.imwrite("labeled_image.jpg", image)
+        cv2.imwrite('amber_mask.jpg', amber_mask)
+        cv2.imwrite('blue_mask.jpg', blue_mask)
+        #cv2.imwrite('magenta_mask.jpg', magenta_mask)
+        #cv2.imwrite('red_mask.jpg', red_mask)
+        #cv2.imwrite('green_mask.jpg', green_mask)
 
     return x_coords, amber_line, blue_line, magenta_rectangle, blue_orientation, image
 
@@ -623,8 +626,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     set_servo_angle(pca, 12, SERVO_BASIS)
 
                 # Save the image with labeled contours
-                if WRITE_CAMERA_IMAGE:
-                    cv2.imwrite("labeled_image.jpg", image)
+                if WRITE_CAMERA_MOVIE:
                     video_writer.write(image)
                     frame_count += 1
 
