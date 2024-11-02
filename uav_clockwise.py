@@ -26,8 +26,8 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 
 #########################################
 Gclock_wise = False
-WRITE_CAMERA_IMAGE = True
-WRITE_CAMERA_MOVIE = False
+WRITE_CAMERA_IMAGE = False
+WRITE_CAMERA_MOVIE = True
 #########################################
 
 # Configuration for WT61 Gyroscope
@@ -516,7 +516,7 @@ def detect_and_label_blobs(image):
 
     most_significant_line = None
     max_line_length = 0
-    lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=50, minLineLength=100, maxLineGap=10)
+    lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=200, minLineLength=200, maxLineGap=10)
     if lines is not None:
         blue_line = True
         for line in lines:
@@ -526,7 +526,7 @@ def detect_and_label_blobs(image):
                 max_line_length = len
                 most_significant_line = line[0]
         x1, y1, x2, y2 = most_significant_line
-        cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
+        cv2.line(image, (x1, y1), (x2, y2), (255, 255, 0), 5)
 
         # Determine the orientation of the line based on endpoint positions
         if x1 < x2:
@@ -610,6 +610,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     print("Amber line detected")
 
                 if blue_line and not blue_lock:
+                    amber_lock = False
                     blue_lock = True
                     if Gblue_orientation is None: Gblue_orientation = blue_orientation
                     if shared_race_mode.value == 1:
