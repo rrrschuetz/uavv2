@@ -52,7 +52,7 @@ PARK_STEER = 2.5
 PARK_FIX_STEER = 0.5
 PARK_ANGLE = 90
 
-BLUE_LINE_PARKING_COUNT = 3
+BLUE_LINE_PARKING_COUNT = 4
 
 # Global variables
 Glidar_string = ""
@@ -591,7 +591,8 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                         current_time = time.time()
                         if current_time - last_blue_line_time >= 3:
                             print(f"Blue line count: {shared_blue_line_count.value+1} \\"
-                                  f"time: {current_time-last_blue_line_time:.2f} seconds")
+                                  f"time: {current_time-last_blue_line_time:.2f} seconds \\"
+                                  f"parking_lot_reached: {parking_lot_reached}")
                             last_blue_line_time = current_time
                             shared_blue_line_count.value += 1
 
@@ -885,7 +886,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.01)
 
-    set_motor_speed(pca, 13, MOTOR_BASIS)
+    #set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car aligned")
 
@@ -905,7 +906,7 @@ def align_angular(pca, angle, shared_race_mode):
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
-    set_servo_angle(pca, 13, MOTOR_BASIS)
+    #set_servo_angle(pca, 13, MOTOR_BASIS)
     print(f"Car final angle {Gyaw:.2f}")
 
 
