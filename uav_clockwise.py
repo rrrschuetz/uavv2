@@ -454,8 +454,8 @@ def detect_and_label_blobs(image):
     blue_lower = np.array([100, 70, 50])  # HSV range for blue detection
     blue_upper = np.array([140, 255, 255])
 
-    amber_lower = np.array([20, 100, 100])  # Lower bound for hue, saturation, and brightness
-    amber_upper = np.array([35, 255, 255])  # Upper bound for hue, saturation, and brightness
+    amber_lower = np.array([90, 25, 85])  # Lower bound for hue, saturation, and brightness
+    amber_upper = np.array([110, 85, 225])  # Upper bound for hue, saturation, and brightness
 
     magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
     magenta_upper = np.array([170, 255, 255])
