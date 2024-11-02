@@ -67,7 +67,7 @@ Gaccel_y = 0.0
 Gaccel_z = 0.0
 Gheading_estimate = 0.0
 Gheading_start = 0.0
-
+Glap_end = False
 shared_race_mode = Value('i', 0)
 shared_blue_line_count = Value('i', 0)
 
@@ -584,7 +584,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
         max_frame_count = 2000  # Maximum number of frames per video file
 
     blue_lock = False
-    parking_lot_reached = False
 
     try:
         while True:
@@ -602,6 +601,12 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     Gx_coords = Gx_coords * -1.0
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
+                if Glap_end:
+                    parking_lot_reached = False
+                    print("Lap end detected")
+                else:
+                    if parking_lot: parking_lot_reached = True
+
                 if amber_line and not blue_line:
                     blue_lock = False
                     #print("Amber line but no blue line detected")
@@ -609,18 +614,11 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 if blue_line and not blue_lock:
                     blue_lock = True
                     if Gblue_orientation is None: Gblue_orientation = blue_orientation
-                    if shared_race_mode.value == 1:
-                        print(f"Blue line count: {shared_blue_line_count.value+1} \\"
-                              f"parking_lot_reached: {parking_lot_reached}")
-                        shared_blue_line_count.value += 1
-
-                if parking_lot and shared_blue_line_count.value >= BLUE_LINE_PARKING_COUNT:
-                    parking_lot_reached = True
-                if parking_lot_reached and shared_blue_line_count.value > BLUE_LINE_PARKING_COUNT:
-                    shared_race_mode.value = 2
-                    print(f"Parking initiated: Blue line count: {shared_blue_line_count.value}")
-                    set_motor_speed(pca, 13, MOTOR_BASIS)
-                    set_servo_angle(pca, 12, SERVO_BASIS)
+                    if shared_race_mode.value == 1 and parking_lot_reached:
+                        shared_race_mode.value = 2
+                        set_motor_speed(pca, 13, MOTOR_BASIS)
+                        set_servo_angle(pca, 12, SERVO_BASIS)
+                        print("Parking initiated")
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
@@ -797,71 +795,60 @@ def orientation(angle):
 def gyro_thread(shared_race_mode):
     global Gaccel_x, Gaccel_y, Gaccel_z
     global Gpitch, Groll, Gyaw
-    global Gheading_estimate, Gheading_start
+    global Gheading_estimate, Gheading_start, Gnum_laps
 
     buff = bytearray()  # Buffer to store incoming serial data
     packet_counter = 0  # Counter to skip packets
-    old_race_mode = 0  # Previous
 
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
             ser.reset_input_buffer()  # Clear old data at the start
 
             while True:
-                if shared_race_mode.value in [0,2]:
-                    if old_race_mode == 1:
-                        ser.reset_input_buffer()
-                        print("Serial buffer reset")
+                if ser.in_waiting:
+                    # Read all available data and append it to the buffer
+                    data = ser.read(ser.in_waiting)
+                    buff.extend(data)  # Add data to the buffer
 
-                    if ser.in_waiting:
-                        # Read all available data and append it to the buffer
-                        data = ser.read(ser.in_waiting)
-                        buff.extend(data)  # Add data to the buffer
+                    # Process all available packets in the buffer
+                    while len(buff) >= 11:  # While we have at least one full packet
 
-                        # Process all available packets in the buffer
-                        while len(buff) >= 11:  # While we have at least one full packet
+                        if buff[0] == 0x55 and buff[1] in [0x51, 0x53]:  # Valid start byte for packet
+                            packet = buff[:11]  # Get a full 11-byte packet
+                            buff = buff[11:]  # Remove the processed packet from the buffer
 
-                            if buff[0] == 0x55 and buff[1] in [0x51, 0x53]:  # Valid start byte for packet
-                                packet = buff[:11]  # Get a full 11-byte packet
-                                buff = buff[11:]  # Remove the processed packet from the buffer
+                            # Increment packet counter and skip processing unless it's every 5th packet
+                            packet_counter += 1
+                            if packet_counter % 5 != 0:
+                                continue  # Skip this packet
 
-                                # Increment packet counter and skip processing unless it's every 5th packet
-                                packet_counter += 1
-                                if packet_counter % 5 != 0:
-                                    continue  # Skip this packet
+                            # Parse the packet
+                            data_type, values = parse_wt61_data(packet)
 
-                                # Parse the packet
-                                data_type, values = parse_wt61_data(packet)
+                            # Handle accelerometer data (0x51)
+                            if data_type == 0x51:
+                                accel = [v / 32768.0 * 16 for v in values]  # Convert to G
+                                Gaccel_x, Gaccel_y, Gaccel_z = accel
 
-                                # Handle accelerometer data (0x51)
-                                if data_type == 0x51:
-                                    accel = [v / 32768.0 * 16 for v in values]  # Convert to G
-                                    Gaccel_x, Gaccel_y, Gaccel_z = accel
+                            # Handle gyroscope data (0x53)
+                            elif data_type == 0x53:
+                                gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
+                                Gpitch, Groll, Gyaw = gyro
 
-                                # Handle gyroscope data (0x53)
-                                elif data_type == 0x53:
-                                    gyro = [v / 32768.0 * 180 for v in values]  # Convert to degrees
-                                    Gpitch, Groll, Gyaw = gyro
-
-                            else:
-                                buff.pop(0)  # Remove one byte and continue checking
-
-                    else:
-                        # Get the magnetometer heading (absolute heading)
-                        mag_x, mag_y, mag_z = get_magnetometer_heading()
-                        # Tilt compensate the magnetometer data
-                        mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z,
-                            math.radians(Gpitch), math.radians(Groll))
-                        # Calculate the magnetometer heading
-                        mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-                        Gheading_estimate = mag_heading
-                        time.sleep(0.1)
+                        else:
+                            buff.pop(0)  # Remove one byte and continue checking
 
                 else:
-                    #print("Gyro inactive")
-                    time.sleep(1.0)
-
-                old_race_mode = shared_race_mode.value
+                    # Get the magnetometer heading (absolute heading)
+                    mag_x, mag_y, mag_z = get_magnetometer_heading()
+                    # Tilt compensate the magnetometer data
+                    mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z,
+                        math.radians(Gpitch), math.radians(Groll))
+                    # Calculate the magnetometer heading
+                    mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
+                    Gheading_estimate = mag_heading
+                    Glap_end =  abs(yaw_difference(Gheading_estimate, Gheading_start)) < 20
+                    time.sleep(0.1)
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
