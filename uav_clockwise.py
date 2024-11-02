@@ -582,6 +582,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
         max_frame_count = 2000  # Maximum number of frames per video file
 
     blue_lock = False
+    amber_lock = False
     parking_lot_reached = False
 
     try:
@@ -600,11 +601,13 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     Gx_coords = Gx_coords * -1.0
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if amber_line:
+                if amber_line and not amber_lock:
+                    amber_lock = True
                     blue_lock = False
                     print("Amber line detected")
 
                 if blue_line and not blue_lock:
+                    blue_lock = True
                     if Gblue_orientation is None: Gblue_orientation = blue_orientation
                     if shared_race_mode.value == 1:
                         print(f"Blue line count: {shared_blue_line_count.value+1} \\"
