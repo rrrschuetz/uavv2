@@ -1037,7 +1037,7 @@ def main():
             time.sleep(0.1)
         while not get_clock_wise():
             set_motor_speed(pca, 13, PARK_SPEED * 0.8 * MOTOR_FACTOR + MOTOR_BASIS)
-            time.sleep(0.1)
+            time.sleep(0.02)
         set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Clockwise: {Gclock_wise}")
         shared_race_mode.value = 1
