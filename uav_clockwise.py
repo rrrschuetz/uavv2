@@ -584,6 +584,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
         max_frame_count = 2000  # Maximum number of frames per video file
 
     blue_lock = False
+    parking_lot_reached = False
 
     try:
         while True:
