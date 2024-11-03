@@ -515,6 +515,7 @@ def detect_and_label_blobs(image):
 
     most_significant_line = None
     max_line_length = 0
+    height, width = image.shape[:2]
     lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=200, minLineLength=200, maxLineGap=10)
     if lines is not None:
         blue_line = True
@@ -528,6 +529,8 @@ def detect_and_label_blobs(image):
         cv2.line(image, (x1, y1), (x2, y2), (255, 255, 0), 5)
 
         # Determine the orientation of the line based on endpoint positions
+        if x1 < width // 2: y1 += (height // 10) # Camera view angle correction left sight
+        if x2 > width // 2: y2 -= (height // 10) # Camera view angle correction right sight
         if x1 < x2:
             blue_orientation = "UP" if y1 > y2 else "DOWN"
         else:
