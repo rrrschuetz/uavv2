@@ -619,7 +619,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     Gx_coords = Gx_coords[::-1]
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if Glap_end and shared_blue_line_count.value > 1:
+                if Glap_end and shared_blue_line_count.value > 0:
                     Glap_end = False
                     parking_lot_reached = False
                     shared_blue_line_count.value = 0
@@ -872,7 +872,9 @@ def gyro_thread(shared_race_mode):
                     # Calculate the magnetometer heading
                     mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
                     Gheading_estimate = mag_heading
-                    if abs(yaw_difference(Gheading_estimate, Gheading_start)) < 20: Glap_end = True
+                    if abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10:
+                        Glap_end = True
+                        #print(f"Lap end detected: {Gheading_estimate:.2f}")
                     time.sleep(0.1)
 
     except serial.SerialException as e:
