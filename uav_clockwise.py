@@ -24,9 +24,9 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-Gclock_wise = False
 WRITE_CAMERA_IMAGE = False
 WRITE_CAMERA_MOVIE = False
+TOTAL_LAPS = 1
 #########################################
 
 # Configuration for WT61 Gyroscope
@@ -51,9 +51,8 @@ PARK_STEER = 2.5
 PARK_FIX_STEER = 0.5
 PARK_ANGLE = 90
 
-BLUE_LINE_PARKING_COUNT = 4
-
 # Global variables
+Gclock_wise = False
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
@@ -586,6 +585,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
         file_index = 0
         max_frame_count = 2000  # Maximum number of frames per video file
 
+    num_laps = 0
     blue_lock = False
     parking_lot_reached = False
 
@@ -605,10 +605,12 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     Gx_coords = Gx_coords * -1.0
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if Glap_end:
+                if Glap_end and shared_blue_line_count.value >=4:
                     parking_lot_reached = False
-                    print("Lap end detected")
-                else:
+                    shared_blue_line_count.value = 0
+                    num_laps += 1
+                    print(f"Laps completed: {num_laps}")
+                else:  # Parking lot never in race start/end segment
                     if parking_lot: parking_lot_reached = True
 
                 if amber_line and not blue_line:
@@ -618,7 +620,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 if blue_line and not blue_lock:
                     blue_lock = True
                     if Gblue_orientation is None: Gblue_orientation = blue_orientation
-                    if shared_race_mode.value == 1 and parking_lot_reached:
+                    if shared_race_mode.value == 1 and parking_lot_reached and lap_count == TOTAL_LAPS:
                         shared_race_mode.value = 2
                         set_motor_speed(pca, 13, MOTOR_BASIS)
                         set_servo_angle(pca, 12, SERVO_BASIS)
