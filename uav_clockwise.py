@@ -620,7 +620,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode):
                     Gx_coords = Gx_coords[::-1]
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if Glap_end and num_lines > 0:
+                if Glap_end and num_lines > 1:
                     Glap_end = False
                     parking_lot_reached = False
                     num_lines = 0
