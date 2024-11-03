@@ -453,7 +453,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     green_lower2 = np.array([70, 40, 40])
     green_upper2 = np.array([90, 255, 255])
 
-    blue_lower = np.array([100, 70, 50])  # HSV range for blue detection
+    blue_lower = np.array([90, 70, 50])  # HSV range for blue detection
     blue_upper = np.array([140, 255, 255])
 
     amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
@@ -506,7 +506,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
         amber_mask = remove_small_contours(amber_mask)
 
-        lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=200, minLineLength=200, maxLineGap=10)
+        lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=500, minLineLength=200, maxLineGap=10)
         if lines is not None:
             amber_line = True
             for line in lines:
@@ -521,7 +521,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         most_significant_line = None
         max_line_length = 0
         height, width = image.shape[:2]
-        lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=200, minLineLength=200, maxLineGap=10)
+        lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=300, minLineLength=200, maxLineGap=10)
         if lines is not None:
             blue_line = True
             for line in lines:
