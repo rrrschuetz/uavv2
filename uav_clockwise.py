@@ -354,7 +354,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 Y = steering_commands[0, 1]  # Extract GY (second element of the output)
                 if Gclock_wise:
                     X = -X
-                    X = X * 1.1 if X > 0 else X * 0.9
+                    #X = X * 1.1 if X > 0 else X * 0.9
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
                     if shared_race_mode.value == 1:
                         set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
@@ -616,6 +616,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
 
                 if Gclock_wise:
                     Gx_coords = Gx_coords * -1.0
+                    Gx_coords = Gx_coords[::-1]
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
                 if Glap_end and shared_blue_line_count.value > 1:
