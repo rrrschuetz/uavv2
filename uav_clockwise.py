@@ -568,7 +568,7 @@ def detect_and_label_blobs(image):
 def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count):
     global Gcolor_string, Gx_coords
     global Gblue_orientation
-    global Glap_end, Gheading_estimate
+    global Glap_end, Gheading_estimate # magnetic heading
 
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = picam0.capture_array().shape
