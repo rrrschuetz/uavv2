@@ -621,7 +621,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode):
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
                 if Glap_end and num_lines > 1:
-                    Glap_end = False
                     parking_lot_reached = False
                     num_lines = 0
                     num_laps += 1
@@ -886,7 +885,9 @@ def gyro_thread(shared_race_mode):
                     Gheading_estimate = mag_heading
                     if abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10:
                         Glap_end = True
-                        #print(f"Lap end detected: {Gheading_estimate:.2f}")
+                        print(f"Lap end detected: {Gheading_estimate:.2f}")
+                    else:
+                        Glap_end = False
                     time.sleep(0.1)
 
     except serial.SerialException as e:
