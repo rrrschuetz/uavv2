@@ -136,86 +136,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00346" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730500740988</created>
-      <option name="number" value="00346" />
-      <option name="presentableId" value="LOCAL-00346" />
-      <option name="project" value="LOCAL" />
-      <updated>1730500740988</updated>
-    </task>
-    <task id="LOCAL-00347" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730501481372</created>
-      <option name="number" value="00347" />
-      <option name="presentableId" value="LOCAL-00347" />
-      <option name="project" value="LOCAL" />
-      <updated>1730501481372</updated>
-    </task>
-    <task id="LOCAL-00348" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730505443143</created>
-      <option name="number" value="00348" />
-      <option name="presentableId" value="LOCAL-00348" />
-      <option name="project" value="LOCAL" />
-      <updated>1730505443143</updated>
-    </task>
-    <task id="LOCAL-00349" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730508149659</created>
-      <option name="number" value="00349" />
-      <option name="presentableId" value="LOCAL-00349" />
-      <option name="project" value="LOCAL" />
-      <updated>1730508149659</updated>
-    </task>
-    <task id="LOCAL-00350" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730509616934</created>
-      <option name="number" value="00350" />
-      <option name="presentableId" value="LOCAL-00350" />
-      <option name="project" value="LOCAL" />
-      <updated>1730509616934</updated>
-    </task>
-    <task id="LOCAL-00351" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730509919413</created>
-      <option name="number" value="00351" />
-      <option name="presentableId" value="LOCAL-00351" />
-      <option name="project" value="LOCAL" />
-      <updated>1730509919413</updated>
-    </task>
-    <task id="LOCAL-00352" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730511775197</created>
-      <option name="number" value="00352" />
-      <option name="presentableId" value="LOCAL-00352" />
-      <option name="project" value="LOCAL" />
-      <updated>1730511775197</updated>
-    </task>
-    <task id="LOCAL-00353" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730526174934</created>
-      <option name="number" value="00353" />
-      <option name="presentableId" value="LOCAL-00353" />
-      <option name="project" value="LOCAL" />
-      <updated>1730526174934</updated>
-    </task>
-    <task id="LOCAL-00354" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730526234731</created>
-      <option name="number" value="00354" />
-      <option name="presentableId" value="LOCAL-00354" />
-      <option name="project" value="LOCAL" />
-      <updated>1730526234731</updated>
-    </task>
-    <task id="LOCAL-00355" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730527643703</created>
-      <option name="number" value="00355" />
-      <option name="presentableId" value="LOCAL-00355" />
-      <option name="project" value="LOCAL" />
-      <updated>1730527643703</updated>
-    </task>
     <task id="LOCAL-00356" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
       <created>1730531409632</created>
@@ -528,7 +448,87 @@
       <option name="project" value="LOCAL" />
       <updated>1730657148514</updated>
     </task>
-    <option name="localTasksCounter" value="395" />
+    <task id="LOCAL-00395" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730658310712</created>
+      <option name="number" value="00395" />
+      <option name="presentableId" value="LOCAL-00395" />
+      <option name="project" value="LOCAL" />
+      <updated>1730658310712</updated>
+    </task>
+    <task id="LOCAL-00396" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730663949544</created>
+      <option name="number" value="00396" />
+      <option name="presentableId" value="LOCAL-00396" />
+      <option name="project" value="LOCAL" />
+      <updated>1730663949545</updated>
+    </task>
+    <task id="LOCAL-00397" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730665301686</created>
+      <option name="number" value="00397" />
+      <option name="presentableId" value="LOCAL-00397" />
+      <option name="project" value="LOCAL" />
+      <updated>1730665301686</updated>
+    </task>
+    <task id="LOCAL-00398" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730665674632</created>
+      <option name="number" value="00398" />
+      <option name="presentableId" value="LOCAL-00398" />
+      <option name="project" value="LOCAL" />
+      <updated>1730665674632</updated>
+    </task>
+    <task id="LOCAL-00399" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730666171452</created>
+      <option name="number" value="00399" />
+      <option name="presentableId" value="LOCAL-00399" />
+      <option name="project" value="LOCAL" />
+      <updated>1730666171452</updated>
+    </task>
+    <task id="LOCAL-00400" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730666475968</created>
+      <option name="number" value="00400" />
+      <option name="presentableId" value="LOCAL-00400" />
+      <option name="project" value="LOCAL" />
+      <updated>1730666475968</updated>
+    </task>
+    <task id="LOCAL-00401" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730666769405</created>
+      <option name="number" value="00401" />
+      <option name="presentableId" value="LOCAL-00401" />
+      <option name="project" value="LOCAL" />
+      <updated>1730666769405</updated>
+    </task>
+    <task id="LOCAL-00402" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730667144338</created>
+      <option name="number" value="00402" />
+      <option name="presentableId" value="LOCAL-00402" />
+      <option name="project" value="LOCAL" />
+      <updated>1730667144338</updated>
+    </task>
+    <task id="LOCAL-00403" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730667707732</created>
+      <option name="number" value="00403" />
+      <option name="presentableId" value="LOCAL-00403" />
+      <option name="project" value="LOCAL" />
+      <updated>1730667707732</updated>
+    </task>
+    <task id="LOCAL-00404" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730668126113</created>
+      <option name="number" value="00404" />
+      <option name="presentableId" value="LOCAL-00404" />
+      <option name="project" value="LOCAL" />
+      <updated>1730668126113</updated>
+    </task>
+    <option name="localTasksCounter" value="405" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -610,6 +610,11 @@
           <url>file://$PROJECT_DIR$/uav_park_gyro_opt.py</url>
           <line>506</line>
           <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/uav_clockwise.py</url>
+          <line>625</line>
+          <option name="timeStamp" value="14" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

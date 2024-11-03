@@ -668,7 +668,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode):
                         video_filename = f"output_video_{file_index:03d}.avi"
                         video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
 
-                time.sleep(0.02)
+                time.sleep(0.05)
                 frame_time = time.time() - start_time
                 fps_list.append(1.0 / frame_time)
 
