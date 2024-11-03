@@ -25,7 +25,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 
 #########################################
 WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = True
+WRITE_CAMERA_MOVIE = False
 TOTAL_LAPS = 1
 #########################################
 
@@ -653,7 +653,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode):
                         num_lines += 1
                         print(f"Blue line detected: {num_lines}")
 
-                    if num_lines > 1 and parking_lot_reached and num_laps == TOTAL_LAPS:
+                    if num_lines > 1 and parking_lot_reached and num_laps >= TOTAL_LAPS:
                         shared_race_mode.value = 2
                         print("Parking initiated")
 
