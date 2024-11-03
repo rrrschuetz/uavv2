@@ -3,7 +3,6 @@ import struct
 import serial
 import pygame
 import numpy as np
-from pandas.core.algorithms import nunique_ints
 from scipy.ndimage import median_filter
 from scipy.stats import trim_mean
 import cv2
