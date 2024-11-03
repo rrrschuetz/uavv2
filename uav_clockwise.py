@@ -22,6 +22,7 @@ import torch
 
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
+from speed_sensor import start_time
 
 #########################################
 WRITE_CAMERA_IMAGE = False
@@ -625,8 +626,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                         shared_blue_line_count.value += 1
                         if parking_lot_reached and num_laps == TOTAL_LAPS:
                             shared_race_mode.value = 2
-                            set_motor_speed(pca, 13, MOTOR_BASIS)
-                            set_servo_angle(pca, 12, SERVO_BASIS)
                             print("Parking initiated")
 
                 # Save the image with labeled contours
@@ -1049,6 +1048,7 @@ def main():
         set_servo_angle(pca, 12, SERVO_BASIS)
         while (shared_race_mode.value != 3):
             time.sleep(0.1)
+        start_time = time.time()
         while not get_clock_wise():
             set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
             time.sleep(0.02)
@@ -1061,16 +1061,17 @@ def main():
 
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
+        print(f"Time to start the parking procedure: {time.time() - start_time:.2f} seconds")
 
         print("Starting the parking procedure")
         print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
         print(f"Heading start: {orientation(Gheading_start):.2f}")
-        time.sleep(5)
+        #time.sleep(5)
         park(pca, sock, shared_race_mode)
 
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
-        print("Parking completed")
+        print(f"Race time: {time.time() - start_time:.2f} seconds")
 
     except KeyboardInterrupt:
         picam0.stop()
