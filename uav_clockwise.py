@@ -25,7 +25,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 
 #########################################
 WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = True
+WRITE_CAMERA_MOVIE = False
 TOTAL_LAPS = 1
 #########################################
 
