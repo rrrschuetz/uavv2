@@ -568,6 +568,7 @@ def detect_and_label_blobs(image):
 def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count):
     global Gcolor_string, Gx_coords
     global Gblue_orientation
+    global Glap_end, Gheading_estimate
 
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = picam0.capture_array().shape
@@ -609,7 +610,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     parking_lot_reached = False
                     shared_blue_line_count.value = 0
                     num_laps += 1
-                    print(f"Laps completed: {num_laps}")
+                    print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                 else:  # Parking lot never in race start/end segment
                     if parking_lot: parking_lot_reached = True
 
@@ -801,7 +802,7 @@ def orientation(angle):
 def gyro_thread(shared_race_mode):
     global Gaccel_x, Gaccel_y, Gaccel_z
     global Gpitch, Groll, Gyaw
-    global Gheading_estimate, Gheading_start, Gnum_laps
+    global Gheading_estimate, Gheading_start, Glap_end
 
     buff = bytearray()  # Buffer to store incoming serial data
     packet_counter = 0  # Counter to skip packets
