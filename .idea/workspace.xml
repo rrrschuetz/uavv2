@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="N/A">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uav_clockwise.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_clockwise.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,38 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00340" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730482689898</created>
-      <option name="number" value="00340" />
-      <option name="presentableId" value="LOCAL-00340" />
-      <option name="project" value="LOCAL" />
-      <updated>1730482689898</updated>
-    </task>
-    <task id="LOCAL-00341" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730482844347</created>
-      <option name="number" value="00341" />
-      <option name="presentableId" value="LOCAL-00341" />
-      <option name="project" value="LOCAL" />
-      <updated>1730482844347</updated>
-    </task>
-    <task id="LOCAL-00342" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730484962098</created>
-      <option name="number" value="00342" />
-      <option name="presentableId" value="LOCAL-00342" />
-      <option name="project" value="LOCAL" />
-      <updated>1730484962098</updated>
-    </task>
-    <task id="LOCAL-00343" summary="Initial setup to read out lidar data">
-      <option name="closed" value="true" />
-      <created>1730500181298</created>
-      <option name="number" value="00343" />
-      <option name="presentableId" value="LOCAL-00343" />
-      <option name="project" value="LOCAL" />
-      <updated>1730500181298</updated>
     </task>
     <task id="LOCAL-00344" summary="Initial setup to read out lidar data">
       <option name="closed" value="true" />
@@ -527,7 +496,39 @@
       <option name="project" value="LOCAL" />
       <updated>1730645577316</updated>
     </task>
-    <option name="localTasksCounter" value="389" />
+    <task id="LOCAL-00389" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730653277378</created>
+      <option name="number" value="00389" />
+      <option name="presentableId" value="LOCAL-00389" />
+      <option name="project" value="LOCAL" />
+      <updated>1730653277379</updated>
+    </task>
+    <task id="LOCAL-00390" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730654446501</created>
+      <option name="number" value="00390" />
+      <option name="presentableId" value="LOCAL-00390" />
+      <option name="project" value="LOCAL" />
+      <updated>1730654446501</updated>
+    </task>
+    <task id="LOCAL-00391" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730654893555</created>
+      <option name="number" value="00391" />
+      <option name="presentableId" value="LOCAL-00391" />
+      <option name="project" value="LOCAL" />
+      <updated>1730654893555</updated>
+    </task>
+    <task id="LOCAL-00392" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1730655756206</created>
+      <option name="number" value="00392" />
+      <option name="presentableId" value="LOCAL-00392" />
+      <option name="project" value="LOCAL" />
+      <updated>1730655756206</updated>
+    </task>
+    <option name="localTasksCounter" value="393" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

@@ -25,7 +25,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 
 #########################################
 WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = False
+WRITE_CAMERA_MOVIE = True
 TOTAL_LAPS = 1
 #########################################
 
@@ -620,6 +620,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
                 if Glap_end and shared_blue_line_count.value > 1:
+                    Glap_end = False
                     parking_lot_reached = False
                     shared_blue_line_count.value = 0
                     num_laps += 1
@@ -871,7 +872,7 @@ def gyro_thread(shared_race_mode):
                     # Calculate the magnetometer heading
                     mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
                     Gheading_estimate = mag_heading
-                    Glap_end =  abs(yaw_difference(Gheading_estimate, Gheading_start)) < 30
+                    if abs(yaw_difference(Gheading_estimate, Gheading_start)) < 20: Glap_end = True
                     time.sleep(0.1)
 
     except serial.SerialException as e:
