@@ -352,10 +352,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 # print("Steering Commands:", steering_commands)
                 X = steering_commands[0, 0]  # Extract GX (first element of the output)
                 Y = steering_commands[0, 1]  # Extract GY (second element of the output)
+                if Gclock_wise:
+                    X = -X
+                    X = X * 1.2 if X > 0 else X * 0.8
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
-                    if Gclock_wise:
-                        X = -X
-                        X =  X * 1.3 if X > 0 else X * 0.7
                     if shared_race_mode.value == 1:
                         set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
                         set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
