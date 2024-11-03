@@ -636,10 +636,10 @@ def camera_thread(pca, picam0, picam1, shared_race_mode):
 
                     if amber_line and not blue_line:
                         blue_lock = False
-                        print("Amber line but no blue line detected")
+                        #print("Amber line but no blue line detected")
                     if blue_line and not amber_line:
                         amber_lock = False
-                        print("Blue line but no amber line detected")
+                        #print("Blue line but no amber line detected")
 
                     if Gclock_wise:
                         if amber_line and not amber_lock:
@@ -885,7 +885,7 @@ def gyro_thread(shared_race_mode):
                     Gheading_estimate = mag_heading
                     if abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10:
                         Glap_end = True
-                        print(f"Lap end detected: {Gheading_estimate:.2f}")
+                        #print(f"Lap end detected: {Gheading_estimate:.2f}")
                     else:
                         Glap_end = False
                     time.sleep(0.1)
