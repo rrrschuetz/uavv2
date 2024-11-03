@@ -25,7 +25,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 
 #########################################
 WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = True
+WRITE_CAMERA_MOVIE = False
 TOTAL_LAPS = 1
 #########################################
 
@@ -354,7 +354,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 Y = steering_commands[0, 1]  # Extract GY (second element of the output)
                 if Gclock_wise:
                     X = -X
-                    X = X * 1.2 if X > 0 else X * 0.8
+                    X = X * 1.1 if X > 0 else X * 0.9
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
                     if shared_race_mode.value == 1:
                         set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
@@ -364,7 +364,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                         set_servo_angle(pca, 12, SERVO_BASIS)
                 else:
                     pass
-                    #print("Invalid steering commands:", X, Y)
+                    print("Invalid steering commands:", X, Y)
 
         elif shared_race_mode.value == 2:
             #print("Lidar inactve")
@@ -455,7 +455,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     green_lower2 = np.array([70, 40, 40])
     green_upper2 = np.array([90, 255, 255])
 
-    blue_lower = np.array([90, 50, 50])  # HSV range for blue detection
+    blue_lower = np.array([90, 40, 40])  # HSV range for blue detection
     blue_upper = np.array([140, 255, 255])
 
     amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
