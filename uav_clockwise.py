@@ -500,7 +500,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
 
-    if num_detector_calls % 2 == 0:
+    if (num_detector_calls % 3 == 0):
 
         # Detect amber lines
         #print("Checking for amber lines")
@@ -561,7 +561,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
         cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
-    if WRITE_CAMERA_IMAGE and num_detector_calls % 2 == 0:
+    if WRITE_CAMERA_IMAGE and num_detector_calls % 3 == 0:
         cv2.imwrite("labeled_image.jpg", image)
         cv2.imwrite('amber_mask.jpg', amber_mask)
         cv2.imwrite('blue_mask.jpg', blue_mask)
