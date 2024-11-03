@@ -67,6 +67,8 @@ Gaccel_z = 0.0
 Gheading_estimate = 0.0
 Gheading_start = 0.0
 Glap_end = False
+Glidar_moving_avg_fps = 0.0
+Gcamera_moving_avg_fps = 0.0
 shared_race_mode = Value('i', 0)
 shared_blue_line_count = Value('i', 0)
 
@@ -292,6 +294,7 @@ def navigate(sock, narrow=False):
 def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     global Glidar_string, Gcolor_string
     global Gx_coords
+    global Glidar_moving_avg_fps
 
     model = None
     scaler_lidar = None
@@ -367,8 +370,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
         frame_time = time.time() - start_time
         fps_list.append(1.0 / frame_time)
 
-        moving_avg_fps = sum(fps_list) / len(fps_list)
-        #print(f'LIDAR moving average FPS: {moving_avg_fps:.2f}')
+        Glidar_moving_avg_fps = sum(fps_list) / len(fps_list)
+        #print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
 
 
 # Camera functions
@@ -569,6 +572,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
     global Gcolor_string, Gx_coords
     global Gblue_orientation
     global Glap_end, Gheading_estimate # magnetic heading
+    global Gcamera_moving_avg_fps, Glidar_moving_avg_fps
 
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = picam0.capture_array().shape
@@ -611,6 +615,8 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     shared_blue_line_count.value = 0
                     num_laps += 1
                     print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
+                    print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
+                    print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                 else:  # Parking lot never in race start/end segment
                     if parking_lot: parking_lot_reached = True
 
@@ -642,8 +648,8 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 frame_time = time.time() - start_time
                 fps_list.append(1.0 / frame_time)
 
-                moving_avg_fps = sum(fps_list) / len(fps_list)
-                #print(f'Camera moving average FPS: {moving_avg_fps:.2f}')
+                Gcamera_moving_avg_fps = sum(fps_list) / len(fps_list)
+                #print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
 
             else:
                 #print("Camera inactive")
