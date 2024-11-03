@@ -867,7 +867,7 @@ def gyro_thread(shared_race_mode):
                     # Calculate the magnetometer heading
                     mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
                     Gheading_estimate = mag_heading
-                    Glap_end =  abs(yaw_difference(Gheading_estimate, Gheading_start)) < 20
+                    Glap_end =  abs(yaw_difference(Gheading_estimate, Gheading_start)) < 30
                     time.sleep(0.1)
 
     except serial.SerialException as e:
