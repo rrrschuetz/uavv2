@@ -621,7 +621,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 if blue_line and not blue_lock:
                     blue_lock = True
                     if Gblue_orientation is None: Gblue_orientation = blue_orientation
-                    if shared_race_mode.value == 1 and parking_lot_reached and lap_count == TOTAL_LAPS:
+                    if shared_race_mode.value == 1 and parking_lot_reached and num_laps == TOTAL_LAPS:
                         shared_race_mode.value = 2
                         set_motor_speed(pca, 13, MOTOR_BASIS)
                         set_servo_angle(pca, 12, SERVO_BASIS)
