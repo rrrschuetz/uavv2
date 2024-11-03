@@ -25,8 +25,8 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 
 #########################################
 WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = False
-TOTAL_LAPS = 3
+WRITE_CAMERA_MOVIE = True
+TOTAL_LAPS = 1
 #########################################
 
 # Configuration for WT61 Gyroscope
@@ -628,14 +628,15 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
 
                 if amber_line and not blue_line:
                     blue_lock = False
-                    #print("Amber line but no blue line detected")
+                    print("Amber line but no blue line detected")
 
                 if blue_line and not blue_lock:
                     blue_lock = True
                     if Gblue_orientation is None: Gblue_orientation = blue_orientation
                     if shared_race_mode.value == 1:
                         shared_blue_line_count.value += 1
-                        if shared_blue_line_count.value > 1 and parking_lot_reached and num_laps == TOTAL_LAPS:
+                        print(f"Blue line detected: {shared_blue_line_count.value}")
+                        if shared_blue_line_count.value > 2 and parking_lot_reached and num_laps == TOTAL_LAPS:
                             shared_race_mode.value = 2
                             print("Parking initiated")
 
