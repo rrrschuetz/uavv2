@@ -70,7 +70,6 @@ Glap_end = False
 Glidar_moving_avg_fps = 0.0
 Gcamera_moving_avg_fps = 0.0
 shared_race_mode = Value('i', 0)
-shared_blue_line_count = Value('i', 0)
 
 i2c = board.I2C()
 qmc = qmc5883.QMC5883L(i2c)
@@ -573,7 +572,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     return x_coords, amber_line, blue_line, magenta_rectangle, blue_orientation, image
 
 
-def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count):
+def camera_thread(pca, picam0, picam1, shared_race_mode):
     global Gcolor_string, Gx_coords
     global Gblue_orientation
     global Glap_end, Gheading_estimate # magnetic heading
@@ -597,7 +596,9 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
 
     num_detector_calls = 0
     num_laps = 0
+    num_lines = 0
     blue_lock = False
+    amber_lock = False
     parking_lot_reached = False
 
     try:
@@ -619,10 +620,10 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     Gx_coords = Gx_coords[::-1]
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if Glap_end and shared_blue_line_count.value > 0:
+                if Glap_end and num_lines > 0:
                     Glap_end = False
                     parking_lot_reached = False
-                    shared_blue_line_count.value = 0
+                    num_lines = 0
                     num_laps += 1
                     print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                     print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
@@ -630,22 +631,31 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 else:  # Parking lot never in race start/end segment
                     if parking_lot: parking_lot_reached = True
 
-                if amber_line and not blue_line:
-                    blue_lock = False
-                    print("Amber line but no blue line detected")
+                if blue_line and Gblue_orientation is None: Gblue_orientation = blue_orientation
 
-                if blue_line:
-                    if Gblue_orientation is None: Gblue_orientation = blue_orientation
-                    if not blue_lock:
+                if shared_race_mode.value == 1:
+
+                    if amber_line and not blue_line:
+                        blue_lock = False
+                        print("Amber line but no blue line detected")
+
+                    if blue_line and not amber_line:
+                        amber_lock = False
+                        print("Blue line but no amber line detected")
+
+                    if amber_line and not amber_lock:
+                        amber_lock = True
+                        num_lines += 1
+                        print(f"Amber line detected: {num_lines}")
+
+                    if blue_line and not blue_lock:
                         blue_lock = True
-                        if shared_race_mode.value == 1:
-                            shared_blue_line_count.value += 1
-                            print(f"Blue line detected: {shared_blue_line_count.value}")
-                            if shared_blue_line_count.value > 1 and parking_lot_reached and num_laps == TOTAL_LAPS:
-                                shared_race_mode.value = 2
-                                print("Parking initiated")
-                    else:
-                        print("Blue line detected but locked")
+                        num_lines += 1
+                        print(f"Blue line detected: {num_lines}")
+
+                    if num_lines > 1 and parking_lot_reached and num_laps == TOTAL_LAPS:
+                        shared_race_mode.value = 2
+                        print("Parking initiated")
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
@@ -676,7 +686,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
         if WRITE_CAMERA_MOVIE and video_writer.isOpened():
             video_writer.release()
 
-def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count):
+def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode):
     pygame.init()
     pygame.joystick.init()
 
@@ -717,7 +727,6 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, shared_
                     if shared_race_mode.value == 0:
                         print("Race started")
                         shared_race_mode.value = 3
-                        shared_blue_line_count.value = 0
                 elif event.button == 1:  # B button
                     print("STOP")
                     set_motor_speed(pca, 13, MOTOR_BASIS)
@@ -970,7 +979,6 @@ def sensor_callback():
     if shared_race_mode.value == 0:
         print("Race started")
         shared_race_mode.value = 3
-        shared_blue_line_count.value = 0
 
 
 def get_clock_wise():
@@ -988,7 +996,7 @@ def get_clock_wise():
 def main():
     global Gheading_estimate, Gheading_start, Gclock_wise
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
-    global shared_race_mode, shared_blue_line_count
+    global shared_race_mode
     global Glidar_moving_avg_fps, Gcamera_moving_avg_fps
 
     print("Starting the UAV program...")
@@ -1053,11 +1061,11 @@ def main():
     lidar_thread_instance = threading.Thread(target=lidar_thread,
                                              args=(sock, pca, shared_GX, shared_GY, shared_race_mode))
     camera_thread_instance = threading.Thread(target=camera_thread,
-                                              args=(pca, picam0, picam1, shared_race_mode, shared_blue_line_count))
+                                              args=(pca, picam0, picam1, shared_race_mode))
     gyro_thread_instance = threading.Thread(target=gyro_thread, args=(shared_race_mode, ))
 
     xbox_controller_process_instance = Process(target=xbox_controller_process,
-                                               args=(pca, shared_GX, shared_GY, shared_race_mode, shared_blue_line_count))
+                                               args=(pca, shared_GX, shared_GY, shared_race_mode))
 
     lidar_thread_instance.start()
     camera_thread_instance.start()
