@@ -635,7 +635,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     if Gblue_orientation is None: Gblue_orientation = blue_orientation
                     if shared_race_mode.value == 1:
                         shared_blue_line_count.value += 1
-                        if parking_lot_reached and num_laps == TOTAL_LAPS:
+                        if shared_blue_line_count.value > 1 and parking_lot_reached and num_laps == TOTAL_LAPS:
                             shared_race_mode.value = 2
                             print("Parking initiated")
 
