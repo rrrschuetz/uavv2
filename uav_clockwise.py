@@ -3,6 +3,7 @@ import struct
 import serial
 import pygame
 import numpy as np
+from pandas.core.algorithms import nunique_ints
 from scipy.ndimage import median_filter
 from scipy.stats import trim_mean
 import cv2
@@ -432,7 +433,7 @@ def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle
     return filtered_contours
 
 
-def detect_and_label_blobs(image):
+def detect_and_label_blobs(image, num_detector_calls):
     blue_line = False
     amber_line = False
     blue_orientation = ""
@@ -498,66 +499,68 @@ def detect_and_label_blobs(image):
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
 
-    # Detect amber lines
-    #print("Checking for amber lines")
-    amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
-    amber_mask = remove_small_contours(amber_mask)
+    if num_detector_calls % 2 == 0:
 
-    lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=200, minLineLength=200, maxLineGap=10)
-    if lines is not None:
-        amber_line = True
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
+        # Detect amber lines
+        #print("Checking for amber lines")
+        amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
+        amber_mask = remove_small_contours(amber_mask)
 
-    # Detect blue lines
-    #print("Checking for blue lines")
-    blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
-    blue_mask = remove_small_contours(blue_mask)
+        lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=200, minLineLength=200, maxLineGap=10)
+        if lines is not None:
+            amber_line = True
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
-    most_significant_line = None
-    max_line_length = 0
-    height, width = image.shape[:2]
-    lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=200, minLineLength=200, maxLineGap=10)
-    if lines is not None:
-        blue_line = True
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            len = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-            if len > max_line_length:
-                max_line_length = len
-                most_significant_line = line[0]
-        x1, y1, x2, y2 = most_significant_line
-        cv2.line(image, (x1, y1), (x2, y2), (255, 255, 0), 5)
+        # Detect blue lines
+        #print("Checking for blue lines")
+        blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
+        blue_mask = remove_small_contours(blue_mask)
 
-        # Determine the orientation of the line based on endpoint positions
-        if x1 < width // 2: y1 += (height // 10) # Camera view angle correction left sight
-        if x2 > width // 2: y2 -= (height // 10) # Camera view angle correction right sight
-        if x1 < x2:
-            blue_orientation = "UP" if y1 > y2 else "DOWN"
-        else:
-            blue_orientation = "UP" if y2 < y1 else "DOWN"
-        #print(f"Blue line endpoints: ({x1}, {y1}), ({x2}, {y2})")
-        #print(f"Blue line orientation: {blue_orientation}")
+        most_significant_line = None
+        max_line_length = 0
+        height, width = image.shape[:2]
+        lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=200, minLineLength=200, maxLineGap=10)
+        if lines is not None:
+            blue_line = True
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                len = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+                if len > max_line_length:
+                    max_line_length = len
+                    most_significant_line = line[0]
+            x1, y1, x2, y2 = most_significant_line
+            cv2.line(image, (x1, y1), (x2, y2), (255, 255, 0), 5)
 
-    # Detect magenta parking lot
-    magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
-    magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
+            # Determine the orientation of the line based on endpoint positions
+            if x1 < width // 2: y1 += (height // 10) # Camera view angle correction left sight
+            if x2 > width // 2: y2 -= (height // 10) # Camera view angle correction right sight
+            if x1 < x2:
+                blue_orientation = "UP" if y1 > y2 else "DOWN"
+            else:
+                blue_orientation = "UP" if y2 < y1 else "DOWN"
+            #print(f"Blue line endpoints: ({x1}, {y1}), ({x2}, {y2})")
+            #print(f"Blue line orientation: {blue_orientation}")
 
-    # Find and filter contours for magenta blobs
-    contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area > 5000:
-            #print(f"Magenta rectangle detected: {area} pixels")
-            magenta_rectangle = True
-            cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
+        # Detect magenta parking lot
+        magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
+        magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
 
-    # Add timestamp in the lower left corner
-    timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
-    cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+        # Find and filter contours for magenta blobs
+        contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area > 5000:
+                #print(f"Magenta rectangle detected: {area} pixels")
+                magenta_rectangle = True
+                cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
 
-    if WRITE_CAMERA_IMAGE:
+        # Add timestamp in the lower left corner
+        timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
+        cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+
+    if WRITE_CAMERA_IMAGE and num_detector_calls % 2 == 0:
         cv2.imwrite("labeled_image.jpg", image)
         cv2.imwrite('amber_mask.jpg', amber_mask)
         cv2.imwrite('blue_mask.jpg', blue_mask)
@@ -590,12 +593,14 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
         file_index = 0
         max_frame_count = 2000  # Maximum number of frames per video file
 
+    num_detector_calls = 0
     num_laps = 0
     blue_lock = False
     parking_lot_reached = False
 
     try:
         while True:
+            num_detector_calls += 1
             if shared_race_mode.value in [0,1]:
                 start_time = time.time()
                 image0 = picam0.capture_array()
@@ -604,7 +609,8 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                 image1_flipped = cv2.flip(image1, -1)
                 combined_image = np.hstack((image0_flipped, image1_flipped))
                 cropped_image = combined_image[frame_height:, :]
-                Gx_coords, amber_line, blue_line, parking_lot, blue_orientation, image = detect_and_label_blobs(cropped_image)
+                Gx_coords, amber_line, blue_line, parking_lot, blue_orientation, image \
+                    = detect_and_label_blobs(cropped_image, num_detector_calls)
 
                 if Gclock_wise:
                     Gx_coords = Gx_coords * -1.0
@@ -971,6 +977,7 @@ def main():
     global Gheading_estimate, Gheading_start, Gclock_wise
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
     global shared_race_mode, shared_blue_line_count
+    global Glidar_moving_avg_fps, Gcamera_moving_avg_fps
 
     print("Starting the UAV program...")
     # Create shared variables
@@ -1048,6 +1055,8 @@ def main():
     time.sleep(2)
     Gheading_start = Gheading_estimate
     print(f"All processes have started: {Gheading_start:.2f} degrees")
+    print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
+    print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
 
     try:
         set_servo_angle(pca, 12, SERVO_BASIS)
