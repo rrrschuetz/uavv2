@@ -506,7 +506,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
         amber_mask = remove_small_contours(amber_mask)
 
-        lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=500, minLineLength=200, maxLineGap=10)
+        lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=10)
         if lines is not None:
             amber_line = True
             for line in lines:
@@ -521,7 +521,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         most_significant_line = None
         max_line_length = 0
         height, width = image.shape[:2]
-        lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=300, minLineLength=200, maxLineGap=10)
+        lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=10)
         if lines is not None:
             blue_line = True
             for line in lines:
@@ -531,7 +531,7 @@ def detect_and_label_blobs(image, num_detector_calls):
                     max_line_length = len
                     most_significant_line = line[0]
             x1, y1, x2, y2 = most_significant_line
-            cv2.line(image, (x1, y1), (x2, y2), (255, 255, 0), 5)
+            cv2.line(image, (x1, y1), (x2, y2), (0, 0, 0), 5)
 
             # Determine the orientation of the line based on endpoint positions
             if x1 < width // 2: y1 += (height // 10) # Camera view angle correction left sight
@@ -616,7 +616,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     Gx_coords = Gx_coords * -1.0
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if Glap_end and shared_blue_line_count.value >=4:
+                if Glap_end and shared_blue_line_count.value > 1:
                     parking_lot_reached = False
                     shared_blue_line_count.value = 0
                     num_laps += 1
@@ -636,7 +636,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, shared_blue_line_count)
                     if shared_race_mode.value == 1:
                         shared_blue_line_count.value += 1
                         print(f"Blue line detected: {shared_blue_line_count.value}")
-                        if shared_blue_line_count.value > 2 and parking_lot_reached and num_laps == TOTAL_LAPS:
+                        if shared_blue_line_count.value > 1 and parking_lot_reached and num_laps == TOTAL_LAPS:
                             shared_race_mode.value = 2
                             print("Parking initiated")
 
