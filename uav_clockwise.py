@@ -26,7 +26,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 #########################################
 WRITE_CAMERA_IMAGE = False
 WRITE_CAMERA_MOVIE = False
-TOTAL_LAPS = 1
+TOTAL_LAPS = 3
 #########################################
 
 # Configuration for WT61 Gyroscope
@@ -500,7 +500,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
 
-    if (num_detector_calls % 2 == 0):
+    if (num_detector_calls % 4 == 0):
 
         # Detect amber lines
         #print("Checking for amber lines")
@@ -561,7 +561,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
         cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
-    if WRITE_CAMERA_IMAGE and num_detector_calls % 2 == 0:
+    if WRITE_CAMERA_IMAGE and num_detector_calls % 4 == 0:
         cv2.imwrite("labeled_image.jpg", image)
         cv2.imwrite('amber_mask.jpg', amber_mask)
         cv2.imwrite('blue_mask.jpg', blue_mask)
@@ -668,7 +668,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode):
                         video_filename = f"output_video_{file_index:03d}.avi"
                         video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
 
-                time.sleep(0.05)
+                #time.sleep(0.05)
                 frame_time = time.time() - start_time
                 fps_list.append(1.0 / frame_time)
 
