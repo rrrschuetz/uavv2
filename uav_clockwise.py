@@ -575,7 +575,7 @@ def detect_and_label_blobs(image, num_detector_calls):
 def camera_thread(pca, picam0, picam1, shared_race_mode):
     global Gcolor_string, Gx_coords
     global Gblue_orientation
-    global Glap_end, Gheading_estimate # magnetic heading
+    global Glap_end, Gparallel_aligned, Gheading_estimate # magnetic heading
     global Gcamera_moving_avg_fps, Glidar_moving_avg_fps
 
     fps_list = deque(maxlen=10)
@@ -652,7 +652,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode):
                             num_lines += 1
                             print(f"Blue line detected: {num_lines}")
 
-                    if num_lines > 1 and parking_lot_reached and num_laps >= TOTAL_LAPS:
+                    if num_lines > 0 and parking_lot_reached and num_laps >= TOTAL_LAPS and Gparallel_aligned:
                         shared_race_mode.value = 2
                         print("Parking initiated")
 
@@ -832,7 +832,7 @@ def orientation(angle):
 def gyro_thread(shared_race_mode):
     global Gaccel_x, Gaccel_y, Gaccel_z
     global Gpitch, Groll, Gyaw
-    global Gheading_estimate, Gheading_start, Glap_end
+    global Gheading_estimate, Gheading_start, Gparallel_aligned, Glap_end
 
     buff = bytearray()  # Buffer to store incoming serial data
     packet_counter = 0  # Counter to skip packets
@@ -884,11 +884,8 @@ def gyro_thread(shared_race_mode):
                     # Calculate the magnetometer heading
                     mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
                     Gheading_estimate = mag_heading
-                    if abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10:
-                        Glap_end = True
-                        #print(f"Lap end detected: {Gheading_estimate:.2f}")
-                    else:
-                        Glap_end = False
+                    Glap_end = abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10
+                    Gparallel_aligned = abs(orientation(Gheading_estimate) - orientation(Gheading_start)) < 10
                     time.sleep(0.1)
 
     except serial.SerialException as e:
