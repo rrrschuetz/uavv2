@@ -1018,19 +1018,26 @@ def led_out(device, pattern):
                         draw.point((x, y), fill="black")
         time.sleep(1)  # Display for 1 second before updating
 
-def smiley(device):
+def smiley_led(device):
     pattern = [
-        0b00111100,
-        0b01000010,
-        0b10100101,
-        0b10000001,
-        0b10100101,
-        0b10011001,
-        0b01000010,
-        0b00111100
+        0b00111100,0b01000010,0b10100101,0b10000001,
+        0b10100101,0b10011001,0b01000010,0b00111100
     ]
     led_out(device,pattern)
 
+def error_led(device):
+    pattern = [
+        0b11111111,0b10000000,0b10000000,0b11111100,
+        0b10000000,0b10000000,0b10000000,0b11111111
+    ]
+    led_out(device, pattern)
+
+def parking_led(device):
+    pattern = [
+        0b11111100,0b10000010,0b10000010,0b11111100,
+        0b10000000,0b10000000,0b10000000,0b10000000
+    ]
+    led_out(device, pattern)
 
 def main():
     global Gheading_estimate, Gheading_start, Gclock_wise
@@ -1122,7 +1129,7 @@ def main():
     print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
     print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
 
-    smiley(device)
+    smiley_led(device)
 
     try:
         set_servo_angle(pca, 12, SERVO_BASIS)
@@ -1142,6 +1149,7 @@ def main():
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
         print(f"Time to start the parking procedure: {time.time() - start_time:.2f} seconds")
+        parking_led(device)
 
         print("Starting the parking procedure")
         print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
