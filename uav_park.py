@@ -1029,7 +1029,7 @@ def smiley(device):
         0b01000010,
         0b00111100
     ]
-    led_output(device,pattern)
+    led_out(device,pattern)
 
 
 def main():
