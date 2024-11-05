@@ -46,6 +46,7 @@ SERVO_BASIS = 0.55
 MOTOR_FACTOR = 0.3 # 0.3
 MOTOR_BASIS = 0.1
 
+RACE_SPEED = -0.44
 PARK_SPEED = -0.55
 PARK_STEER = 2.5
 PARK_FIX_STEER = 0.5
@@ -350,13 +351,12 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 steering_commands = output.cpu().numpy()
                 # print("Steering Commands:", steering_commands)
                 X = steering_commands[0, 0]  # Extract GX (first element of the output)
-                Y = steering_commands[0, 1]  # Extract GY (second element of the output)
+                #Y = steering_commands[0, 1]  # Extract GY (second element of the output)
+                Y = RACE_SPEED
                 if Gclock_wise:
                     X = -X
-                    #X = X * 1.1 if X > 0 else X * 0.9
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
                     if shared_race_mode.value == 1:
-                        Y= PARK_SPEED *0.8
                         set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
                         set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
                     else:
@@ -536,8 +536,8 @@ def detect_and_label_blobs(image, num_detector_calls):
             cv2.line(image, (x1, y1), (x2, y2), (0, 0, 0), 5)
 
             # Determine the orientation of the line based on endpoint positions
-            if x1 < width // 2: y1 += (height // 10) # Camera view angle correction left sight
-            if x2 > width // 2: y2 -= (height // 10) # Camera view angle correction right sight
+            if x1 < width // 4 *1: y1 += (height // 10) # Camera view angle correction left sight
+            if x2 > width // 4 *3: y2 += (height // 10) # Camera view angle correction right sight
             if x1 < x2:
                 blue_orientation = "UP" if y1 > y2 else "DOWN"
             else:
