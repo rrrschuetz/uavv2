@@ -356,6 +356,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                     #X = X * 1.1 if X > 0 else X * 0.9
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
                     if shared_race_mode.value == 1:
+                        Y= PARK_SPEED *0.8
                         set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
                         set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
                     else:
