@@ -15,7 +15,7 @@ import board
 from board import SCL, SDA
 import busio
 from gpiozero import Button
-import time
+import time, sys
 import math, statistics
 import qmc5883l as qmc5883
 import torch
@@ -993,6 +993,14 @@ def get_clock_wise():
     else:
         return False
 
+def pgm_exit():
+    picam0.stop()
+    picam1.stop()
+    stop_scan(sock)
+    sock.close()
+    pygame.quit()
+    sys.exit()
+
 def main():
     global Gheading_estimate, Gheading_start, Gclock_wise
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
@@ -1106,13 +1114,10 @@ def main():
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
         print(f"Race time: {time.time() - start_time:.2f} seconds")
+        pgm_exit()
 
     except KeyboardInterrupt:
-        picam0.stop()
-        picam1.stop()
-        stop_scan(sock)
-        sock.close()
-        pygame.quit()
+        pgm_exit()
 
 
 if __name__ == '__main__':
