@@ -970,10 +970,7 @@ def park(pca, sock, shared_race_mode):
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
-
-    #set_servo_angle(pca, 11, 1.4)
-    #time.sleep(5)
-    #set_servo_angle(pca, 11, 0.0)
+    set_servo_angle(pca, 11, 1.4)
 
 
 def sensor_callback():
@@ -1153,12 +1150,15 @@ def main():
         print("Starting the parking procedure")
         print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
         print(f"Heading start: {orientation(Gheading_start):.2f}")
-        #time.sleep(5)
         park(pca, sock, shared_race_mode)
+        print(f"Race time: {time.time() - start_time:.2f} seconds")
+        smiley_led(device)
 
+        while shared_race_mode == 2:
+            time.sleep(0.1)
+        set_servo_angle(pca, 11, 0.0)
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
-        print(f"Race time: {time.time() - start_time:.2f} seconds")
         pgm_exit()
 
     except KeyboardInterrupt:
