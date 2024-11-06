@@ -307,14 +307,14 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     while True:
         start_time = time.time()
 
-        if shared_race_mode.value == 0:
+        if shared_race_mode.value == 4:  # Training
             # print("LIDAR in manual mode")
             interpolated_distances, angles = full_scan(sock)
             Glidar_string = ",".join(f"{d:.4f}" for d in interpolated_distances[:LIDAR_LEN])
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
-        elif shared_race_mode.value == 1:
+        elif shared_race_mode.value == 1:  # Race
             # print("LIDAR in autonomous mode")
             interpolated_distances, angles = full_scan(sock)
 
@@ -369,7 +369,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                     pass
                     print("Invalid steering commands:", X, Y)
 
-        elif shared_race_mode.value == 2:
+        elif shared_race_mode.value == 2:  # Parking
             #print("Lidar inactve")
             time.sleep(1)
 
@@ -608,7 +608,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode):
     try:
         while True:
             num_detector_calls += 1
-            if shared_race_mode.value in [0,1]:
+            if shared_race_mode.value in [0,1,4]:
                 start_time = time.time()
                 image0 = picam0.capture_array()
                 image1 = picam1.capture_array()
@@ -732,17 +732,16 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode):
                         print("Race started")
                         shared_race_mode.value = 3
                 elif event.button == 1:  # B button
-                    print("STOP")
-                    set_motor_speed(pca, 13, MOTOR_BASIS)
-                    set_servo_angle(pca, 12, SERVO_BASIS)
+                    if shared_race_mode.value == 0
+                        print("Training started")
+                        shared_race_mode.value = 4
                 elif event.button == 3:  # X button
-                    print("Race stopped")
+                    print("STOP")
                     shared_race_mode.value = 0
                     set_motor_speed(pca, 13, MOTOR_BASIS)
                     set_servo_angle(pca, 12, SERVO_BASIS)
                 elif event.button == 4:  # Y button
-                    print("Parking initiated")
-                    shared_race_mode.value = 2
+                    print("Y Button pressed")
 
             elif event.type == pygame.JOYBUTTONUP:
                 print(f"JOYBUTTONUP: button={event.button}")
