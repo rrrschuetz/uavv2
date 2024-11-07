@@ -643,7 +643,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                         if blue_line and not amber_line:
                             amber_lock = False
                             blue_line_led(device)
-                            # print("Blue line but no amber line detected")
+                            print("Blue line but no amber line detected")
                         if amber_line and not amber_lock:
                             amber_lock = True
                             num_lines += 1
@@ -653,7 +653,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                         if amber_line and not blue_line:
                             blue_lock = False
                             amber_line_led(device)
-                            # print("Amber line but no blue line detected")
+                            print("Amber line but no blue line detected")
                         if blue_line and not blue_lock:
                             blue_lock = True
                             num_lines += 1
