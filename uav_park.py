@@ -1028,6 +1028,13 @@ def error_led(device):
     ]
     led_out(device, pattern)
 
+def race_led(device):
+    pattern = [
+        0b11111100, 0b10000010, 0b10000010, 0b11111100,
+        0b10000000, 0b10000000, 0b10000000, 0b10000000
+    ]
+    led_out(device, pattern)
+
 def parking_led(device):
     pattern = [
         0b11111100,0b10000010,0b10000010,0b11111100,
@@ -1138,6 +1145,7 @@ def main():
         set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Clockwise: {Gclock_wise}")
         shared_race_mode.value = 1
+        race_led(device)
 
         while shared_race_mode.value != 2:
             time.sleep(0.1)
