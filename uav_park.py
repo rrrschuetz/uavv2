@@ -1132,13 +1132,15 @@ def main():
     print(f"All processes have started: {Gheading_start:.2f} degrees")
     print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
     print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
-
     smiley_led(device)
 
     try:
         set_servo_angle(pca, 12, SERVO_BASIS)
         while (shared_race_mode.value != 3):
+            print(shared_race_mode.value)
             time.sleep(0.1)
+        print("start")
+
         start_time = time.time()
         while not get_clock_wise():
             set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
