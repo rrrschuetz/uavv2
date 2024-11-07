@@ -732,7 +732,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode):
                         print("Race started")
                         shared_race_mode.value = 3
                 elif event.button == 1:  # B button
-                    if shared_race_mode.value == 0
+                    if shared_race_mode.value == 0:
                         print("Training started")
                         shared_race_mode.value = 4
                 elif event.button == 3:  # X button
