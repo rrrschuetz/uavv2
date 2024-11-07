@@ -49,7 +49,7 @@ SERVO_BASIS = 0.55
 MOTOR_FACTOR = 0.3 # 0.3
 MOTOR_BASIS = 0.1
 
-RACE_SPEED = -0.44
+RACE_SPEED = -0.35
 PARK_SPEED = -0.55
 PARK_STEER = 2.5
 PARK_FIX_STEER = 0.5
@@ -504,7 +504,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
 
-    if (num_detector_calls % 4 == 0):
+    if (num_detector_calls % 2 == 0):
 
         # Detect amber lines
         #print("Checking for amber lines")
@@ -565,7 +565,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
         cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
-    if WRITE_CAMERA_IMAGE and num_detector_calls % 4 == 0:
+    if WRITE_CAMERA_IMAGE and num_detector_calls % 2 == 0:
         cv2.imwrite("labeled_image.jpg", image)
         cv2.imwrite('amber_mask.jpg', amber_mask)
         cv2.imwrite('blue_mask.jpg', blue_mask)
@@ -576,7 +576,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     return x_coords, amber_line, blue_line, magenta_rectangle, blue_orientation, image
 
 
-def camera_thread(pca, picam0, picam1, shared_race_mode):
+def camera_thread(pca, picam0, picam1, shared_race_mode, device):
     global Gcolor_string, Gx_coords
     global Gblue_orientation
     global Glap_end, Gparallel_aligned, Gheading_estimate # magnetic heading
@@ -645,15 +645,18 @@ def camera_thread(pca, picam0, picam1, shared_race_mode):
                         amber_lock = False
                         #print("Blue line but no amber line detected")
 
+                    blank_led(device)
                     if Gclock_wise:
                         if amber_line and not amber_lock:
                             amber_lock = True
                             num_lines += 1
+                            amber_line_led(device)
                             print(f"Amber line detected: {num_lines}")
                     else:
                         if blue_line and not blue_lock:
                             blue_lock = True
                             num_lines += 1
+                            blue_line_led(device)
                             print(f"Blue line detected: {num_lines}")
 
                     if num_lines > 0 and parking_lot_reached and num_laps >= TOTAL_LAPS and Gparallel_aligned:
@@ -1032,6 +1035,27 @@ def parking_led(device):
     ]
     led_out(device, pattern)
 
+def amber_line_led(device):
+    pattern = [
+        0b00111100, 0b01000010, 0b10000001, 0b10000001,
+        0b11111111, 0b10000001, 0b10000001, 0b10000001
+    ]
+    led_out(device, pattern)
+
+def blue_line_led(device):
+    pattern = [
+        0b11111100, 0b10000010, 0b10000010, 0b11111100,
+        0b10000010, 0b10000010, 0b10000010, 0b11111100
+    ]
+    led_out(device, pattern)
+
+def blank_led(device):
+    pattern = [
+        0b00000000, 0b00000000, 0b00000000, 0b00000000,
+        0b00000000, 0b00000000, 0b00000000, 0b00000000
+    ]
+    led_out(device, pattern)
+
 def main():
     global Gheading_estimate, Gheading_start, Gclock_wise
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
@@ -1105,7 +1129,7 @@ def main():
     lidar_thread_instance = threading.Thread(target=lidar_thread,
                                              args=(sock, pca, shared_GX, shared_GY, shared_race_mode))
     camera_thread_instance = threading.Thread(target=camera_thread,
-                                              args=(pca, picam0, picam1, shared_race_mode))
+                                              args=(pca, picam0, picam1, shared_race_mode, device))
     gyro_thread_instance = threading.Thread(target=gyro_thread, args=(shared_race_mode, ))
 
     xbox_controller_process_instance = Process(target=xbox_controller_process,
