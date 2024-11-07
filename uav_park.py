@@ -28,7 +28,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 
 #########################################
 WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = False
+WRITE_CAMERA_MOVIE = True
 TOTAL_LAPS = 1
 #########################################
 
@@ -536,7 +536,7 @@ def detect_and_label_blobs(image, num_detector_calls):
                     max_line_length = len
                     most_significant_line = line[0]
             x1, y1, x2, y2 = most_significant_line
-            cv2.line(image, (x1, y1), (x2, y2), (0, 0, 0), 5)
+            cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 5)
 
             # Determine the orientation of the line based on endpoint positions
             if x1 < width // 4 *1: y1 += (height // 10) # Camera view angle correction left sight
