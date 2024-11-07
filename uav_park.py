@@ -369,7 +369,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                     pass
                     print("Invalid steering commands:", X, Y)
 
-        elif shared_race_mode.value == 2:  # Parking
+        elif shared_race_mode.value in [0,2]:
             #print("Lidar inactve")
             time.sleep(1)
 
