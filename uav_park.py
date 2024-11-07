@@ -993,15 +993,6 @@ def get_clock_wise():
         return False
 
 
-def pgm_exit():
-    picam0.stop()
-    picam1.stop()
-    stop_scan(sock)
-    sock.close()
-    pygame.quit()
-    sys.exit()
-
-
 def led_out(device, pattern):
     # Display the pattern on the LED matrix
     with canvas(device) as draw:
@@ -1135,7 +1126,6 @@ def main():
     try:
         set_servo_angle(pca, 12, SERVO_BASIS)
         while (shared_race_mode.value != 3):
-            print(shared_race_mode.value)
             time.sleep(0.1)
 
         start_time = time.time()
@@ -1167,11 +1157,21 @@ def main():
         set_servo_angle(pca, 11, 0.0)
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
-        pgm_exit()
+
+        picam0.stop()
+        picam1.stop()
+        stop_scan(sock)
+        sock.close()
+        pygame.quit()
+        sys.exit()
 
     except KeyboardInterrupt:
-        pgm_exit()
-
+        picam0.stop()
+        picam1.stop()
+        stop_scan(sock)
+        sock.close()
+        pygame.quit()
+        sys.exit()
 
 if __name__ == '__main__':
     main()
