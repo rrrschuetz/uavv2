@@ -992,6 +992,7 @@ def get_clock_wise():
     else:
         return False
 
+
 def pgm_exit():
     picam0.stop()
     picam1.stop()
