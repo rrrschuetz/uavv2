@@ -1004,16 +1004,14 @@ def pgm_exit():
 
 def led_out(device, pattern):
     # Display the pattern on the LED matrix
-    while True:
-        with canvas(device) as draw:
-            for y, row in enumerate(pattern):
-                for x in range(8):
-                    # Check if the specific bit in the row is set
-                    if (row >> (7 - x)) & 1:
-                        draw.point((x, y), fill="white")
-                    else:
-                        draw.point((x, y), fill="black")
-        time.sleep(1)  # Display for 1 second before updating
+    with canvas(device) as draw:
+        for y, row in enumerate(pattern):
+            for x in range(8):
+               # Check if the specific bit in the row is set
+               if (row >> (7 - x)) & 1:
+                   draw.point((x, y), fill="white")
+               else:
+                   draw.point((x, y), fill="black")
 
 def smiley_led(device):
     pattern = [
@@ -1032,7 +1030,7 @@ def error_led(device):
 def race_led(device):
     pattern = [
         0b11111100, 0b10000010, 0b10000010, 0b11111100,
-        0b10000000, 0b10000000, 0b10000000, 0b10000000
+        0b10100000, 0b10010000, 0b10001000, 0b10000100
     ]
     led_out(device, pattern)
 
@@ -1139,7 +1137,6 @@ def main():
         while (shared_race_mode.value != 3):
             print(shared_race_mode.value)
             time.sleep(0.1)
-        print("start")
 
         start_time = time.time()
         while not get_clock_wise():
