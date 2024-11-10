@@ -27,7 +27,7 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-WRITE_CAMERA_IMAGE = False
+WRITE_CAMERA_IMAGE = True
 WRITE_CAMERA_MOVIE = True
 TOTAL_LAPS = 1
 #########################################
@@ -511,7 +511,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
         amber_mask = remove_small_contours(amber_mask)
 
-        lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=10)
+        lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=1)
         if lines is not None:
             amber_line = True
             for line in lines:
@@ -526,7 +526,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         most_significant_line = None
         max_line_length = 0
         height, width = image.shape[:2]
-        lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=10)
+        lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=1)
         if lines is not None:
             blue_line = True
             for line in lines:
