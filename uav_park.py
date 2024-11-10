@@ -458,7 +458,7 @@ def check_line_thickness(line, mask, min_thickness):
             if mask[cy, cx] > 0:
                 thickness_count += 1
 
-    print(f"Line thickness: {thickness_count}")
+    #print(f"Line thickness: {thickness_count}")
     return thickness_count >= min_thickness
 
 
@@ -537,10 +537,11 @@ def detect_and_label_blobs(image, num_detector_calls):
 
         lines = cv2.HoughLinesP(amber_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=1)
         if lines is not None:
-            amber_line = True
-            for line in lines:
-                x1, y1, x2, y2 = line[0]
-                cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
+            if check_line_thickness(line[0], amber_mask, 8):
+                amber_line = True
+                for line in lines:
+                    x1, y1, x2, y2 = line[0]
+                    cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
         # Detect blue lines
         #print("Checking for blue lines")
@@ -554,7 +555,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=1)
         if lines is not None:
             for line in lines:
-                if check_line_thickness(line[0], blue_mask, 5):
+                if check_line_thickness(line[0], blue_mask, 8):
                     x1, y1, x2, y2 = line[0]
                     len = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
                     if len > max_line_length:
