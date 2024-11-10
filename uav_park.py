@@ -458,7 +458,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     green_lower2 = np.array([70, 40, 40])
     green_upper2 = np.array([90, 255, 255])
 
-    blue_lower = np.array([90, 40, 40])  # HSV range for blue detection
+    blue_lower = np.array([90, 70, 90])  # HSV range for blue detection
     blue_upper = np.array([140, 255, 255])
 
     amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
@@ -644,21 +644,23 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                             amber_lock = False
                             blue_line_led(device)
                             print("Blue line but no amber line detected")
-                        if amber_line and not amber_lock:
-                            amber_lock = True
-                            num_lines += 1
+                        if amber_line:
                             amber_line_led(device)
-                            print(f"Amber line detected: {num_lines}")
+                            if not amber_lock:
+                                amber_lock = True
+                                num_lines += 1
+                                print(f"New amber line detected: {num_lines}")
                     else:
                         if amber_line and not blue_line:
                             blue_lock = False
                             amber_line_led(device)
                             print("Amber line but no blue line detected")
-                        if blue_line and not blue_lock:
-                            blue_lock = True
-                            num_lines += 1
+                        if blue_line:
                             blue_line_led(device)
-                            print(f"Blue line detected: {num_lines}")
+                            if not blue_lock:
+                                blue_lock = True
+                                num_lines += 1
+                                print(f"New blue line detected: {num_lines}")
 
                     if num_lines > 0 and parking_lot_reached and num_laps >= TOTAL_LAPS and Gparallel_aligned:
                         shared_race_mode.value = 2
