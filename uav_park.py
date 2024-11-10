@@ -438,6 +438,29 @@ def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle
     return filtered_contours
 
 
+def check_line_thickness(line, mask, min_thickness):
+    """Check if the line has the specified minimum thickness."""
+    x1, y1, x2, y2 = line
+    length = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+    # Calculate unit vector perpendicular to the line
+    dx = (y2 - y1) / length
+    dy = -(x2 - x1) / length
+
+    # Count consecutive non-zero pixels along the perpendicular direction
+    thickness_count = 0
+    for offset in range(-min_thickness, min_thickness + 1):
+        cx = int((x1 + x2) / 2 + dx * offset)
+        cy = int((y1 + y2) / 2 + dy * offset)
+
+        # Ensure point is within bounds
+        if 0 <= cx < mask.shape[1] and 0 <= cy < mask.shape[0]:
+            if mask[cy, cx] > 0:
+                thickness_count += 1
+
+    return thickness_count >= min_thickness
+
+
 def detect_and_label_blobs(image, num_detector_calls):
     blue_line = False
     amber_line = False
@@ -526,15 +549,17 @@ def detect_and_label_blobs(image, num_detector_calls):
         most_significant_line = None
         max_line_length = 0
         height, width = image.shape[:2]
+
         lines = cv2.HoughLinesP(blue_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=1)
         if lines is not None:
             blue_line = True
             for line in lines:
-                x1, y1, x2, y2 = line[0]
-                len = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-                if len > max_line_length:
-                    max_line_length = len
-                    most_significant_line = line[0]
+                if check_line_thickness(line[0], blue_mask, 5):
+                    x1, y1, x2, y2 = line[0]
+                    len = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+                    if len > max_line_length:
+                        max_line_length = len
+                        most_significant_line = line[0]
             x1, y1, x2, y2 = most_significant_line
             cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 5)
 
@@ -637,7 +662,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                 if blue_line and Gblue_orientation is None: Gblue_orientation = blue_orientation
 
                 if shared_race_mode.value == 1:
-                    blank_led(device)
+                    #blank_led(device)
 
                     if Gclock_wise:
                         if blue_line and not amber_line:
