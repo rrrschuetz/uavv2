@@ -27,8 +27,8 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
 #########################################
-WRITE_CAMERA_IMAGE = True
-WRITE_CAMERA_MOVIE = True
+WRITE_CAMERA_IMAGE = False
+WRITE_CAMERA_MOVIE = False
 TOTAL_LAPS = 1
 #########################################
 
