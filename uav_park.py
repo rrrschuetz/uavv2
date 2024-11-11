@@ -1005,7 +1005,7 @@ def park(pca, sock, shared_race_mode):
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
-    set_servo_angle(pca, 11, 1.4)
+    set_servo_angle(pca, 11, 1.7)
 
 
 def sensor_callback():
@@ -1208,8 +1208,7 @@ def main():
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
 
-        while shared_race_mode == 2:
-            time.sleep(0.1)
+        time.sleep(10)
         set_servo_angle(pca, 11, 0.0)
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
