@@ -1014,16 +1014,13 @@ def get_clock_wise(sock):
     if Gline_orientation == "UP":
         print(f"Gline orientation: UP")
         Gclock_wise = False
-        return True
     elif Gline_orientation == "DOWN":
         print(f"Gline orientation: DOWN")
         Gclock_wise = True
-        return True
     else:
         position = navigate(sock)
         Gclock_wise =  position['distance_ratio'] > 1.0
         print(f"distance_ratio: {position['distance_ratio']}")
-        return True
 
 def led_out(device, pattern):
     # Display the pattern on the LED matrix
@@ -1182,9 +1179,7 @@ def main():
             time.sleep(0.1)
 
         start_time = time.time()
-        set_motor_speed(pca, 13, PARK_SPEED * 0.6 * MOTOR_FACTOR + MOTOR_BASIS)
-        while not get_clock_wise(sock):
-            time.sleep(0.1)
+        get_clock_wise(sock):
         print(f"Clockwise: {Gclock_wise}")
         shared_race_mode.value = 1
         race_led(device)
