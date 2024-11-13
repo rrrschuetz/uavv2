@@ -1056,17 +1056,17 @@ def parking_led(device):
     ]
     led_out(device, pattern)
 
-def amber_line_led(device):
+def second_line_led(device):
     pattern = [
-        0b00111100, 0b01000010, 0b10000001, 0b10000001,
-        0b11111111, 0b10000001, 0b10000001, 0b10000001
+        0b00111100,0b01000010,0b00000010,0b00000100,
+        0b00001000,0b00010000,0b00100000,0b01111110
     ]
     led_out(device, pattern)
 
-def blue_line_led(device):
+def first_line_led(device):
     pattern = [
-        0b11111100, 0b10000010, 0b10000010, 0b11111100,
-        0b10000010, 0b10000010, 0b10000010, 0b11111100
+        0b00011000,0b00111000,0b00011000,0b00011000,
+        0b00011000,0b00011000,0b01111110,0b01111110
     ]
     led_out(device, pattern)
 
