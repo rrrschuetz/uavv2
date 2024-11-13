@@ -1186,10 +1186,9 @@ def main():
             time.sleep(0.1)
 
         start_time = time.time()
+        set_motor_speed(pca, 13, PARK_SPEED * 0.6 * MOTOR_FACTOR + MOTOR_BASIS)
         while not get_clock_wise(sock):
-            set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
             time.sleep(0.1)
-        set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Clockwise: {Gclock_wise}")
         shared_race_mode.value = 1
         race_led(device)
