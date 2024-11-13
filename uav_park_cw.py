@@ -1009,7 +1009,7 @@ def sensor_callback():
         shared_race_mode.value = 3
 
 
-def get_clock_wise():
+def get_clock_wise(sock):
     global Gline_orientation, Gclock_wise
     if Gline_orientation == "UP":
         print(f"Gline orientation: UP")
