@@ -1171,16 +1171,15 @@ def main():
     print(f"All processes have started: {Gheading_start:.2f} degrees")
     print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
     print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
+    get_clock_wise(sock)
+    print(f"Clockwise: {Gclock_wise}")
     smiley_led(device)
 
     try:
-        set_servo_angle(pca, 12, SERVO_BASIS)
         while (shared_race_mode.value != 3):
             time.sleep(0.1)
 
         start_time = time.time()
-        get_clock_wise(sock):
-        print(f"Clockwise: {Gclock_wise}")
         shared_race_mode.value = 1
         race_led(device)
 
