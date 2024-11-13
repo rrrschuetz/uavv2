@@ -28,7 +28,7 @@ from preprocessing import preprocess_input, load_scaler  # Import preprocessing 
 
 #########################################
 WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = False
+WRITE_CAMERA_MOVIE = True
 TOTAL_LAPS = 1
 #########################################
 
@@ -265,8 +265,12 @@ def navigate(sock, narrow=False):
     # Smooth the data using a median filter to reduce noise and outliers
     valid_distances = median_filter(interpolated_distances[:LIDAR_LEN], size=window_size)
     front_distance = np.mean(valid_distances[LIDAR_LEN // 2 - window_size // 2:LIDAR_LEN // 2 + window_size // 2])
+    # Calculate lidar orientation (clockwise ?)
+    first_half_sum = np.sum(valid_distances[:LIDAR_LEN // 2])
+    second_half_sum = np.sum(valid_distances[LIDAR_LEN // 2:])
+    distance_ratio = first_half_sum / second_half_sum if second_half_sum != 0 else float('inf')
 
-      # Use the sliding window to compute the local robust minimum distance
+    # Use the sliding window to compute the local robust minimum distance
     for i in range(reduce, LIDAR_LEN - reduce - window_size + 1):
         window = valid_distances[i:i + window_size]
         trimmed_mean_distance = trim_mean(window, proportiontocut=0.1)
@@ -290,7 +294,8 @@ def navigate(sock, narrow=False):
         "left_min_angle": left_min_angle,
         "right_min_distance": right_min_distance,
         "right_min_angle": right_min_angle,
-        "front_distance": front_distance
+        "front_distance": front_distance,
+        "distance_ratio": distance_ratio
     }
 
 
@@ -1006,16 +1011,22 @@ def sensor_callback():
 
 def get_clock_wise():
     global Gline_orientation, Gclock_wise
-    print(f"Gline orientation: {Gline_orientation}")
     if Gline_orientation == "UP":
+        print(f"Gline orientation: UP")
         Gclock_wise = False
         return True
     elif Gline_orientation == "DOWN":
+        print(f"Gline orientation: DOWN")
         Gclock_wise = True
         return True
     else:
-        return False
-
+        position = navigate(sock,False)
+        if position['front_distance'] < 1.5:
+            Gclockwise =  position['distance_ratio'] < 1.0
+            print(f"distance_ratio: {position['distance_ratio']}")
+            return True
+        else:
+            return False
 
 def led_out(device, pattern):
     # Display the pattern on the LED matrix
@@ -1174,7 +1185,7 @@ def main():
             time.sleep(0.1)
 
         start_time = time.time()
-        while not get_clock_wise():
+        while not get_clock_wise(sock):
             set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
             time.sleep(0.02)
         set_motor_speed(pca, 13, MOTOR_BASIS)
