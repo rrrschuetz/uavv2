@@ -1021,13 +1021,9 @@ def get_clock_wise(sock):
         return True
     else:
         position = navigate(sock)
-        if position['front_distance'] < 1.5:
-            Gclock_wise =  position['distance_ratio'] > 1.0
-            print(f"distance_ratio: {position['distance_ratio']}")
-            return True
-        else:
-            print(f"front_distance: {position['front_distance']}")
-            return False
+        Gclock_wise =  position['distance_ratio'] > 1.0
+        print(f"distance_ratio: {position['distance_ratio']}")
+        return True
 
 def led_out(device, pattern):
     # Display the pattern on the LED matrix
