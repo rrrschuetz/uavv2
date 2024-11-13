@@ -1020,12 +1020,13 @@ def get_clock_wise(sock):
         Gclock_wise = True
         return True
     else:
-        position = navigate(sock,False)
+        position = navigate(sock)
         if position['front_distance'] < 1.5:
             Gclock_wise =  position['distance_ratio'] > 1.0
-            print(f"front_distance: {position['front_distance']} distance_ratio: {position['distance_ratio']}")
+            print(f"distance_ratio: {position['distance_ratio']}")
             return True
         else:
+            print(f"front_distance: {position['front_distance']}")
             return False
 
 def led_out(device, pattern):
@@ -1187,7 +1188,7 @@ def main():
         start_time = time.time()
         while not get_clock_wise(sock):
             set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
-            time.sleep(0.02)
+            time.sleep(0.1)
         set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Clockwise: {Gclock_wise}")
         shared_race_mode.value = 1
