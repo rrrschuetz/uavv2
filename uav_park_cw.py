@@ -639,7 +639,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
     try:
         while True:
             num_detector_calls += 1
-            if shared_race_mode.value in [0,1,4]:
+            if shared_race_mode.value in [0,1,3,4]:
                 start_time = time.time()
                 image0 = picam0.capture_array()
                 image1 = picam1.capture_array()
