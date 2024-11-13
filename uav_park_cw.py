@@ -1022,8 +1022,8 @@ def get_clock_wise(sock):
     else:
         position = navigate(sock,False)
         if position['front_distance'] < 1.5:
-            Gclockwise =  position['distance_ratio'] < 1.0
-            print(f"distance_ratio: {position['distance_ratio']}")
+            Gclock_wise =  position['distance_ratio'] > 1.0
+            print(f"front_distance: {position['front_distance']} distance_ratio: {position['distance_ratio']}")
             return True
         else:
             return False
