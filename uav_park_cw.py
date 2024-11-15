@@ -654,7 +654,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
     num_detector_calls = 0
     num_laps = 0
     num_lines = 0
-    first_line_lock = False
     parking_lot_reached = False
 
     try:
@@ -683,7 +682,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                     if Glap_end and num_lines > 1:
                         parking_lot_reached = False
-                        first_line_lock = False
                         num_lines = 0
                         num_laps += 1
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
@@ -692,15 +690,13 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     else:  # Parking lot never in race start/end segment
                         if parking_lot: parking_lot_reached = True
 
-                    if second_line and not first_line:
-                        first_line_lock = False
-                        second_line_led(device)
-                    if not Glap_end and first_line:
+                    if first_line:
                         first_line_led(device)
-                        if not first_line_lock:
-                            first_line_lock = True
-                            num_lines += 1
-                            print(f"New first line detected: {num_lines}")
+
+                    if not Glap_end and second_line and not first_line:
+                        num_lines += 1
+                        print(f"Line detected: {num_lines}")
+                        second_line_led(device)
 
                     if num_lines > 0 and parking_lot_reached and num_laps >= TOTAL_LAPS and Gparallel_aligned:
                         shared_race_mode.value = 2
