@@ -676,26 +676,26 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     Gx_coords = Gx_coords[::-1]
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
-                if Glap_end and num_lines > 1:
-                    parking_lot_reached = False
-                    first_line_lock = False
-                    num_lines = 0
-                    num_laps += 1
-                    print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
-                    print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
-                    print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
-                else:  # Parking lot never in race start/end segment
-                    if parking_lot: parking_lot_reached = True
-
                 if first_line and Gline_orientation is None: Gline_orientation = line_orientation
 
                 if shared_race_mode.value == 1:
                     #blank_led(device)
 
+                    if Glap_end and num_lines > 1:
+                        parking_lot_reached = False
+                        first_line_lock = False
+                        num_lines = 0
+                        num_laps += 1
+                        print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
+                        print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
+                        print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
+                    else:  # Parking lot never in race start/end segment
+                        if parking_lot: parking_lot_reached = True
+
                     if second_line and not first_line:
                         first_line_lock = False
                         second_line_led(device)
-                    if first_line:
+                    if not Glap_end and first_line:
                         first_line_led(device)
                         if not first_line_lock:
                             first_line_lock = True
