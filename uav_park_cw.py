@@ -346,12 +346,12 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
 
             # emergency break
             if 0 < min(interpolated_distances[LIDAR_LEN // 4 : LIDAR_LEN // 4 * 3]) < 0.1:
-                set_motor_speed(pca, 13, MOTOR_BASIS)
-                set_servo_angle(pca, 12, SERVO_BASIS)
                 print("Emergency break")
                 set_motor_speed(pca, 13, MOTOR_BASIS - PARK_SPEED * MOTOR_FACTOR)
+                set_servo_angle(pca, 12, SERVO_BASIS + PARK_STEER * SERVO_FACTOR)
                 time.sleep(3)
                 set_motor_speed(pca, 13, MOTOR_BASIS)
+                set_servo_angle(pca, 12, SERVO_BASIS)
                 continue
 
             ld = interpolated_distances[:LIDAR_LEN]
