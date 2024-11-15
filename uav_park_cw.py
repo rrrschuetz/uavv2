@@ -678,6 +678,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                 if Glap_end and num_lines > 1:
                     parking_lot_reached = False
+                    first_line_lock = False
                     num_lines = 0
                     num_laps += 1
                     print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
