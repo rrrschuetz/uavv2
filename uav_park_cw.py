@@ -1001,7 +1001,7 @@ def align_angular(pca, angle, shared_race_mode):
 
 def park(pca, sock, shared_race_mode):
     position = navigate(sock)
-    stop_distance = 1.5 if Gclock_wise and position['left_min_distance'] < position['right_min_distance'] or \
+    stop_distance = 1.3 if Gclock_wise and position['left_min_distance'] < position['right_min_distance'] or \
          not Gclock_wise and position['left_min_distance'] > position['right_min_distance'] else 1.4
     print(f"stop_distance: {stop_distance:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
