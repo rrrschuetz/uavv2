@@ -352,7 +352,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
             # emergency break
             left_min = min(interpolated_distances[LIDAR_LEN // 8 * 3 : LIDAR_LEN // 2])
             right_min = min(interpolated_distances[LIDAR_LEN // 2: LIDAR_LEN // 8 * 5])
-            if 0 < left_min < 0.1 or 0 < right_min < 0.1:
+            if 0 < left_min < 0.07 or 0 < right_min < 0.07:
                 print("Emergency break")
                 dir = 1 if left_min < right_min else -1
                 set_motor_speed(pca, 13, MOTOR_BASIS - PARK_SPEED * MOTOR_FACTOR)
@@ -382,12 +382,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 if Gclock_wise:
                     X = -X
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
-                    if shared_race_mode.value == 1:
-                        set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
-                        set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
-                    else:
-                        set_motor_speed(pca, 13, MOTOR_BASIS)
-                        set_servo_angle(pca, 12, SERVO_BASIS)
+                    set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
+                    set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
                 else:
                     pass
                     print("Invalid steering commands:", X, Y)
