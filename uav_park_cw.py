@@ -128,8 +128,8 @@ def receive_full_data(sock, expected_length, timeout=5):
                 print(f"Timeout after {timeout} seconds while waiting for data.")
                 raise  # Re-raise the timeout exception
     except socket.timeout:
-        print("Socket timed out. Returning incomplete data.")
-        return None  # Return None or raise an exception depending on how you want to handle it
+        print("Socket timed out. Reconnect.")
+        return None  # Return None
     return data
 
 
@@ -142,9 +142,12 @@ def get_health(sock):
 
 def get_info(sock):
     sock.send(b'\xA5\x50')
-    response = None
-    while response is None:
+    while True:
         response = receive_full_data(sock, 27)
+        if response is not None: break
+        sock.close()
+        connect_lidar()
+        start_scan()
     model, firmware_minor, firmware_major, hardware, serialnum = struct.unpack('<BBBB16s', response[7:])
     serialnum_str = serialnum[::-1].hex()
     return model, firmware_minor, firmware_major, hardware, serialnum_str
