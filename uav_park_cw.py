@@ -110,7 +110,9 @@ def arm_esc(pca, channel):
 
 
 # LIDAR functions
-def connect_lidar(ip, port=8089):
+IP_ADDRESS = '192.168.11.2'
+PORT = 8089
+def connect_lidar(ip = IP_ADDRESS, port = PORT):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect((ip, port))
     return sock
@@ -1136,10 +1138,7 @@ def main():
     initialize_wt61()
 
     # LIDAR setup
-    IP_ADDRESS = '192.168.11.2'
-    PORT = 8089
-    sock = connect_lidar(IP_ADDRESS, PORT)
-
+    sock = connect_lidar()
     print('Getting LIDAR info...')
     info = get_info(sock)
     print('LIDAR Info:', info)
