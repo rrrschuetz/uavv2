@@ -148,11 +148,11 @@ def get_info(sock):
         response = receive_full_data(sock, 27)
         if response is not None: break
         sock.close()
-        connect_lidar()
-        start_scan()
+        sock = connect_lidar()
+        start_scan(sock)
     model, firmware_minor, firmware_major, hardware, serialnum = struct.unpack('<BBBB16s', response[7:])
     serialnum_str = serialnum[::-1].hex()
-    return model, firmware_minor, firmware_major, hardware, serialnum_str
+    return sock, model, firmware_minor, firmware_major, hardware, serialnum_str
 
 
 def start_scan(sock):
@@ -1140,8 +1140,8 @@ def main():
     # LIDAR setup
     sock = connect_lidar()
     print('Getting LIDAR info...')
-    info = get_info(sock)
-    print('LIDAR Info:', info)
+    sock, model, firmware_minor, firmware_major, hardware, serialnum_str = get_info(sock)
+    print('LIDAR Info:', model, firmware_minor, firmware_major, hardware, serialnum_str)
 
     print('Getting LIDAR health...')
     health = get_health(sock)
