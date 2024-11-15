@@ -357,9 +357,9 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 dir = 1 if left_min < right_min else -1
                 set_motor_speed(pca, 13, MOTOR_BASIS - PARK_SPEED * MOTOR_FACTOR)
                 set_servo_angle(pca, 12, SERVO_BASIS + PARK_STEER * SERVO_FACTOR * dir)
-                time.sleep(1)
-                set_motor_speed(pca, 13, MOTOR_BASIS)
-                set_servo_angle(pca, 12, SERVO_BASIS)
+                time.sleep(0.7)
+                #set_motor_speed(pca, 13, MOTOR_BASIS)
+                #set_servo_angle(pca, 12, SERVO_BASIS)
                 continue
 
             ld = interpolated_distances[:LIDAR_LEN]
@@ -682,7 +682,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                     if Glap_end and num_lines > 1:
                         parking_lot_reached = False
-                        num_lines = 0
                         num_laps += 1
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                         print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
@@ -693,14 +692,17 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     if first_line:
                         first_line_led(device)
 
-                    if not Glap_end and second_line and not first_line:
-                        num_lines += 1
-                        print(f"Line detected: {num_lines}")
-                        second_line_led(device)
-
-                    if num_lines > 0 and parking_lot_reached and num_laps >= TOTAL_LAPS and Gparallel_aligned:
-                        shared_race_mode.value = 2
-                        print("Parking initiated")
+                    if not Gparallel_aligned:
+                        if second_line and not first_line:
+                            num_lines += 1
+                            print(f"Line detected: {num_lines}")
+                            second_line_led(device)
+                    else:
+                        if num_lines > 0:
+                            if parking_lot_reached and num_laps >= TOTAL_LAPS:
+                                shared_race_mode.value = 2
+                                print("Parking initiated")
+                            else: num_lines = 0
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
