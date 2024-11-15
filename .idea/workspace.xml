@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="N/A">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uav_park_cw.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_park_cw.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,14 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00402" summary="N/A">
-      <option name="closed" value="true" />
-      <created>1730667144338</created>
-      <option name="number" value="00402" />
-      <option name="presentableId" value="LOCAL-00402" />
-      <option name="project" value="LOCAL" />
-      <updated>1730667144338</updated>
     </task>
     <task id="LOCAL-00403" summary="N/A">
       <option name="closed" value="true" />
@@ -527,7 +520,15 @@
       <option name="project" value="LOCAL" />
       <updated>1731542131765</updated>
     </task>
-    <option name="localTasksCounter" value="451" />
+    <task id="LOCAL-00451" summary="N/A">
+      <option name="closed" value="true" />
+      <created>1731696345348</created>
+      <option name="number" value="00451" />
+      <option name="presentableId" value="LOCAL-00451" />
+      <option name="project" value="LOCAL" />
+      <updated>1731696345348</updated>
+    </task>
+    <option name="localTasksCounter" value="452" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
