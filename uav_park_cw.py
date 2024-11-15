@@ -571,7 +571,7 @@ def detect_and_label_blobs(image, num_detector_calls):
             for line in lines:
                 x1, y1, x2, y2 = line[0]
                 if (y1 > height // 2 and y2 > height // 2
-                    and check_line_thickness(line[0], first_line_mask, 8)):
+                    and check_line_thickness(line[0], first_line_mask, 6)):
                     len = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
                     if len > max_line_length:
                         max_line_length = len
@@ -597,7 +597,7 @@ def detect_and_label_blobs(image, num_detector_calls):
             for line in lines:
                 x1, y1, x2, y2 = line[0]
                 if (y1 > height // 2 and y2 > height // 2
-                    and check_line_thickness(line[0], second_line_mask, 8)):
+                    and check_line_thickness(line[0], second_line_mask, 6)):
                     second_line = True
                     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
