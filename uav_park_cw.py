@@ -555,8 +555,9 @@ def detect_and_label_blobs(image, num_detector_calls):
         lines = cv2.HoughLinesP(first_line_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=1)
         if lines is not None:
             for line in lines:
-                if check_line_thickness(line[0], first_line_mask, 8):
-                    x1, y1, x2, y2 = line[0]
+                x1, y1, x2, y2 = line[0]
+                if (y1 > height // 2 and y2 > height // 2
+                    and check_line_thickness(line[0], first_line_mask, 8)):
                     len = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
                     if len > max_line_length:
                         max_line_length = len
@@ -580,9 +581,10 @@ def detect_and_label_blobs(image, num_detector_calls):
         lines = cv2.HoughLinesP(second_line_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=1)
         if lines is not None:
             for line in lines:
-                if check_line_thickness(line[0], second_line_mask, 8):
+                x1, y1, x2, y2 = line[0]
+                if (y1 > height // 2 and y2 > height // 2
+                    and check_line_thickness(line[0], second_line_mask, 8)):
                     second_line = True
-                    x1, y1, x2, y2 = line[0]
                     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
         # Detect magenta parking lot
