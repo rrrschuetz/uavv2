@@ -350,7 +350,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 set_servo_angle(pca, 12, SERVO_BASIS)
                 print("Emergency break")
                 set_motor_speed(pca, 13, MOTOR_BASIS - PARK_SPEED * MOTOR_FACTOR)
-                time.sleep(1)
+                time.sleep(3)
                 set_motor_speed(pca, 13, MOTOR_BASIS)
                 continue
 
