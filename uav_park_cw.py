@@ -358,7 +358,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 dir = 1 if left_min < right_min else -1
                 set_motor_speed(pca, 13, MOTOR_BASIS - PARK_SPEED * MOTOR_FACTOR)
                 set_servo_angle(pca, 12, SERVO_BASIS + PARK_STEER * SERVO_FACTOR * dir)
-                time.sleep(0.7)
+                time.sleep(0.5)
                 #set_motor_speed(pca, 13, MOTOR_BASIS)
                 #set_servo_angle(pca, 12, SERVO_BASIS)
                 continue
