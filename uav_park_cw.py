@@ -688,9 +688,10 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     if not Gparallel_aligned:
                         if second_line and not first_line:
                             num_lines += 1
-                            print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
+                            #print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
                             second_line_led(device)
                     else:
+                        #print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
                         if num_lines > 0:
                             num_lines = 0
                             if Glap_end:
@@ -933,7 +934,7 @@ def gyro_thread(shared_race_mode):
                     Gheading_estimate = mag_heading
                     Glap_end = abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10
                     Gparallel_aligned = abs(orientation(Gheading_estimate) - orientation(Gheading_start)) < 10
-                    print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} Gheading_estimate: {Gheading_estimate:.2f}")
+                    #print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} Gheading_estimate: {Gheading_estimate:.2f}")
                     time.sleep(0.1)
 
     except serial.SerialException as e:
