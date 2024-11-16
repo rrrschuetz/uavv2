@@ -1001,9 +1001,10 @@ def align_angular(pca, angle, shared_race_mode):
 
 def park(pca, sock, shared_race_mode):
     position = navigate(sock)
-    stop_distance = 1.3 if Gclock_wise and position['left_min_distance'] < position['right_min_distance'] or \
-         not Gclock_wise and position['left_min_distance'] > position['right_min_distance'] else 1.4
-    print(f"stop_distance: {stop_distance:.2f}")
+    dl = position['left_min_distance']
+    dr = position['right_min_distance']
+    stop_distance = 1.3 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4
+    print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
     align_angular(pca, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
     print(f"Car final heading: {orientation(Gyaw) - orientation(Gheading_start):.2f}")
@@ -1202,8 +1203,8 @@ def main():
         while shared_race_mode.value != 2:
             time.sleep(0.1)
 
-        set_motor_speed(pca, 13, MOTOR_BASIS)
-        set_servo_angle(pca, 12, SERVO_BASIS)
+        #set_motor_speed(pca, 13, MOTOR_BASIS)
+        #set_servo_angle(pca, 12, SERVO_BASIS)
         print(f"Time to start the parking procedure: {time.time() - start_time:.2f} seconds")
         parking_led(device)
 
