@@ -22,6 +22,7 @@ import torch
 from luma.led_matrix.device import max7219
 from luma.core.interface.serial import spi, noop
 from luma.core.render import canvas
+from torch.distributions.constraints import positive
 
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
@@ -566,7 +567,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         max_line_length = 0
         height, width = image.shape[:2]
 
-        lines = cv2.HoughLinesP(first_line_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=1)
+        lines = cv2.HoughLinesP(first_line_mask, 1, np.pi / 180, threshold=250, minLineLength=150, maxLineGap=1)
         if lines is not None:
             for line in lines:
                 x1, y1, x2, y2 = line[0]
@@ -592,7 +593,7 @@ def detect_and_label_blobs(image, num_detector_calls):
             #print(f"First line endpoints: ({x1}, {y1}), ({x2}, {y2})")
             #print(f"First line orientation: {line_orientation}")
 
-        lines = cv2.HoughLinesP(second_line_mask, 1, np.pi / 180, threshold=250, minLineLength=200, maxLineGap=1)
+        lines = cv2.HoughLinesP(second_line_mask, 1, np.pi / 180, threshold=250, minLineLength=150, maxLineGap=1)
         if lines is not None:
             for line in lines:
                 x1, y1, x2, y2 = line[0]
@@ -982,7 +983,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     print(f"Car aligned")
 
 
-def align_angular(pca, angle, shared_race_mode):
+def align_angular(pca, sock, angle, shared_race_mode):
     global Gyaw
 
     yaw_init = Gyaw
@@ -997,6 +998,10 @@ def align_angular(pca, angle, shared_race_mode):
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
+        position = navigate(sock)
+        print(f"Front distance: {position['front_distance']:.2f}")
+        if position['front_distance'] < 0.10: break
+
     #set_servo_angle(pca, 13, MOTOR_BASIS)
     print(f"Car final angle {Gyaw:.2f}")
 
@@ -1005,10 +1010,10 @@ def park(pca, sock, shared_race_mode):
     position = navigate(sock)
     dl = position['left_min_distance']
     dr = position['right_min_distance']
-    stop_distance = 1.3 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4
+    stop_distance = 1.35 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
-    align_angular(pca, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
+    align_angular(pca, sock, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
     print(f"Car final heading: {orientation(Gyaw) - orientation(Gheading_start):.2f}")
 
     while True:
