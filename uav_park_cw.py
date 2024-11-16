@@ -680,15 +680,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                 if shared_race_mode.value == 1:
                     #blank_led(device)
 
-                    if  Glap_end and num_lines >1:
-                        parking_lot_reached = False
-                        num_laps += 1
-                        print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
-                        print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
-                        print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
-                    else:  # Parking lot never in race start/end segment
-                        if parking_lot: parking_lot_reached = True
-
                     if first_line:
                         first_line_led(device)
 
@@ -699,9 +690,17 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                             second_line_led(device)
                     else:
                         if num_lines > 0:
-                            if parking_lot_reached and num_laps >= TOTAL_LAPS:
-                                shared_race_mode.value = 2
-                                print("Parking initiated")
+                            if Glap_end:
+                                num_laps += 1
+                                parking_lot_reached = False
+                                print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
+                                print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
+                                print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
+                            else:
+                                if parking_lot: parking_lot_reached = True
+                                if parking_lot_reached and num_laps >= TOTAL_LAPS:
+                                    shared_race_mode.value = 2
+                                    print("Parking initiated")
                             else: num_lines = 0
 
                 # Save the image with labeled contours
