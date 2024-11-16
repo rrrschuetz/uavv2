@@ -960,14 +960,6 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     yaw_delta =  orientation(Gheading_estimate) - orientation(Gheading_start)
     print(f"LID Gheading_estimate {orientation(Gheading_estimate):.2f} yaw_delta: {yaw_delta:.2f}")
 
-    # prealign to allow accurate front distance measurement
-    while shared_race_mode.value == 2 and abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta):
-        steer = PARK_STEER * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
-        steer = max(min(steer, 1), -1)
-        set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
-        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)  # Minimal speed for alignment
-        time.sleep(0.01)
-
     while shared_race_mode.value == 2 and \
            (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
         position = navigate(sock)
