@@ -680,7 +680,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                 if shared_race_mode.value == 1:
                     #blank_led(device)
 
-                    if Glap_end and num_lines > 1:
+                    if  Glap_end and num_lines >1:
                         parking_lot_reached = False
                         num_laps += 1
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
@@ -695,7 +695,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     if not Gparallel_aligned:
                         if second_line and not first_line:
                             num_lines += 1
-                            print(f"Line detected: {num_lines}")
+                            print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
                             second_line_led(device)
                     else:
                         if num_lines > 0:
@@ -1019,7 +1019,7 @@ def park(pca, sock, shared_race_mode):
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
-    set_servo_angle(pca, 11, 1.7)
+    #set_servo_angle(pca, 11, 1.7)
 
 
 def sensor_callback():
@@ -1215,8 +1215,8 @@ def main():
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
 
-        time.sleep(10)
-        set_servo_angle(pca, 11, 0.0)
+        #time.sleep(10)
+        #set_servo_angle(pca, 11, 0.0)
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
 
