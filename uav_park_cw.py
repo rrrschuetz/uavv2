@@ -701,7 +701,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                                 if parking_lot_reached and num_laps >= TOTAL_LAPS:
                                     shared_race_mode.value = 2
                                     print("Parking initiated")
-                            else: num_lines = 0
+                                else: num_lines = 0
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
