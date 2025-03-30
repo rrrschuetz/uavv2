@@ -828,11 +828,15 @@ def get_magnetometer_heading():
         try:
             mag_x, mag_y, mag_z = qmc.magnetic
             #mag_x, mag_y, mag_z = (0,0,0)
-            return mag_x, mag_y, mag_z
+            mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z,
+                math.radians(Gpitch), math.radians(Groll))
+            # Calculate the magnetometer heading
+            mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
+            return mag_heading
         except OSError as e:
             print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
             time.sleep(0.5)  # Wait before retrying
-    return 0,0,0
+    return 0
     #raise RuntimeError("Failed to read from magnetometer after multiple attempts")
 
 # Tilt compensation for magnetometer using pitch and roll
@@ -927,13 +931,7 @@ def gyro_thread(shared_race_mode):
 
                 else:
                     # Get the magnetometer heading (absolute heading)
-                    mag_x, mag_y, mag_z = get_magnetometer_heading()
-                    # Tilt compensate the magnetometer data
-                    mag_x_comp, mag_y_comp = tilt_compensate(mag_x, mag_y, mag_z,
-                        math.radians(Gpitch), math.radians(Groll))
-                    # Calculate the magnetometer heading
-                    mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-                    Gheading_estimate = mag_heading
+                    Gheading_estimate = get_magnetometer_heading()
                     Glap_end = abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10
                     Gparallel_aligned = abs(orientation(Gheading_estimate) - orientation(Gheading_start)) < 10
                     #print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} Gheading_estimate: {Gheading_estimate:.2f}")
