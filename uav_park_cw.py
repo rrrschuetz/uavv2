@@ -682,6 +682,8 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     #blank_led(device)
 
                     parking_lot_reached = parking_lot_reached or parking_lot
+                    if parking_lot_reached:
+                        #print("Parking lot reached.")
 
                     if first_line:
                         first_line_led(device)
@@ -689,10 +691,10 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     if not Gparallel_aligned:
                         if second_line and not first_line:
                             num_lines += 1
-                            #print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
+                            print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
                             second_line_led(device)
                     else:
-                        #print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
+                        print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
                         if num_lines > 0:
                             num_lines = 0
                             if Glap_end:
