@@ -46,7 +46,7 @@ ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
 
 SERVO_FACTOR = 0.4
-SERVO_BASIS =  0.4 # 0.55
+SERVO_BASIS =  1.55 # 0.55
 MOTOR_FACTOR = 0.3 # 0.3
 MOTOR_BASIS = 0.1
 
@@ -1198,6 +1198,10 @@ def main():
     get_clock_wise(sock)
     print(f"Clockwise: {Gclock_wise}")
     smiley_led(device)
+
+    print("Steering and power neutral.")
+    set_motor_speed(pca, 13, MOTOR_BASIS)
+    set_servo_angle(pca, 12, SERVO_BASIS)
 
     try:
         while (shared_race_mode.value != 3):

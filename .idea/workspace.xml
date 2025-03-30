@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="N/A">
-      <change beforePath="$PROJECT_DIR$/uav_park_cw.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_park_cw.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +31,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/rrrschuetz/uavv2.git&quot;,
-    &quot;accountId&quot;: &quot;e3e9be11-b9d9-4e09-8b09-c6f8de32244f&quot;
+    &quot;accountId&quot;: &quot;b3e158e1-bc69-49d1-bf52-83127aac922c&quot;
   }
 }</component>
   <component name="ProblemsViewState">
@@ -58,6 +58,7 @@
     &quot;Python.lidar_color_model.executor&quot;: &quot;Run&quot;,
     &quot;Python.plot_data_file.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;last_opened_file_path&quot;: &quot;/home/rrrschuetz/PycharmProjects/uavv2&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
@@ -122,7 +123,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-d7ad00fb9fc3-c546a90a8094-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.23726.102" />
+        <option value="bundled-python-sdk-14705d77f0bb-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.25659.43" />
       </set>
     </attachedChunks>
   </component>
