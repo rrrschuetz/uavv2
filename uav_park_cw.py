@@ -682,8 +682,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     #blank_led(device)
 
                     parking_lot_reached = parking_lot_reached or parking_lot
-                    if parking_lot_reached:
-                        #print("Parking lot reached.")
+                    #if parking_lot_reached: print("Parking lot reached.")
 
                     if first_line:
                         first_line_led(device)
