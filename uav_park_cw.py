@@ -822,6 +822,14 @@ def vector_2_degrees(x, y):
         angle += 360
     return angle
 
+# Tilt compensation for magnetometer using pitch and roll
+def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
+    mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
+    mag_y_comp = (mag_x * math.sin(roll) * math.sin(pitch)
+                  + mag_y * math.cos(roll)
+                  - mag_z * math.sin(roll) * math.cos(pitch))
+    return mag_x_comp, mag_y_comp
+
 def get_magnetometer_heading():
     retries = 10  # Set a retry limit
     for attempt in range(retries):
@@ -832,20 +840,12 @@ def get_magnetometer_heading():
                 math.radians(Gpitch), math.radians(Groll))
             # Calculate the magnetometer heading
             mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
+            printf(f"Magnetomeder reading: {mag_heading}")
             return mag_heading
         except OSError as e:
             print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
             time.sleep(0.5)  # Wait before retrying
     return 0
-    #raise RuntimeError("Failed to read from magnetometer after multiple attempts")
-
-# Tilt compensation for magnetometer using pitch and roll
-def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
-    mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
-    mag_y_comp = (mag_x * math.sin(roll) * math.sin(pitch)
-                  + mag_y * math.cos(roll)
-                  - mag_z * math.sin(roll) * math.cos(pitch))
-    return mag_x_comp, mag_y_comp
 
 def parse_wt61_data(data):
     if len(data) == 11 and data[0] == 0x55 and sum(data[0:-1]) & 0xFF == data[-1]:
