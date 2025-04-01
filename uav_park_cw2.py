@@ -684,29 +684,20 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     parking_lot_reached = parking_lot_reached or parking_lot
                     #if parking_lot_reached: print("Parking lot reached.")
 
-                    if first_line:
-                        first_line_led(device)
+                    if parking_lot_reached:
+                        parking_led(device)
 
-                    if not Gparallel_aligned:
-                        if second_line and not first_line:
-                            num_lines += 1
-                            #print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
-                            second_line_led(device)
+                    if Glap_end:
+                        num_laps += 1
+                        parking_lot_reached = False
+                        blank_led(device)
+                        print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
+                        print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
+                        print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                     else:
-                        #print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
-                        if num_lines > 0:
-                            num_lines = 0
-                            if Glap_end:
-                                num_laps += 1
-                                parking_lot_reached = False
-                                print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
-                                print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
-                                print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
-                            else:
-                                print(f"first_line {first_line}")
-                                if parking_lot_reached and num_laps >= TOTAL_LAPS:
-                                    shared_race_mode.value = 2
-                                    print("Parking initiated")
+                        if parking_lot_reached and num_laps >= TOTAL_LAPS:
+                            shared_race_mode.value = 2
+                            print("Parking initiated")
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
@@ -933,13 +924,7 @@ def gyro_thread(shared_race_mode):
                 else:
                     # Get the magnetometer heading (absolute heading)
                     Gheading_estimate = get_magnetometer_heading()
-                    yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
-                    Glap_end = yaw_diff < 10
-                    #Gparallel_aligned = abs(orientation(Gheading_estimate) - orientation(Gheading_start)) < 10
-                    Gparallel_aligned = (yaw_diff % 90) < 15 or (yaw_diff % 90) > 75
-                    print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} "\
-                          f"Gheading_estimate: {Gheading_estimate:.2f} yaw_diff: {yaw_diff:.2f} "\
-                          f"{yaw_diff % 90:.2f}")
+                    Glap_end = abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10
                     time.sleep(0.1)
 
     except serial.SerialException as e:
