@@ -840,7 +840,7 @@ def get_magnetometer_heading():
                 math.radians(Gpitch), math.radians(Groll))
             # Calculate the magnetometer heading
             mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-            print(f"Magnetometer reading: {mag_heading}")
+            #print(f"Magnetometer reading: {mag_heading}")
             return mag_heading
         except OSError as e:
             #print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
@@ -935,7 +935,7 @@ def gyro_thread(shared_race_mode):
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
                     Glap_end = yaw_diff < 10
                     #Gparallel_aligned = abs(orientation(Gheading_estimate) - orientation(Gheading_start)) < 10
-                    Gparallel_aligned = (abs(yaw_diff % 90)  < 10
+                    Gparallel_aligned = (yaw_diff + 10) % 90 < 10
                     print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} Gheading_estimate: {Gheading_estimate:.2f} yaw_diff: {yaw_diff:.2f}  {yaw_diff % 90:.2f} ")
                     time.sleep(0.1)
 
