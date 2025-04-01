@@ -935,7 +935,7 @@ def gyro_thread(shared_race_mode):
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
                     Glap_end = yaw_diff < 10
                     #Gparallel_aligned = abs(orientation(Gheading_estimate) - orientation(Gheading_start)) < 10
-                    Gparallel_aligned = (yaw_diff + 10) % 90 < 10
+                    Gparallel_aligned = (yaw_diff % 90) < 10 or (yawdiff % 90) > 80
                     print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} Gheading_estimate: {Gheading_estimate:.2f} yaw_diff: {yaw_diff:.2f}  {yaw_diff % 90:.2f} ")
                     time.sleep(0.1)
 
