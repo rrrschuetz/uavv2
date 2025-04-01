@@ -697,8 +697,8 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                         if num_lines > 0:
                             num_lines = 0
                             if Glap_end:
-                                num_laps += 1
                                 parking_lot_reached = False
+                                num_laps += 1
                                 print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                                 print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
                                 print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')

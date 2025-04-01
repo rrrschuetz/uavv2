@@ -259,6 +259,7 @@ def full_scan(sock):
 
 def navigate(sock, narrow=False):
     window_size = 10  # Adjust based on desired robustness
+    input_size = 200
     min_distance = 3.0
     min_angle = 0.0
     left_min_distance = 3.0
@@ -270,7 +271,7 @@ def navigate(sock, narrow=False):
     interpolated_distances, angles = full_scan(sock)
     # Smooth the data using a median filter to reduce noise and outliers
     valid_distances = median_filter(interpolated_distances[:LIDAR_LEN], size=window_size)
-    front_distance = np.mean(valid_distances[LIDAR_LEN // 2 - window_size // 2:LIDAR_LEN // 2 + window_size // 2])
+    front_distance = np.mean(valid_distances[LIDAR_LEN // 2 - input_size // 2:LIDAR_LEN // 2 + input_size // 2])
     # Calculate lidar orientation (clockwise ?)
     first_half_sum = np.sum(valid_distances[:LIDAR_LEN // 2])
     second_half_sum = np.sum(valid_distances[LIDAR_LEN // 2:])
@@ -610,7 +611,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
-            if area > 20000:  #5000 size of parking lot
+            if area > 3000:  #5000 size of parking lot
                 print(f"Magenta rectangle detected: {area} pixels")
                 magenta_rectangle = True
                 cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
@@ -654,7 +655,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
     num_detector_calls = 0
     num_laps = 0
-    num_lines = 0
     parking_lot_reached = False
 
     try:
@@ -686,16 +686,18 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                     if parking_lot_reached:
                         parking_led(device)
+                    else:
+                        blank_led(device)
 
-                    if Glap_end:
-                        num_laps += 1
+                    if Glap_end and parking_lot_reached:
                         parking_lot_reached = False
+                        num_laps += 1
                         blank_led(device)
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                         print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
                         print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                     else:
-                        if parking_lot_reached and num_laps >= TOTAL_LAPS:
+                        if parking_lot_reached and Gparallel_aligned and num_laps >= TOTAL_LAPS:
                             shared_race_mode.value = 2
                             print("Parking initiated")
 
@@ -924,7 +926,9 @@ def gyro_thread(shared_race_mode):
                 else:
                     # Get the magnetometer heading (absolute heading)
                     Gheading_estimate = get_magnetometer_heading()
-                    Glap_end = abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10
+                    yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
+                    Glap_end = yaw_diff < 10
+                    Gparallel_aligned = (yaw_diff % 90) < 5 or (yaw_diff % 90) > 85
                     time.sleep(0.1)
 
     except serial.SerialException as e:
@@ -1211,7 +1215,7 @@ def main():
         print("Starting the parking procedure")
         print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
         print(f"Heading start: {orientation(Gheading_start):.2f}")
-        park(pca, sock, shared_race_mode)
+        #park(pca, sock, shared_race_mode)
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
 
