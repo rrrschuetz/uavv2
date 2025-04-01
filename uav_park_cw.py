@@ -610,7 +610,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
-            if area > 10000:  #5000 size of parking lot
+            if area > 20000:  #5000 size of parking lot
                 print(f"Magenta rectangle detected: {area} pixels")
                 magenta_rectangle = True
                 cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
@@ -703,6 +703,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                                 print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
                                 print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                             else:
+                                print(f"first_line {first_line}")
                                 if parking_lot_reached and num_laps >= TOTAL_LAPS:
                                     shared_race_mode.value = 2
                                     print("Parking initiated")
@@ -935,8 +936,10 @@ def gyro_thread(shared_race_mode):
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
                     Glap_end = yaw_diff < 10
                     #Gparallel_aligned = abs(orientation(Gheading_estimate) - orientation(Gheading_start)) < 10
-                    Gparallel_aligned = (yaw_diff % 90) < 10 or (yawdiff % 90) > 80
-                    print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} Gheading_estimate: {Gheading_estimate:.2f} yaw_diff: {yaw_diff:.2f}  {yaw_diff % 90:.2f} ")
+                    Gparallel_aligned = (yaw_diff % 90) < 15 or (yaw_diff % 90) > 75
+                    print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} "\
+                          f"Gheading_estimate: {Gheading_estimate:.2f} yaw_diff: {yaw_diff:.2f} "\
+                          f"{yaw_diff % 90:.2f}")
                     time.sleep(0.1)
 
     except serial.SerialException as e:
