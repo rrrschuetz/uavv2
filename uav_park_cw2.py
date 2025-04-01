@@ -271,7 +271,7 @@ def navigate(sock, narrow=False):
     interpolated_distances, angles = full_scan(sock)
     # Smooth the data using a median filter to reduce noise and outliers
     valid_distances = median_filter(interpolated_distances[:LIDAR_LEN], size=window_size)
-    front_distance = np.mean(valid_distances[LIDAR_LEN // 2 - input_size // 2:LIDAR_LEN // 2 + input_size // 2])
+    front_distance = np.max(valid_distances[LIDAR_LEN // 2 - input_size // 2:LIDAR_LEN // 2 + input_size // 2])
     # Calculate lidar orientation (clockwise ?)
     first_half_sum = np.sum(valid_distances[:LIDAR_LEN // 2])
     second_half_sum = np.sum(valid_distances[LIDAR_LEN // 2:])
