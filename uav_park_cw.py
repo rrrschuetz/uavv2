@@ -690,10 +690,10 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                     if not Gparallel_aligned:
                         if second_line and not first_line:
                             num_lines += 1
-                            print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
+                            #print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
                             second_line_led(device)
                     else:
-                        print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
+                        #print(f"Line detected: {num_lines} parking_lot_reached: {parking_lot_reached}")
                         if num_lines > 0:
                             num_lines = 0
                             if Glap_end:
@@ -840,10 +840,10 @@ def get_magnetometer_heading():
                 math.radians(Gpitch), math.radians(Groll))
             # Calculate the magnetometer heading
             mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-            printf(f"Magnetomeder reading: {mag_heading}")
+            print(f"Magnetometer reading: {mag_heading}")
             return mag_heading
         except OSError as e:
-            print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
+            #print(f"Error reading from magnetometer: {e}. Retrying {attempt + 1}/{retries}")
             time.sleep(0.5)  # Wait before retrying
     return 0
 
@@ -933,8 +933,9 @@ def gyro_thread(shared_race_mode):
                     # Get the magnetometer heading (absolute heading)
                     Gheading_estimate = get_magnetometer_heading()
                     Glap_end = abs(yaw_difference(Gheading_estimate, Gheading_start)) < 10
-                    Gparallel_aligned = abs(orientation(Gheading_estimate) - orientation(Gheading_start)) < 10
-                    #print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} Gheading_estimate: {Gheading_estimate:.2f}")
+                    #Gparallel_aligned = abs(orientation(Gheading_estimate) - orientation(Gheading_start)) < 10
+                    Gparallel_aligned = (abs(yaw_difference(Gheading_estimate, Gheading_start)) % 90)  < 10
+                    print(f"Gparallel_aligned: {Gparallel_aligned} Glap_end: {Glap_end} Gheading_estimate: {Gheading_estimate:.2f}")
                     time.sleep(0.1)
 
     except serial.SerialException as e:
