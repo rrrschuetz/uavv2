@@ -259,7 +259,7 @@ def full_scan(sock):
 
 def navigate(sock, narrow=False):
     window_size = 10  # Adjust based on desired robustness
-    input_size = 200
+    input_size = 400
     min_distance = 3.0
     min_angle = 0.0
     left_min_distance = 3.0
@@ -609,17 +609,17 @@ def detect_and_label_blobs(image, num_detector_calls):
         magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
         magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
 
-        # Find and filter contours for magenta blobs
+        # Find and filter contours for magenta blobs only with outwards looking camera
         contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > 3000:  #5000 size of parking lot
                 left_end = min(box[:, 0])
                 right_end = max(box[:, 0])
-                if not Gclock_wise and 
-                print(f"Magenta rectangle detected: {area} pixels")
-                magenta_rectangle = True
-                cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
+                if (not Gclock_wise and left_end > COLOR_LEN /2) or (Gclock_wise and right_end > COLOR_LEN /2):
+                    print(f"Magenta rectangle detected: {area} pixels")
+                    magenta_rectangle = True
+                    cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
 
         # Add timestamp in the lower left corner
         timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
