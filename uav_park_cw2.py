@@ -484,6 +484,8 @@ def check_line_thickness(line, mask, min_thickness):
 
 
 def detect_and_label_blobs(image, num_detector_calls):
+    global Gclock_wise
+    
     first_line = False
     second_line = False
     line_orientation = ""
@@ -612,6 +614,9 @@ def detect_and_label_blobs(image, num_detector_calls):
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > 3000:  #5000 size of parking lot
+                left_end = min(box[:, 0])
+                right_end = max(box[:, 0])
+                if not Gclock_wise and 
                 print(f"Magenta rectangle detected: {area} pixels")
                 magenta_rectangle = True
                 cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
