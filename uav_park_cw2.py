@@ -259,7 +259,7 @@ def full_scan(sock):
 
 def navigate(sock, narrow=False):
     window_size = 10  # Adjust based on desired robustness
-    input_size = 400
+    input_size = 20
     min_distance = 3.0
     min_angle = 0.0
     left_min_distance = 3.0
@@ -614,6 +614,9 @@ def detect_and_label_blobs(image, num_detector_calls):
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > 3000:  #5000 size of parking lot
+                rect = cv2.minAreaRect(contour)
+                box = cv2.boxPoints(rect)
+                box = np.int32(box)
                 left_end = min(box[:, 0])
                 right_end = max(box[:, 0])
                 if (not Gclock_wise and left_end > COLOR_LEN /2) or (Gclock_wise and right_end > COLOR_LEN /2):
@@ -639,7 +642,7 @@ def detect_and_label_blobs(image, num_detector_calls):
 def camera_thread(pca, picam0, picam1, shared_race_mode, device):
     global Gcolor_string, Gx_coords
     global Gline_orientation
-    global Glap_end, Gparallel_aligned, Gheading_estimate # magnetic heading
+    global Glap_end, Gheading_estimate # magnetic heading
     global Gcamera_moving_avg_fps, Glidar_moving_avg_fps
 
     fps_list = deque(maxlen=10)
@@ -702,7 +705,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                         print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
                         print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                     else:
-                        if parking_lot_reached and Gparallel_aligned and num_laps >= TOTAL_LAPS:
+                        if parking_lot_reached and num_laps >= TOTAL_LAPS:
                             shared_race_mode.value = 2
                             print("Parking initiated")
 
@@ -885,7 +888,7 @@ def orientation(angle):
 def gyro_thread(shared_race_mode):
     global Gaccel_x, Gaccel_y, Gaccel_z
     global Gpitch, Groll, Gyaw
-    global Gheading_estimate, Gheading_start, Gparallel_aligned, Glap_end
+    global Gheading_estimate, Gheading_start, Glap_end
 
     buff = bytearray()  # Buffer to store incoming serial data
     packet_counter = 0  # Counter to skip packets
@@ -933,7 +936,6 @@ def gyro_thread(shared_race_mode):
                     Gheading_estimate = get_magnetometer_heading()
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
                     Glap_end = yaw_diff < 10
-                    Gparallel_aligned = (yaw_diff % 90) < 5 or (yaw_diff % 90) > 85
                     time.sleep(0.1)
 
     except serial.SerialException as e:
@@ -958,8 +960,9 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     yaw_delta =  orientation(Gheading_estimate) - orientation(Gheading_start)
     print(f"LID Gheading_estimate {orientation(Gheading_estimate):.2f} yaw_delta: {yaw_delta:.2f}")
 
+
     while shared_race_mode.value == 2 and \
-           (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
+        (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
         position = navigate(sock)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
@@ -969,9 +972,9 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         if -PARK_FIX_STEER < steer < 0: steer = -PARK_FIX_STEER
         if 0 < steer < PARK_FIX_STEER: steer = PARK_FIX_STEER
         steer = max(min(steer, 1), -1) * sign
-        #print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
-        #      f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw, yaw_init)):.2f}  \\"
-        #      f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
+        print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
+             f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw, yaw_init)):.2f}  \\"
+             f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
         set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.01)
@@ -1220,7 +1223,7 @@ def main():
         print("Starting the parking procedure")
         print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
         print(f"Heading start: {orientation(Gheading_start):.2f}")
-        #park(pca, sock, shared_race_mode)
+        park(pca, sock, shared_race_mode)
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
 
