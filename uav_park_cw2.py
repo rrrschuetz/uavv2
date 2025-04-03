@@ -613,7 +613,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
-            if area > 3000:  #5000 size of parking lot
+            if area > 1000:  #5000 size of parking lot
                 rect = cv2.minAreaRect(contour)
                 box = cv2.boxPoints(rect)
                 box = np.int32(box)
@@ -948,34 +948,15 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
     global Gyaw, Gheading_estimate, Gheading_start
 
     position = navigate(sock)
-    left_angle = position['left_min_angle']
-    right_angle = position['right_min_angle']
     front_distance = position['front_distance']
     distance2stop = front_distance - stop_distance
-    yaw_init = Gyaw
-    yaw_delta_r = right_angle if 90 >= right_angle > 0 else 90
-    yaw_delta_l = left_angle - 180 if 180 >= left_angle > 90 else -90
-    yaw_delta = yaw_delta_l if abs(yaw_delta_l) < abs(yaw_delta_r) else yaw_delta_r
-    print(f"LID left_angle: {left_angle:.2f} right_angle: {right_angle:.2f} yaw_delta: {yaw_delta:.2f}")
-    yaw_delta =  orientation(Gheading_estimate) - orientation(Gheading_start)
-    print(f"LID Gheading_estimate {orientation(Gheading_estimate):.2f} yaw_delta: {yaw_delta:.2f}")
-
-
-    while shared_race_mode.value == 2 and \
-        (abs(yaw_difference(Gyaw, yaw_init)) < abs(yaw_delta) or abs(distance2stop) > 0.05):
+    while shared_race_mode.value == 2 and  abs(distance2stop) > 0.05 :
         position = navigate(sock)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
         sign = - 1.0 if distance2stop < 0 else 1.0
         drive = PARK_SPEED * sign
-        steer = PARK_STEER * (yaw_delta - yaw_difference(Gyaw, yaw_init)) / 90
-        if -PARK_FIX_STEER < steer < 0: steer = -PARK_FIX_STEER
-        if 0 < steer < PARK_FIX_STEER: steer = PARK_FIX_STEER
-        steer = max(min(steer, 1), -1) * sign
-        print(f"Steer {steer:.2f} Drive {drive:.2f} \\"
-             f"Gyaw: {Gyaw:.2f} yaw_init: {yaw_init:2f} yaw_difference: {(yaw_difference(Gyaw, yaw_init)):.2f}  \\"
-             f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
-        set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
+        print(f"Steer {steer:.2f} front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.01)
 
