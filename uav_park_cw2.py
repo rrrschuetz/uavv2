@@ -47,7 +47,7 @@ DISTANCE_CORRECTION = -0.10
 
 SERVO_FACTOR = 0.4
 SERVO_BASIS =  1.55 # 0.55
-MOTOR_FACTOR = 0.4 # 0.3
+MOTOR_FACTOR = 0.45 # 0.3
 MOTOR_BASIS = 0.1
 
 RACE_SPEED = -0.35
@@ -956,7 +956,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         distance2stop = front_distance - stop_distance
         sign = - 1.0 if distance2stop < 0 else 1.0
         drive = PARK_SPEED * sign
-        print(f"Steer {steer:.2f} front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
+        print(f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f}")
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.01)
 
