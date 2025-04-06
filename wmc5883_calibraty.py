@@ -1,103 +1,75 @@
-import math
+#!/usr/bin/env python3
 import time
 import json
+import math
 
-# Annahme: qmc5883 ist bereits importiert und initialisiert.
-import qmc5883
-
-
-# Hier stehen auch deine existierenden Funktionen:
-def vector_2_degrees(x, y):
-    angle = math.degrees(math.atan2(y, x))
-    if angle < 0:
-        angle += 360
-    return angle
+# Hier musst du den Import und die Initialisierung deines QMC5883-Moduls anpassen.
+# Im Beispiel gehen wir davon aus, dass 'qmc5883.magnetic' ein Tupel (mag_x, mag_y, mag_z) liefert.
+import qmc5883  # Ersetze dies ggf. durch deinen konkreten Modulaufruf.
 
 
-def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
-    mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
-    mag_y_comp = (mag_x * math.sin(roll) * math.sin(pitch)
-                  + mag_y * math.cos(roll)
-                  - mag_z * math.sin(roll) * math.cos(pitch))
-    return mag_x_comp, mag_y_comp
-
-
-# Funktionen zum Laden der Kalibrierungsdaten und Anwenden der Korrektur
-def load_compass_calibration(filename="compass_calibration.json"):
+def calibrate_magnetometer():
     """
-    Lädt Kalibrierungsdaten aus der JSON-Datei.
-    Liefert:
-        offsets: Liste mit Offsets für X, Y, Z
-        scales: Liste mit Skalenfaktoren für X, Y, Z
+    Kalibriert den QMC5883, indem für jede Achse die minimalen und maximalen
+    Rohwerte erfasst werden. Mit STRG+C wird die Kalibrierung beendet und die
+    Daten (Offsets und Skalen) werden in einer JSON-Datei gespeichert.
     """
+    print("Starte Magnetometer-Kalibrierung.")
+    print("Drehe den Sensor in alle Richtungen.")
+    print("Drücke STRG+C, um die Kalibrierung zu beenden und die Daten zu speichern.\n")
+
+    # Initialisiere die Minimal- und Maximalwerte für X, Y, Z als None
+    mag_min = [None, None, None]
+    mag_max = [None, None, None]
+
     try:
-        with open(filename, "r") as f:
-            data = json.load(f)
-        offsets = data.get("offsets", [0, 0, 0])
-        scales = data.get("scales", [1, 1, 1])
-        return offsets, scales
-    except Exception as e:
-        print(f"Fehler beim Laden der Kalibrierungsdaten: {e}")
-        return [0, 0, 0], [1, 1, 1]
+        while True:
+            # Lese die Rohwerte vom Magnetometer
+            mag_x, mag_y, mag_z = qmc5883.magnetic  # Ersetze diesen Aufruf falls anders
+            # Aktualisiere die Min-/Max-Werte für jede Achse
+            for i, val in enumerate((mag_x, mag_y, mag_z)):
+                if mag_min[i] is None or val < mag_min[i]:
+                    mag_min[i] = val
+                if mag_max[i] is None or val > mag_max[i]:
+                    mag_max[i] = val
+            # Gib aktuelle Werte aus (diese Ausgabe aktualisiert sich in derselben Zeile)
+            print(f"Raw: X={mag_x}, Y={mag_y}, Z={mag_z} | Min: {mag_min} | Max: {mag_max}", end="\r")
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("\nKalibrierung beendet. Berechne Kalibrierungsdaten...")
 
-
-def calibrate_magnetometer_data(raw_data, offsets, scales):
-    """
-    Wendet die Kalibrierungsdaten auf die Rohwerte an.
-
-    Args:
-        raw_data: Tupel (x, y, z) mit Rohwerten.
-        offsets: Liste der Offsets.
-        scales: Liste der Skalenfaktoren.
-
-    Returns:
-        Tupel mit kalibrierten Werten.
-    """
-    calibrated = []
-    for raw, offset, scale in zip(raw_data, offsets, scales):
-        if scale != 0:
-            calibrated_val = (raw - offset) / scale
+    # Berechne Offset und Skalenfaktor für jede Achse:
+    # Offset = (min + max) / 2  -> Hard-Iron-Korrektur
+    # Skalenfaktor = (max - min) / 2  -> Normierung des Messbereichs
+    offsets = []
+    scales = []
+    for i in range(3):
+        if mag_min[i] is None or mag_max[i] is None:
+            offsets.append(0)
+            scales.append(1)
         else:
-            calibrated_val = raw - offset
-        calibrated.append(calibrated_val)
-    return tuple(calibrated)
+            offset = (mag_max[i] + mag_min[i]) / 2.0
+            scale = (mag_max[i] - mag_min[i]) / 2.0
+            offsets.append(offset)
+            scales.append(scale)
+
+    calibration_data = {
+        "offsets": offsets,
+        "scales": scales,
+        "min": mag_min,
+        "max": mag_max
+    }
+
+    filename = "compass_calibration.json"
+    try:
+        with open(filename, "w") as f:
+            json.dump(calibration_data, f, indent=4)
+        print(f"\nKalibrierungsdaten wurden in '{filename}' gespeichert.")
+        print(f"Offsets: {offsets}")
+        print(f"Skalierungsfaktoren: {scales}")
+    except Exception as e:
+        print(f"Fehler beim Speichern der Kalibrierungsdaten: {e}")
 
 
-# Beispiel: Integration in die Funktion zur Bestimmung des Magnetometer-Headings
-# Hier wird angenommen, dass Gpitch und Groll (in Grad) global definiert sind.
-Gpitch = 0.0  # Beispielwert, ersetze durch deine tatsächlichen Daten
-Groll = 0.0  # Beispielwert
-
-
-def get_magnetometer_heading():
-    retries = 10  # Anzahl der Wiederholungsversuche
-    # Kalibrierungsdaten laden
-    offsets, scales = load_compass_calibration("compass_calibration.json")
-
-    for attempt in range(retries):
-        try:
-            # Lese Rohwerte vom Magnetometer
-            raw_data = qmc5883.magnetic  # Liefert (mag_x, mag_y, mag_z)
-            # Wende die Kalibrierung an
-            mag_x, mag_y, mag_z = calibrate_magnetometer_data(raw_data, offsets, scales)
-            # Optional: Hier kannst du die kalibrierten Werte ausgeben
-            # print(f"Kalibrierte Rohwerte: X={mag_x}, Y={mag_y}, Z={mag_z}")
-
-            # Führe Neigungskompensation anhand von Pitch und Roll durch
-            mag_x_comp, mag_y_comp = tilt_compensate(
-                mag_x, mag_y, mag_z,
-                math.radians(Gpitch), math.radians(Groll)
-            )
-            # Berechne den Kompasswinkel aus den kompensierten Werten
-            mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-            return mag_heading
-        except OSError as e:
-            # Fehler beim Lesen – kurze Wartezeit und erneuter Versuch
-            time.sleep(0.5)
-    return 0
-
-
-# Beispielhafter Aufruf
 if __name__ == "__main__":
-    heading = get_magnetometer_heading()
-    print(f"Magnetometer Heading: {heading:.2f}°")
+    calibrate_magnetometer()
