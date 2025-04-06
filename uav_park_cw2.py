@@ -2,6 +2,7 @@ import socket
 import struct
 import serial
 import pygame
+import json
 import numpy as np
 from scipy.ndimage import median_filter
 from scipy.stats import trim_mean
