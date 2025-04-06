@@ -3,7 +3,7 @@ import time
 import json
 import math
 import board
-import qmcl as qmc5883
+import qmc5883l as qmc5883
 
 i2c = board.I2C()
 qmc = qmc5883.QMC5883L(i2c)

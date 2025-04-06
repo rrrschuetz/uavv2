@@ -18,7 +18,7 @@ import busio
 from gpiozero import Button
 import time, sys
 import math, statistics
-import qmcl as qmc5883
+import qmc5883l as qmc5883
 import torch
 from luma.led_matrix.device import max7219
 from luma.core.interface.serial import spi, noop
@@ -78,7 +78,7 @@ Gcamera_moving_avg_fps = 0.0
 shared_race_mode = Value('i', 0)
 
 i2c = board.I2C()
-qmc = qmc5883.QMC5883L(i2c)
+qmc = qmc5883.QMC5883L(1)
 qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
 
 
