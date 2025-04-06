@@ -3,10 +3,11 @@ import time
 import json
 import math
 
-# Hier musst du den Import und die Initialisierung deines QMC5883-Moduls anpassen.
-# Im Beispiel gehen wir davon aus, dass 'qmc5883.magnetic' ein Tupel (mag_x, mag_y, mag_z) liefert.
-import qmc5883  # Ersetze dies ggf. durch deinen konkreten Modulaufruf.
+import qmc5883l as qmc5883
 
+i2c = board.I2C()
+qmc = qmc5883.QMC5883L(i2c)
+qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
 
 def calibrate_magnetometer():
     """
