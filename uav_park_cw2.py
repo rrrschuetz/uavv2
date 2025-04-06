@@ -18,7 +18,7 @@ import busio
 from gpiozero import Button
 import time, sys
 import math, statistics
-import qmc5883l as qmc5883
+import qmcl as qmc5883
 import torch
 from luma.led_matrix.device import max7219
 from luma.core.interface.serial import spi, noop
@@ -643,7 +643,7 @@ def detect_and_label_blobs(image, num_detector_calls):
 def camera_thread(pca, picam0, picam1, shared_race_mode, device):
     global Gcolor_string, Gx_coords
     global Gline_orientation
-    global Glap_end, Gheading_estimate # magnetic heading
+    global Glap_end, Gheading_estimate # heading
     global Gcamera_moving_avg_fps, Glidar_moving_avg_fps
 
     fps_list = deque(maxlen=10)
