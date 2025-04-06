@@ -5,6 +5,32 @@ import math
 import board
 import qmc5883l as qmc5883
 
+import socket
+import struct
+import serial
+import pygame
+import json
+import numpy as np
+from scipy.ndimage import median_filter
+from scipy.stats import trim_mean
+import cv2
+from picamera2 import Picamera2
+from multiprocessing import Process, Value
+import threading
+from collections import deque
+from adafruit_pca9685 import PCA9685
+import board
+from board import SCL, SDA
+import busio
+from gpiozero import Button
+import time, sys
+import math, statistics
+import qmcl as qmc5883
+import torch
+from luma.led_matrix.device import max7219
+from luma.core.interface.serial import spi, noop
+from luma.core.render import canvas
+
 i2c = board.I2C()
 qmc = qmc5883.QMC5883L(i2c)
 qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
