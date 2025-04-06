@@ -78,7 +78,7 @@ Gcamera_moving_avg_fps = 0.0
 shared_race_mode = Value('i', 0)
 
 i2c = board.I2C()
-qmc = qmc5883.QMC5883L(1)
+qmc = qmc5883.QMC5883L(i2c)
 qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
 
 
@@ -890,7 +890,7 @@ def get_magnetometer_heading():
     for attempt in range(retries):
         try:
             # Lese Rohwerte vom Magnetometer
-            raw_data = qmc5883.magnetic  # Liefert (mag_x, mag_y, mag_z)
+            raw_data = qmc.magnetic  # Liefert (mag_x, mag_y, mag_z)
             # Wende die Kalibrierung an
             mag_x, mag_y, mag_z = calibrate_magnetometer_data(raw_data, offsets, scales)
             # Optional: Hier kannst du die kalibrierten Werte ausgeben

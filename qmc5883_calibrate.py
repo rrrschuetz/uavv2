@@ -26,7 +26,7 @@ def calibrate_magnetometer():
     try:
         while True:
             # Lese die Rohwerte vom Magnetometer
-            mag_x, mag_y, mag_z = qmc5883.magnetic  # Ersetze diesen Aufruf falls anders
+            mag_x, mag_y, mag_z = qmc.magnetic  # Ersetze diesen Aufruf falls anders
             # Aktualisiere die Min-/Max-Werte für jede Achse
             for i, val in enumerate((mag_x, mag_y, mag_z)):
                 if mag_min[i] is None or val < mag_min[i]:
