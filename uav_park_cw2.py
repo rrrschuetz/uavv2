@@ -53,8 +53,7 @@ MOTOR_BASIS = 0.1
 
 RACE_SPEED = -0.35
 PARK_SPEED = -0.35  # -0.55
-PARK_STEER = 2.5
-PARK_FIX_STEER = 0.5
+PARK_STEER = 2.5 
 PARK_ANGLE = 90
 
 # Global variables
@@ -1015,12 +1014,12 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
         yaw_diff = orientation(yaw_difference(Gheading_start, Gheading_estimate))
-        steer = 1 - abs(yaw_diff)/90
+        steer = abs(yaw_diff)/45
         if yaw_diff > 0: steer = - steer
-        steer = max(min(PARK_STEER * steer, 1), -1)
+        steer = max(min(steer, 1), -1)
         print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff}")
         print(f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
-        set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
+        set_servo_angle(pca, 12, PARK_STEER * steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.1)
 
@@ -1038,10 +1037,10 @@ def align_angular(pca, sock, angle, shared_race_mode):
         #print(f"Car orthogonal alignment: angle {yaw_difference(Gyaw, yaw_init):.2f}")
         steer = 1 - abs(yaw_difference(Gyaw, yaw_init)) / abs(angle)
         if angle > 0: steer = -steer
-        steer = max(min(PARK_STEER * steer, 1), -1)
+        steer = max(min(steer, 1), -1)
         drive = PARK_SPEED * max(dyn_steer, 0.5)
         #print(f"dyn_steer {dyn_steer:.2f} Steer {steer:.2f} Drive {drive:.2f}")
-        set_servo_angle(pca, 12, steer * SERVO_FACTOR + SERVO_BASIS)
+        set_servo_angle(pca, 12, PARK_STEER * steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
         position = navigate(sock)
