@@ -259,7 +259,7 @@ def full_scan(sock):
 
 def navigate(sock, narrow=True):
     window_size = 10  # Adjust based on desired robustness
-    input_size = 20 if narrow else 400
+    input_size = window_size if narrow else 400
     min_distance = 3.0
     min_angle = 0.0
     left_min_distance = 3.0
@@ -1009,18 +1009,19 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
 
     distance2stop = 1.0
     while shared_race_mode.value == 2 and distance2stop > 0:
-        position = navigate(sock, narrow = False)
-        front_distance = position['front_distance']
-        distance2stop = front_distance - stop_distance
         yaw_diff = orientation(yaw_difference(Gheading_start, Gheading_estimate))
-        steer = abs(yaw_diff)/45
+        steer = abs(yaw_diff) / 45
         if yaw_diff > 0: steer = - steer
         steer = max(min(steer, 1), -1)
-        #print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff}")
-        #print(f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
+        narrow = abs(yaw_diff) < 15
+        position = navigate(sock, narrow)
+        front_distance = position['front_distance']
+        distance2stop = front_distance - stop_distance
+        print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff}")
+        print(f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
         set_servo_angle(pca, 12, PARK_STEER * steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
-        time.sleep(0.1)
+        time.sleep(0.05)
 
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
@@ -1055,7 +1056,8 @@ def park(pca, sock, shared_race_mode):
     position = navigate(sock, narrow = False)
     dl = position['left_min_distance']
     dr = position['right_min_distance']
-    stop_distance = 1.4 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.35,1.4
+    stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.5 # 1.35,1.4
+    print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
     align_angular(pca, sock, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
