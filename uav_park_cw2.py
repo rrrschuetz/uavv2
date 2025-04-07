@@ -284,7 +284,7 @@ def navigate(sock, narrow=True):
             min_distance = trimmed_mean_distance
             min_index = i + window_size // 2  # Center of the window
             min_angle = angles[min_index]
-        if i > LIDAR_LEN // 2:
+        if i < LIDAR_LEN // 2:
             if 0 < trimmed_mean_distance < right_min_distance:
                 right_min_distance = trimmed_mean_distance
                 right_min_angle = angles[i + window_size // 2]
@@ -619,7 +619,7 @@ def detect_and_label_blobs(image, num_detector_calls):
                 left_end = min(box[:, 0])
                 right_end = max(box[:, 0])
                 if (not Gclock_wise and left_end > COLOR_LEN /2) or (Gclock_wise and right_end > COLOR_LEN /2):
-                    print(f"Magenta rectangle detected: {area} pixels")
+                    #print(f"Magenta rectangle detected: {area} pixels")
                     magenta_rectangle = True
                     cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
 
@@ -1004,26 +1004,27 @@ def gyro_thread(shared_race_mode):
         print("Stopping data read.")
 
 
-def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4):
+def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, min_yaw=15):
     global Gyaw, Gheading_estimate, Gheading_start
 
     distance2stop = 1.0
-    while shared_race_mode.value == 2 and distance2stop > 0:
+    yaw_diff = 90
+    while shared_race_mode.value == 2 and (abs(yaw_diff) > min_yaw or distance2stop > 0):
         yaw_diff = orientation(yaw_difference(Gheading_start, Gheading_estimate))
         steer = abs(yaw_diff) / 45
         if yaw_diff > 0: steer = - steer
         steer = max(min(steer, 1), -1)
-        narrow = abs(yaw_diff) < 15
+        narrow = abs(yaw_diff) < min_yaw
         position = navigate(sock, narrow)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
-        print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff}")
-        print(f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
+        #print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff}")
+        #print(f"front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
         set_servo_angle(pca, 12, PARK_STEER * steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
 
-    set_motor_speed(pca, 13, MOTOR_BASIS)
+    #set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car aligned")
 
@@ -1038,15 +1039,12 @@ def align_angular(pca, sock, angle, shared_race_mode):
         steer = 1 - abs(yaw_difference(Gyaw, yaw_init)) / abs(angle)
         if angle > 0: steer = -steer
         steer = max(min(steer, 1), -1)
-        #drive = PARK_SPEED * max(steer, 0.5)
-        drive = PARK_SPEED
-        #print(f"dyn_steer {dyn_steer:.2f} Steer {steer:.2f} Drive {drive:.2f}")
         set_servo_angle(pca, 12, PARK_STEER * steer * SERVO_FACTOR + SERVO_BASIS)
-        set_motor_speed(pca, 13, drive * MOTOR_FACTOR + MOTOR_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
         position = navigate(sock)
-        print(f"Front distance: {position['front_distance']:.2f}")
-        if position['front_distance'] < 0.10: break
+        #print(f"Front distance: {position['front_distance']:.2f}")
+        if position['front_distance'] < 0.05: break
 
     #set_servo_angle(pca, 13, MOTOR_BASIS)
     print(f"Car final angle {Gyaw:.2f}")
@@ -1056,19 +1054,19 @@ def park(pca, sock, shared_race_mode):
     position = navigate(sock, narrow = False)
     dl = position['left_min_distance']
     dr = position['right_min_distance']
-    stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.5 # 1.35,1.4
+    stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
     align_angular(pca, sock, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
     print(f"Car final heading: {orientation(Gyaw) - orientation(Gheading_start):.2f}")
 
-    #while True:
-    #    position = navigate(sock)
-    #    #print(f"Front distance: {position['front_distance']:.2f}")
-    #    if position['front_distance'] < 0.10: break
-    #    set_servo_angle(pca, 12, SERVO_BASIS)
-    #    set_motor_speed(pca, 13, PARK_SPEED * 0.5 * MOTOR_FACTOR + MOTOR_BASIS)
+    while True:
+        position = navigate(sock)
+        #print(f"Front distance: {position['front_distance']:.2f}")
+        if position['front_distance'] < 0.05: break
+        set_servo_angle(pca, 12, SERVO_BASIS)
+        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     set_motor_speed(pca, 13, MOTOR_BASIS)
