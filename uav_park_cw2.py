@@ -18,7 +18,6 @@ import busio
 from gpiozero import Button
 import time, sys
 import math, statistics
-import qmc5883l as qmc5883
 import torch
 from luma.led_matrix.device import max7219
 from luma.core.interface.serial import spi, noop
@@ -27,6 +26,12 @@ from torch.distributions.constraints import positive
 
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
+
+from smbus2 import SMBus
+# On a Raspberry Pi, I2C bus is typically 1 (/dev/i2c-1)
+i2c = SMBus(1)
+import qmc5883l as qmc5883
+qmc = qmc5883.QMC5883L(i2c)
 
 #########################################
 WRITE_CAMERA_IMAGE = False
