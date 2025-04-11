@@ -16,6 +16,7 @@ import board
 from board import SCL, SDA
 import busio
 from gpiozero import Button
+import qmc5883l as qmc5883
 import time, sys
 import math, statistics
 import torch
@@ -27,11 +28,7 @@ from torch.distributions.constraints import positive
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 
-from smbus2 import SMBus
-# On a Raspberry Pi, I2C bus is typically 1 (/dev/i2c-1)
-i2c = SMBus(1)
-import qmc5883l as qmc5883
-qmc = qmc5883.QMC5883L(i2c)
+
 
 #########################################
 WRITE_CAMERA_IMAGE = False
@@ -40,7 +37,7 @@ TOTAL_LAPS = 1
 #########################################
 
 # Configuration for WT61 Gyroscope
-SERIAL_PORT = "/dev/ttyAMA0"  # or "/dev/ttyS0" if you have mapped accordingly
+SERIAL_PORT = "/dev/ttyAMA10"  # or "/dev/ttyS0" if you have mapped accordingly
 BAUD_RATE = 115200
 TIMEOUT = 0.5  # Set a slightly longer timeout to ensure full packet reads
 
