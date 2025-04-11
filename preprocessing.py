@@ -32,6 +32,6 @@ def preprocess_input(lidar_raw, color_raw, scaler_lidar, device):
     return lidar_tensor, color_tensor
 
 def load_scaler(scaler_path):
-    with h5py.File('scaler_path', 'r') as f:
+    with h5py.File(scaler_path, 'r') as f:
         scaler_lidar = f['scaler'][:]
     return scaler_lidar
