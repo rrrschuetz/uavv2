@@ -7,8 +7,6 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import apply_reciprocal  # Import preprocessing function
-#from sklearn.preprocessing import StandardScaler
-#import cloudpickle
 
 # Load data without headers
 data_raw = pd.read_csv("./data_file.txt", header=None)
@@ -20,13 +18,6 @@ color_data = data_raw.iloc[:, 1622:2902].values  # Adjust based on actual data r
 
 # Apply reciprocal transformation to LIDAR data
 lidar_data = apply_reciprocal(lidar_data)
-# Standardize LIDAR data
-#scaler_lidar = StandardScaler().fit(lidar_data)
-#lidar_data = scaler_lidar.transform(lidar_data).astype(np.float32)
-
-# Save the scaler for later use in inference
-#with open('scaler.pkl', 'wb') as f:
-#    cloudpickle.dump(scaler_lidar, f)
 
 # Reshape data for model input
 lidar_data = lidar_data.reshape(lidar_data.shape[0], 1, lidar_data.shape[1])
@@ -37,12 +28,12 @@ train_lidar, test_lidar, train_color, test_color, y_train, y_test = train_test_s
     lidar_data, color_data, x_y, test_size=0.2, random_state=42
 )
 
-# Convert data to PyTorch tensors
+# Convert data to PyTorch tensors and ensure dtype is float32
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-train_lidar = torch.tensor(train_lidar).to(device)
-test_lidar = torch.tensor(test_lidar).to(device)
-train_color = torch.tensor(train_color).to(device)
-test_color = torch.tensor(test_color).to(device)
+train_lidar = torch.tensor(train_lidar, dtype=torch.float32).to(device)
+test_lidar = torch.tensor(test_lidar, dtype=torch.float32).to(device)
+train_color = torch.tensor(train_color, dtype=torch.float32).to(device)
+test_color = torch.tensor(test_color, dtype=torch.float32).to(device)
 y_train = torch.tensor(y_train, dtype=torch.float32).to(device)
 y_test = torch.tensor(y_test, dtype=torch.float32).to(device)
 
@@ -69,16 +60,23 @@ epochs_no_improve = 0
 for epoch in range(45):
     model.train()
     for batch_lidar, batch_color, batch_labels in train_loader:
+        batch_lidar = batch_lidar.float()  # Ensure dtype is float32
+        batch_color = batch_color.float()  # Ensure dtype is float32
+
         optimizer.zero_grad()
         output = model(batch_lidar, batch_color)
         loss = criterion(output, batch_labels)
         loss.backward()
         optimizer.step()
 
+    # Validation step
     model.eval()
     val_loss = 0
     with torch.no_grad():
         for batch_lidar, batch_color, batch_labels in test_loader:
+            batch_lidar = batch_lidar.float()  # Ensure dtype is float32
+            batch_color = batch_color.float()  # Ensure dtype is float32
+
             val_output = model(batch_lidar, batch_color)
             val_loss += criterion(val_output, batch_labels).item()
 
@@ -102,6 +100,9 @@ test_loss = 0
 accuracy = 0
 with torch.no_grad():
     for batch_lidar, batch_color, batch_labels in test_loader:
+        batch_lidar = batch_lidar.float()  # Ensure dtype is float32
+        batch_color = batch_color.float()  # Ensure dtype is float32
+
         test_output = model(batch_lidar, batch_color)
         test_loss += criterion(test_output, batch_labels).item()
         accuracy += ((test_output.argmax(dim=1) == batch_labels.argmax(dim=1)).float().mean()).item()

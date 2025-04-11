@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from sklearn.preprocessing import StandardScaler
 import cloudpickle
 
 def apply_reciprocal(data):
@@ -8,13 +7,15 @@ def apply_reciprocal(data):
     with np.errstate(divide='ignore'):
         return np.where(data != 0.0, 1.0 / data, 0.0)
 
-def preprocess_input(lidar_raw, color_raw, scaler_lidar, device):
+def preprocess_input(lidar_raw, color_raw, device):
     try:
         lidar_raw = lidar_raw.reshape(1, -1)
         # Apply reciprocal transformation to LIDAR data
         lidar_data = apply_reciprocal(lidar_raw)
-        # Standardize LIDAR data
-        lidar_data = scaler_lidar.transform(lidar_data).astype(np.float32)
+
+        # No scaling is applied to lidar_data, use it as-is (no StandardScaler)
+        lidar_data = lidar_data.astype(np.float32)  # Ensure it's float32
+
         # Reshape data for model input
         lidar_data = lidar_data.reshape(1, 1, lidar_data.shape[1])
 
@@ -30,8 +31,3 @@ def preprocess_input(lidar_raw, color_raw, scaler_lidar, device):
         color_tensor = None
 
     return lidar_tensor, color_tensor
-
-def load_scaler(scaler_path):
-    with open(scaler_path, 'rb') as f:
-        scaler_lidar = cloudpickle.load(f)
-    return scaler_lidar

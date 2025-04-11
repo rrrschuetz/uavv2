@@ -139,30 +139,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00464" summary="N/A">
-      <option name="closed" value="true" />
-      <created>1731710544744</created>
-      <option name="number" value="00464" />
-      <option name="presentableId" value="LOCAL-00464" />
-      <option name="project" value="LOCAL" />
-      <updated>1731710544744</updated>
-    </task>
-    <task id="LOCAL-00465" summary="N/A">
-      <option name="closed" value="true" />
-      <created>1731711760931</created>
-      <option name="number" value="00465" />
-      <option name="presentableId" value="LOCAL-00465" />
-      <option name="project" value="LOCAL" />
-      <updated>1731711760931</updated>
-    </task>
-    <task id="LOCAL-00466" summary="N/A">
-      <option name="closed" value="true" />
-      <created>1731713505595</created>
-      <option name="number" value="00466" />
-      <option name="presentableId" value="LOCAL-00466" />
-      <option name="project" value="LOCAL" />
-      <updated>1731713505595</updated>
-    </task>
     <task id="LOCAL-00467" summary="N/A">
       <option name="closed" value="true" />
       <created>1731714514696</created>
@@ -531,7 +507,31 @@
       <option name="project" value="LOCAL" />
       <updated>1744395632405</updated>
     </task>
-    <option name="localTasksCounter" value="513" />
+    <task id="LOCAL-00513" summary="magnetometer based lap counting">
+      <option name="closed" value="true" />
+      <created>1744399932045</created>
+      <option name="number" value="00513" />
+      <option name="presentableId" value="LOCAL-00513" />
+      <option name="project" value="LOCAL" />
+      <updated>1744399932045</updated>
+    </task>
+    <task id="LOCAL-00514" summary="magnetometer based lap counting">
+      <option name="closed" value="true" />
+      <created>1744400032135</created>
+      <option name="number" value="00514" />
+      <option name="presentableId" value="LOCAL-00514" />
+      <option name="project" value="LOCAL" />
+      <updated>1744400032136</updated>
+    </task>
+    <task id="LOCAL-00515" summary="magnetometer based lap counting">
+      <option name="closed" value="true" />
+      <created>1744400056398</created>
+      <option name="number" value="00515" />
+      <option name="presentableId" value="LOCAL-00515" />
+      <option name="project" value="LOCAL" />
+      <updated>1744400056398</updated>
+    </task>
+    <option name="localTasksCounter" value="516" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

@@ -26,8 +26,8 @@ from luma.core.render import canvas
 from torch.distributions.constraints import positive
 
 from lidar_color_model import CNNModel  # Import the model from model.py
-from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
-
+#from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
+from preprocessing_no_scaler import preprocess_input  # Import preprocessing functions
 
 
 #########################################
@@ -313,7 +313,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     global Glidar_moving_avg_fps
 
     model = None
-    scaler_lidar = None
+    #scaler_lidar = None
     device = None
 
     fps_list = deque(maxlen=10)
@@ -348,9 +348,9 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 model.load_state_dict(state_dict)
                 model.eval()
 
-            if scaler_lidar is None:
-                # Load the scaler for LIDAR data
-                scaler_lidar = load_scaler('./scaler.h5')
+            #if scaler_lidar is None:
+            #    # Load the scaler for LIDAR data
+            #    scaler_lidar = load_scaler('./scaler.pkl')
 
             # emergency break
             left_min = min(interpolated_distances[LIDAR_LEN // 8 * 3 : LIDAR_LEN // 2])
@@ -368,8 +368,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
             ld = interpolated_distances[:LIDAR_LEN]
             if Gclock_wise:
                 ld = ld[::-1]
+            #lidar_tensor, color_tensor = preprocess_input(
+            #    ld, Gx_coords, scaler_lidar, device)
             lidar_tensor, color_tensor = preprocess_input(
-                ld, Gx_coords, scaler_lidar, device)
+                ld, Gx_coords, device)
 
             if lidar_tensor is not None and color_tensor is not None:
                 # Perform inference
