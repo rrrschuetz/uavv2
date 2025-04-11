@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="magnetometer based lap counting">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="magnetometer">
       <change beforePath="$PROJECT_DIR$/uav_park_cw2.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_park_cw2.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -137,14 +136,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00469" summary="N/A">
-      <option name="closed" value="true" />
-      <created>1731746440692</created>
-      <option name="number" value="00469" />
-      <option name="presentableId" value="LOCAL-00469" />
-      <option name="project" value="LOCAL" />
-      <updated>1731746440692</updated>
     </task>
     <task id="LOCAL-00470" summary="N/A">
       <option name="closed" value="true" />
@@ -530,7 +521,15 @@
       <option name="project" value="LOCAL" />
       <updated>1744402149189</updated>
     </task>
-    <option name="localTasksCounter" value="518" />
+    <task id="LOCAL-00518" summary="magnetometer">
+      <option name="closed" value="true" />
+      <created>1744403299635</created>
+      <option name="number" value="00518" />
+      <option name="presentableId" value="LOCAL-00518" />
+      <option name="project" value="LOCAL" />
+      <updated>1744403299635</updated>
+    </task>
+    <option name="localTasksCounter" value="519" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -550,7 +549,8 @@
     <MESSAGE value="camera view angle correction when detecting clockwise&#10;lap counting added" />
     <MESSAGE value="N/A" />
     <MESSAGE value="magnetometer based lap counting" />
-    <option name="LAST_COMMIT_MESSAGE" value="magnetometer based lap counting" />
+    <MESSAGE value="magnetometer" />
+    <option name="LAST_COMMIT_MESSAGE" value="magnetometer" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
