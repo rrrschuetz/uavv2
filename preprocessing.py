@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from sklearn.preprocessing import StandardScaler
-import pickle
+import h5py
 
 def apply_reciprocal(data):
     """Applies reciprocal transformation to the data, handling zeros."""
@@ -32,7 +32,6 @@ def preprocess_input(lidar_raw, color_raw, scaler_lidar, device):
     return lidar_tensor, color_tensor
 
 def load_scaler(scaler_path):
-    """Loads the scaler used for standardizing LIDAR data."""
-    with open(scaler_path, 'rb') as f:
-        scaler_lidar = pickle.load(f)
+    with h5py.File('scaler_path, 'r') as f:
+        scaler_lidar = f['scaler'][:]
     return scaler_lidar

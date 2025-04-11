@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from lidar_color_model import CNNModel  # Import the model from model.py
 from preprocessing import apply_reciprocal  # Import preprocessing function
 from sklearn.preprocessing import StandardScaler
-import pickle
+import h5py
 
 # Load data without headers
 data_raw = pd.read_csv("./data_file.txt", header=None)
@@ -25,8 +25,8 @@ scaler_lidar = StandardScaler().fit(lidar_data)
 lidar_data = scaler_lidar.transform(lidar_data).astype(np.float32)
 
 # Save the scaler for later use in inference
-with open('./scaler.pkl', 'wb') as f:
-    pickle.dump(scaler_lidar, f)
+with h5py.File('scaler.h5', 'w') as f:
+    f.create_dataset('scaler', data=scaler_lidar)
 
 # Reshape data for model input
 lidar_data = lidar_data.reshape(lidar_data.shape[0], 1, lidar_data.shape[1])

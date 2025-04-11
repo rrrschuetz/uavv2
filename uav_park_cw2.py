@@ -350,7 +350,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
 
             if scaler_lidar is None:
                 # Load the scaler for LIDAR data
-                scaler_lidar = load_scaler('./scaler.pkl')
+                scaler_lidar = load_scaler('./scaler.h5')
 
             # emergency break
             left_min = min(interpolated_distances[LIDAR_LEN // 8 * 3 : LIDAR_LEN // 2])
