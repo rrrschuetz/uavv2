@@ -1009,7 +1009,7 @@ def gyro_thread(shared_race_mode):
         print("Stopping data read.")
 
 
-def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, min_yaw=5):
+def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, min_yaw=10):
     global Gheading_estimate, Gheading_start
 
     distance2stop = 1.0
@@ -1029,7 +1029,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, min_yaw=5):
         set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
 
-    #set_motor_speed(pca, 13, MOTOR_BASIS)
+    set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car aligned")
 
@@ -1065,6 +1065,10 @@ def park(pca, sock, shared_race_mode):
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
+    while True:
+        position = navigate(sock,True)
+        front_distance = position['front_distance']
+        print(f"front_distance {front_distance}")
     align_angular(pca, sock, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
     print(f"Car final heading: {orientation(Gheading_estimate) - orientation(Gheading_start):.2f}")
 
