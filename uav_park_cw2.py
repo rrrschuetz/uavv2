@@ -1023,13 +1023,13 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, min_yaw=10):
         position = navigate(sock, narrow)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
-        print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff}")
-        print(f"{narrow} front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
+        #print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff}")
+        #print(f"{narrow} front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
         set_servo_angle(pca, 12, PARK_STEER * steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
 
-    set_motor_speed(pca, 13, MOTOR_BASIS)
+    #set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car aligned")
 
@@ -1065,10 +1065,12 @@ def park(pca, sock, shared_race_mode):
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
-    while True:
-        position = navigate(sock,True)
-        front_distance = position['front_distance']
-        print(f"front_distance {front_distance}")
+
+    #while True:
+    #    position = navigate(sock,True)
+    #    front_distance = position['front_distance']
+    #    print(f"front_distance {front_distance}")
+
     align_angular(pca, sock, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
     print(f"Car final heading: {orientation(Gheading_estimate) - orientation(Gheading_start):.2f}")
 
