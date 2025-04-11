@@ -254,7 +254,7 @@ def full_scan(sock):
     # Save the processed data (angles and distances) to a file
     data = np.column_stack((interpolated_distances, full_angle_range))
     data = data[:LIDAR_LEN]
-    np.savetxt("radar.txt", data, header="Distances, Angles", comments='', fmt='%f')
+    #np.savetxt("radar.txt", data, header="Distances, Angles", comments='', fmt='%f')
 
     return interpolated_distances, full_angle_range
 
