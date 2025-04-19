@@ -2,146 +2,158 @@ import socket
 import struct
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 from collections import deque
 
-def connect_lidar(ip, port=8089):
+# Configuration
+IP_ADDRESS = '192.168.11.2'
+PORT = 8089
+LIDAR_LEN = 1620                  # Number of output angles (resolution)                  # Number of output angles (resolution)
+ANGLE_CORRECTION = 0.0           # Degrees to offset each angle (if needed)
+DISTANCE_CORRECTION = 0.0        # Meters to add to each distance (if needed)
+
+
+def connect_lidar(ip=IP_ADDRESS, port=PORT):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect((ip, port))
     return sock
 
-def receive_full_data(sock, expected_length):
+
+def receive_full_data(sock, expected_length, timeout=5):
+    sock.settimeout(timeout)
     data = b''
-    while len(data) < expected_length:
-        packet, _ = sock.recvfrom(expected_length - len(data))
-        data += packet
+    try:
+        while len(data) < expected_length:
+            packet, _ = sock.recvfrom(expected_length - len(data))
+            data += packet
+    except socket.timeout:
+        print(f"Timeout ({timeout}s) waiting for {expected_length} bytes.")
+        return None
     return data
+
 
 def get_health(sock):
     sock.send(b'\xA5\x52')
-    response = receive_full_data(sock, 10)
-    status, error_code = struct.unpack('<BH', response[3:6])
+    resp = receive_full_data(sock, 10)
+    if not resp:
+        raise RuntimeError("Failed to read health status")
+    status, error_code = struct.unpack('<BH', resp[3:6])
     return status, error_code
+
 
 def get_info(sock):
     sock.send(b'\xA5\x50')
-    response = receive_full_data(sock, 27)
-    model, firmware_minor, firmware_major, hardware, serialnum = struct.unpack('<BBBB16s', response[7:])
-    serialnum_str = serialnum[::-1].hex()
-    return model, firmware_minor, firmware_major, hardware, serialnum_str
+    resp = None
+    while resp is None:
+        resp = receive_full_data(sock, 27)
+        if resp is None:
+            sock.close()
+            sock = connect_lidar()
+            start_scan(sock)
+    model, fw_min, fw_maj, hw, sn = struct.unpack('<BBBB16s', resp[7:])
+    serial = sn[::-1].hex()
+    return sock, model, fw_min, fw_maj, hw, serial
+
 
 def start_scan(sock):
     sock.send(b'\xA5\x82\x05\x00\x00\x00\x00\x00\x22')
-    response = receive_full_data(sock, 10)
+    _ = receive_full_data(sock, 10)
+
 
 def stop_scan(sock):
     sock.send(b'\xA5\x25')
     time.sleep(0.1)
 
-def decode_dense_mode_packet(packet, old_start_angle=0.0):
-    if len(packet) != 84:
-        raise ValueError(f"Invalid packet length: {len(packet)}")
 
-    sync1 = (packet[0] & 0xF0) >> 4
-    sync2 = (packet[1] & 0xF0) >> 4
-    if sync1 != 0xA or sync2 != 0x5:
-        raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
+def decode_dense_mode_packet(packet):
+    if packet is None or len(packet) != 84:
+        raise ValueError(f"Unexpected packet length: {None if packet is None else len(packet)}")
+    # Sync and checksum
+    if ((packet[0] & 0xF0) >> 4 != 0xA) or ((packet[1] & 0xF0) >> 4 != 0x5):
+        raise ValueError("Invalid sync bytes")
+    chk_recv = ((packet[1] & 0x0F) << 4) | (packet[0] & 0x0F)
+    chk_calc = 0
+    for b in packet[2:]: chk_calc ^= b
+    if chk_recv != chk_calc:
+        raise ValueError("Checksum mismatch")
 
-    checksum_received = ((packet[1] & 0x0F) << 4) | (packet[0] & 0x0F)
-    checksum_computed = 0
-    for byte in packet[2:]:
-        checksum_computed ^= byte
-
-    if checksum_received != checksum_computed:
-        raise ValueError(f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
-
-    start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
-    start_angle = start_angle_q6 / 64.0
-    angle_diff = start_angle - old_start_angle
-    if angle_diff < 0: angle_diff += 360.0
-
-    distances = []
-    angles = []
-
+    start_q6 = packet[2] | ((packet[3] & 0x7F) << 8)
+    start_angle = start_q6 / 64.0
+    distances, angles = [], []
     for i in range(40):
-        index = 4 + i * 2
-        if index + 1 >= len(packet):
-            raise ValueError(f"Packet is too short for expected data: index {index}")
-        distance = (packet[index] | (packet[index+1] << 8))
-        distance /= 1000.0  # Convert from millimeters to meters
+        idx = 4 + 2*i
+        d = (packet[idx] | (packet[idx+1] << 8)) / 1000.0
+        a = (start_angle + i * 360/81/40.0 + ANGLE_CORRECTION) % 360
+        distances.append(d)
+        angles.append(a)
+    return np.array(distances), np.array(angles)
 
-        distances.append(distance)
-        angle = start_angle + i * angle_diff / 40.0
-        angles.append(angle)
 
-    return {
-        "start_angle": start_angle,
-        "distances": distances,
-        "angles": angles
-    }
+def full_scan_new(sock):
+    # Initialize high-res scan array
+    full_angles = np.linspace(0, 360, LIDAR_LEN*2, endpoint=False)
+    final_d = np.full_like(full_angles, np.inf, dtype=float)
+    # Continue until <100 gaps in 0°–180°
+    mask = (full_angles >= 0) & (full_angles <= 180)
+    while np.sum(np.isinf(final_d[mask])) > 100:
+        raw = receive_full_data(sock, 84)
+        dists, angs = decode_dense_mode_packet(raw)
+        # Sort by angle
+        order = np.argsort(angs)
+        angs, dists = angs[order], dists[order]
+        # Map into final_d
+        idxs = np.searchsorted(full_angles, angs)
+        valid = idxs < len(final_d)
+        final_d[idxs[valid]] = dists[valid]
+    final_d[final_d==0] = np.inf
+    # Interpolate
+    x = np.arange(len(final_d))
+    good = np.isfinite(final_d)
+    final_d = np.interp(x, x[good], final_d[good]) + DISTANCE_CORRECTION
+    # Return paired to user resolution
+    return final_d[:LIDAR_LEN], full_angles[:LIDAR_LEN]
 
-def initialize(sock):
-    pass
 
-def full_scan(sock):
-    old_start_angle = 0.0
-    all_distances = []
-    all_angles = []
+def save_scan_image(angles, distances, filename):
+    # Polar to Cartesian
+    rads = np.deg2rad(angles)
+    x = distances * np.cos(rads)
+    y = distances * np.sin(rads)
+    plt.figure(figsize=(6,6))
+    plt.scatter(x, y, s=1)
+    plt.axis('equal')
+    plt.xlabel('X (m)')
+    plt.ylabel('Y (m)')
+    plt.title('LIDAR Scan')
+    plt.savefig(filename, dpi=300)
+    plt.close()
 
-    while True:
-        data = receive_full_data(sock, 84)
-        decoded_data = decode_dense_mode_packet(data, old_start_angle)
-        start_angle = decoded_data['start_angle']
-        if start_angle < old_start_angle:
-            break
-        else:
-            old_start_angle = start_angle
-        all_distances.extend(decoded_data['distances'])
-        all_angles.extend(decoded_data['angles'])
-
-    return all_angles, all_distances
 
 def main():
-    IP_ADDRESS = '192.168.11.2'
-    PORT = 8089
-
-    sock = connect_lidar(IP_ADDRESS, PORT)
-
-    print('Initializing LIDAR...')
-    initialize(sock)
-    print('Initialization complete.')
-
-    print('Getting LIDAR info...')
-    info = get_info(sock)
-    print('LIDAR Info:', info)
-
-    print('Getting LIDAR health...')
-    health = get_health(sock)
-    print('LIDAR Health:', health)
-
-    print('Starting scan...')
+    sock = connect_lidar()
+    print('Initialization complete')
+    sock, model, fw_min, fw_maj, hw, serial = get_info(sock)
+    print(f"LIDAR Info - Model: {model}, FW: {fw_maj}.{fw_min}, HW: {hw}, SN: {serial}")
+    status, err = get_health(sock)
+    print(f"Health - Status: {status}, Error Code: {err}")
     start_scan(sock)
 
     fps_window = deque(maxlen=10)
-    total_frames = 0
-    total_time = 0.0
-
+    frame = 0
     try:
         while True:
-            start_time = time.time()
-            angles, distances = full_scan(sock)
-            end_time = time.time()
-
-            frame_time = end_time - start_time
-            total_time += frame_time
-            total_frames += 1
-            fps_window.append(1.0 / frame_time)
-
-            if len(fps_window) == fps_window.maxlen:
-                moving_avg_fps = sum(fps_window) / len(fps_window)
-                print(f'Moving Average FPS: {moving_avg_fps:.2f}')
-
+            t0 = time.time()
+            dists, angs = full_scan_new(sock)
+            fname = f"scan_{frame:03d}.jpg"
+            save_scan_image(angs, dists, fname)
+            print(f"Saved {fname}")
+            fps = 1.0 / (time.time() - t0)
+            fps_window.append(fps)
+            if len(fps_window)==fps_window.maxlen:
+                print(f"Avg FPS: {sum(fps_window)/len(fps_window):.2f}")
+            frame += 1
     except KeyboardInterrupt:
-        print('Stopping scan...')
+        print('Stopping...')
         stop_scan(sock)
         sock.close()
 
