@@ -49,7 +49,7 @@ ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
 
 SERVO_FACTOR = 0.4
-SERVO_BASIS =  1.55 # 0.55
+SERVO_BASIS =  0.5 #1.55 # 0.55
 MOTOR_FACTOR = 0.45 # 0.3
 MOTOR_BASIS = 0.1
 
@@ -1024,7 +1024,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, min_yaw=10):
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
         print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff}")
-        print(f"{narrow} front_distance: {front_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
+        print(f"{narrow} front_distance: {front_distance:.2f} stop_distance: {stop_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
         set_servo_angle(pca, 12, PARK_STEER * steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
@@ -1061,7 +1061,7 @@ def park(pca, sock, shared_race_mode):
     position = navigate(sock, narrow = False)
     dl = position['left_min_distance']
     dr = position['right_min_distance']
-    stop_distance = 1.6 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4
+    stop_distance = 1.4 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
