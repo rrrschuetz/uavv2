@@ -1061,7 +1061,7 @@ def park(pca, sock, shared_race_mode):
     position = navigate(sock, narrow = False)
     dl = position['left_min_distance']
     dr = position['right_min_distance']
-    stop_distance = 1.4 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
+    stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
