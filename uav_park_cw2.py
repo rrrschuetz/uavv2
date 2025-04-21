@@ -1016,7 +1016,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, min_yaw=10):
     yaw_diff = 90
     while shared_race_mode.value == 2 and (abs(yaw_diff) > min_yaw or distance2stop > 0):
         yaw_diff = orientation(yaw_difference(Gheading_start, Gheading_estimate))
-        steer = abs(yaw_diff) / 90 * 1.7
+        steer = abs(yaw_diff) / 90 * 1  #1.7
         if yaw_diff > 0: steer = - steer
         steer = max(min(steer, 1), -1)
         narrow = abs(yaw_diff) < min_yaw
