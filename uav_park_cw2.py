@@ -49,8 +49,6 @@ COLOR_LEN = 1280
 ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
 
-BETA = 0  #0.2
-
 SERVO_FACTOR = 0.4
 SERVO_BASIS =  0.5 #1.55 # 0.55
 MOTOR_FACTOR = 0.45 # 0.3
@@ -340,22 +338,31 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
             # print("LIDAR in autonomous mode")
             interpolated_distances, angles = full_scan(sock)
 
-            if model is None:
+            if model_cc is None:
                 # Load the trained model and the scaler
                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
                 # Initialize the model
-                model = CNNModel(LIDAR_LEN, COLOR_LEN).to(device)
+                model_cc = CNNModel(LIDAR_LEN, COLOR_LEN).to(device)
+                model_cw = CNNModel(LIDAR_LEN, COLOR_LEN).to(device)
 
                 # Load the trained weights into the model
-                state_dict = torch.load('./model.pth', map_location=torch.device('cpu'))
+                state_dict_cc = torch.load('./model_cc.pth', map_location=torch.device('cpu'))
+                state_dict_cw = torch.load('./model_cw.pth', map_location=torch.device('cpu'))
+
                 # Convert all weights to float32 if they are in float64
-                for key, value in state_dict.items():
+                for key, value in state_dict_cc.items():
                     if value.dtype == torch.float64:  # Check if the parameter is in double precision
-                        state_dict[key] = value.float()  # Convert to single precision (float32)
+                        state_dict_cc[key] = value.float()  # Convert to single precision (float32)
+                for key, value in state_dict_cw.items():
+                    if value.dtype == torch.float64:  # Check if the parameter is in double precision
+                        state_dict_cw[key] = value.float()  # Convert to single precision (float32)
+
                 # Load the state dict into the model
-                model.load_state_dict(state_dict)
-                model.eval()
+                model_cc.load_state_dict(state_dict_cc)
+                model_cw.load_state_dict(state_dict_cw)
+                model_cc.eval()
+                model_cw.eval()
 
             #if scaler_lidar is None:
             #    # Load the scaler for LIDAR data
@@ -375,8 +382,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 continue
 
             ld = interpolated_distances[:LIDAR_LEN]
-            if Gclock_wise:
-                ld = ld[::-1]
+            #if Gclock_wise:
+            #    ld = ld[::-1]
             #lidar_tensor, color_tensor = preprocess_input(
             #    ld, Gx_coords, scaler_lidar, device)
             lidar_tensor, color_tensor = preprocess_input(
@@ -385,7 +392,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
             if lidar_tensor is not None and color_tensor is not None:
                 # Perform inference
                 with torch.no_grad():
-                    output = model(lidar_tensor, color_tensor)
+                    if not Gclock_wise:
+                        output = model_cc(lidar_tensor, color_tensor)
+                    else:
+                        output = model_cw(lidar_tensor, color_tensor)
 
                 # Convert the model's output to steering commands or other UAV controls
                 steering_commands = output.cpu().numpy()
@@ -393,13 +403,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 X = steering_commands[0, 0]  # Extract GX (first element of the output)
                 #Y = steering_commands[0, 1]  # Extract GY (second element of the output)
                 Y = RACE_SPEED
-                if Gclock_wise:
-                    X = -X
+                #if Gclock_wise:
+                #    X = -X
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
-                    korr=math.sin(X+BETA)/math.sin(X)
-                    print("BETA, X, korr: ", BETA, X, korr)
-                    XX=max(-1,min(1,X*korr))
-                    set_servo_angle(pca, 12, XX * SERVO_FACTOR + SERVO_BASIS)
+                    set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
                     set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
                 else:
                     pass
@@ -694,9 +701,9 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                 Gx_coords, first_line, second_line, parking_lot, line_orientation, image \
                     = detect_and_label_blobs(cropped_image, num_detector_calls)
 
-                if Gclock_wise:
-                    Gx_coords = Gx_coords * -1.0
-                    Gx_coords = Gx_coords[::-1]
+                #if Gclock_wise:
+                #    Gx_coords = Gx_coords * -1.0
+                #    Gx_coords = Gx_coords[::-1]
                 Gcolor_string = ",".join(map(str, Gx_coords.astype(int)))
 
                 if first_line and Gline_orientation is None: Gline_orientation = line_orientation
