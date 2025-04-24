@@ -49,7 +49,9 @@ COLOR_LEN = 1280
 ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
 
-SERVO_FACTOR = 0.3
+BETA = 0.2
+
+SERVO_FACTOR = 0.4
 SERVO_BASIS =  0.5 #1.55 # 0.55
 MOTOR_FACTOR = 0.45 # 0.3
 MOTOR_BASIS = 0.1
@@ -394,7 +396,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 if Gclock_wise:
                     X = -X
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
-                    set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
+                    korr=math.sin(X+BETA)/math.sin(X)
+                    print("BETA, X, korr: ", BETA, X, korr)
+                    XX=max(-1,min(1,X*korr))
+                    set_servo_angle(pca, 12, XX * SERVO_FACTOR + SERVO_BASIS)
                     set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
                 else:
                     pass
