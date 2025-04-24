@@ -170,46 +170,50 @@ def stop_scan(sock):
 
 
 def decode_dense_mode_packet(packet):
-    if len(packet) != 84:
-        raise ValueError(f"Invalid packet length: {len(packet)}")
+    try:
+        if len(packet) != 84:
+            raise ValueError(f"Invalid packet length: {len(packet)}")
 
-    sync1 = (packet[0] & 0xF0) >> 4
-    sync2 = (packet[1] & 0xF0) >> 4
-    if sync1 != 0xA or sync2 != 0x5:
-        raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
+        sync1 = (packet[0] & 0xF0) >> 4
+        sync2 = (packet[1] & 0xF0) >> 4
+        if sync1 != 0xA or sync2 != 0x5:
+            raise ValueError(f"Invalid sync bytes: sync1={sync1:#04x}, sync2={sync2:#04x}")
 
-    checksum_received = ((packet[1] & 0x0F) << 4) | (packet[0] & 0x0F)
-    checksum_computed = 0
-    for byte in packet[2:]:
-        checksum_computed ^= byte
+        checksum_received = ((packet[1] & 0x0F) << 4) | (packet[0] & 0x0F)
+        checksum_computed = 0
+        for byte in packet[2:]:
+            checksum_computed ^= byte
 
-    if checksum_received != checksum_computed:
-        raise ValueError(
-            f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
+        if checksum_received != checksum_computed:
+            raise ValueError(
+                f"Checksum validation failed: received={checksum_received:#04x}, computed={checksum_computed:#04x}")
 
-    distances = []
-    angles = []
+        distances = []
+        angles = []
 
-    start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
-    start_angle = start_angle_q6 / 64.0
+        start_angle_q6 = (packet[2] | ((packet[3] & 0x7f) << 8))
+        start_angle = start_angle_q6 / 64.0
 
-    for i in range(40):
-        index = 4 + i * 2
-        if index + 1 >= len(packet):
-            raise ValueError(f"Packet is too short for expected data: index {index}")
-        distance = (packet[index] | (packet[index + 1] << 8))
-        distance /= 1000.0  # Convert from millimeters to meters
-        angle = start_angle + i * 360 / 81 / 40.0
+        for i in range(40):
+            index = 4 + i * 2
+            if index + 1 >= len(packet):
+                raise ValueError(f"Packet is too short for expected data: index {index}")
+            distance = (packet[index] | (packet[index + 1] << 8))
+            distance /= 1000.0  # Convert from millimeters to meters
+            angle = start_angle + i * 360 / 81 / 40.0
 
-        distances.append(distance)
-        angles.append(angle)
+            distances.append(distance)
+            angles.append(angle)
 
-    return {
-        "start_angle": start_angle,
-        "distances": distances,
-        "angles": angles
-    }
+        return {
+            "start_angle": start_angle,
+            "distances": distances,
+            "angles": angles
+        }
 
+    except Exception as e:
+        print(f"Error decoding lidar data: {e}")
+        return None
 
 def full_scan(sock):
     inf_threshold = 100  # Stop scanning when fewer than 100 np.inf values remain
@@ -223,6 +227,8 @@ def full_scan(sock):
         # Collect data in each iteration (single scan)
         data = receive_full_data(sock, 84)
         decoded_data = decode_dense_mode_packet(data)
+        if decoded_data == None: continue
+
         distances = np.array(decoded_data['distances'])
         angles = np.array(decoded_data['angles'])
 
