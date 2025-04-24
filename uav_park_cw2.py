@@ -642,7 +642,7 @@ def detect_and_label_blobs(image, num_detector_calls):
                 box = np.int32(box)
                 left_end = min(box[:, 0])
                 right_end = max(box[:, 0])
-                if (not Gclock_wise and left_end > COLOR_LEN /2) or (Gclock_wise and right_end > COLOR_LEN /2):
+                if (not Gclock_wise and left_end > COLOR_LEN /2) or (Gclock_wise and right_end < COLOR_LEN /2):
                     #print(f"Magenta rectangle detected: {area} pixels")
                     magenta_rectangle = True
                     cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
@@ -1081,7 +1081,13 @@ def park(pca, sock, shared_race_mode):
     position = navigate(sock, narrow = False)
     dl = position['left_min_distance']
     dr = position['right_min_distance']
-    stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
+
+    if not Gclock_wise:
+        stop_distance = 1.4 if dl > dr else 1.5
+    else:
+        stop_distance = 1.6 if dl > dr else 1.5
+    #stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
+
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     align_parallel(pca, sock, shared_race_mode, stop_distance)
