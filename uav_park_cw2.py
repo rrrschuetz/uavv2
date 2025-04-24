@@ -49,7 +49,7 @@ COLOR_LEN = 1280
 ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
 
-SERVO_FACTOR = 0.4
+SERVO_FACTOR = 0.5 #0.4
 SERVO_BASIS =  0.5 #1.55 # 0.55
 MOTOR_FACTOR = 0.45 # 0.3
 MOTOR_BASIS = 0.1
@@ -319,7 +319,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     global Gx_coords
     global Glidar_moving_avg_fps
 
-    model = None
+    model_cc = None
+    model_cw = None
     #scaler_lidar = None
     device = None
 
