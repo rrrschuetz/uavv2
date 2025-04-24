@@ -34,6 +34,7 @@ from preprocessing_no_scaler import preprocess_input  # Import preprocessing fun
 WRITE_CAMERA_IMAGE = False
 WRITE_CAMERA_MOVIE = False
 TOTAL_LAPS = 1
+PARKING_MODE = False
 #########################################
 
 # Configuration for WT61 Gyroscope
@@ -1274,18 +1275,19 @@ def main():
 
         #set_motor_speed(pca, 13, MOTOR_BASIS)
         #set_servo_angle(pca, 12, SERVO_BASIS)
-        print(f"Time to start the parking procedure: {time.time() - start_time:.2f} seconds")
-        parking_led(device)
-
-        print("Starting the parking procedure")
-        print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
-        print(f"Heading start: {orientation(Gheading_start):.2f}")
-        park(pca, sock, shared_race_mode)
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
 
-        #time.sleep(10)
-        #set_servo_angle(pca, 11, 0.0)
+        if PARKING_MODE:
+            print(f"Time to start the parking procedure: {time.time() - start_time:.2f} seconds")
+            parking_led(device)
+
+            print("Starting the parking procedure")
+            print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
+            print(f"Heading start: {orientation(Gheading_start):.2f}")
+            park(pca, sock, shared_race_mode)
+            print(f"Race & parking time: {time.time() - start_time:.2f} seconds")
+
         set_motor_speed(pca, 13, MOTOR_BASIS)
         set_servo_angle(pca, 12, SERVO_BASIS)
 
