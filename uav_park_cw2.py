@@ -33,7 +33,7 @@ from preprocessing_no_scaler import preprocess_input  # Import preprocessing fun
 #########################################
 WRITE_CAMERA_IMAGE = False
 WRITE_CAMERA_MOVIE = False
-TOTAL_LAPS = 1
+TOTAL_LAPS = 3
 PARKING_MODE = False
 #########################################
 
