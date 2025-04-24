@@ -55,6 +55,7 @@ MOTOR_FACTOR = 0.45 # 0.3
 MOTOR_BASIS = 0.1
 
 RACE_SPEED = -0.35
+EMERGENCY_SPEED = -0.45
 PARK_SPEED = -0.35  # -0.55
 PARK_STEER = 2.5 
 PARK_ANGLE = 90
@@ -375,10 +376,11 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
             if 0 < left_min < 0.07 or 0 < right_min < 0.07:
                 print("Emergency break")
                 dir = 1 if left_min < right_min else -1
-                set_motor_speed(pca, 13, MOTOR_BASIS - PARK_SPEED * MOTOR_FACTOR)
                 set_servo_angle(pca, 12, SERVO_BASIS + PARK_STEER * SERVO_FACTOR * dir)
                 time.sleep(0.5)
-                #set_motor_speed(pca, 13, MOTOR_BASIS)
+                set_motor_speed(pca, 13, MOTOR_BASIS - EMERGENCY_SPEED * MOTOR_FACTOR)
+                time.sleep(0.5)
+                set_motor_speed(pca, 13, MOTOR_BASIS)
                 #set_servo_angle(pca, 12, SERVO_BASIS)
                 continue
 
@@ -1085,7 +1087,7 @@ def park(pca, sock, shared_race_mode):
     if not Gclock_wise:
         stop_distance = 1.4 if dl > dr else 1.5
     else:
-        stop_distance = 1.6 if dl > dr else 1.5
+        stop_distance = 1.4 if dl > dr else 1.5
     #stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
 
     print(f"Front distance: {position['front_distance']:.2f}")
