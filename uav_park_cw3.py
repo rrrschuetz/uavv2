@@ -18,6 +18,7 @@ import busio
 from gpiozero import Button
 import qmc5883l as qmc5883
 import time, sys
+import usb.core, usb.util
 import math, statistics
 import torch
 from luma.led_matrix.device import max7219
@@ -1223,6 +1224,20 @@ def blank_led(device):
         0b00000000, 0b00000000, 0b00000000, 0b00000000
     ]
     led_out(device, pattern)
+
+
+def check_usb_device(self, vendor_id, product_id):
+    # Convert vendor_id and product_id from hexadecimal string to integer
+    vendor_id = int(vendor_id, 16)
+    product_id = int(product_id, 16)
+    # Find USB device with specific Vendor ID and Product ID
+    device = usb.core.find(idVendor=vendor_id, idProduct=product_id)
+    # Return True if device is found, else False
+    if device is not None:
+        self.get_logger().info("Device Found: ID {0}:{1}".format(vendor_id, product_id))
+        return True
+    else:
+        return False
 
 
 def main():
