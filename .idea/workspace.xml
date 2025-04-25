@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="magnetometer">
-      <change beforePath="$PROJECT_DIR$/uav_park_cw2.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_park_cw2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/uav_park_cw3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -135,38 +136,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00490" summary="magnetometer based lap counting">
-      <option name="closed" value="true" />
-      <created>1743543541838</created>
-      <option name="number" value="00490" />
-      <option name="presentableId" value="LOCAL-00490" />
-      <option name="project" value="LOCAL" />
-      <updated>1743543541838</updated>
-    </task>
-    <task id="LOCAL-00491" summary="magnetometer based lap counting">
-      <option name="closed" value="true" />
-      <created>1743544601083</created>
-      <option name="number" value="00491" />
-      <option name="presentableId" value="LOCAL-00491" />
-      <option name="project" value="LOCAL" />
-      <updated>1743544601083</updated>
-    </task>
-    <task id="LOCAL-00492" summary="magnetometer based lap counting">
-      <option name="closed" value="true" />
-      <created>1743549554764</created>
-      <option name="number" value="00492" />
-      <option name="presentableId" value="LOCAL-00492" />
-      <option name="project" value="LOCAL" />
-      <updated>1743549554764</updated>
-    </task>
-    <task id="LOCAL-00493" summary="magnetometer based lap counting">
-      <option name="closed" value="true" />
-      <created>1743549691756</created>
-      <option name="number" value="00493" />
-      <option name="presentableId" value="LOCAL-00493" />
-      <option name="project" value="LOCAL" />
-      <updated>1743549691756</updated>
     </task>
     <task id="LOCAL-00494" summary="magnetometer based lap counting">
       <option name="closed" value="true" />
@@ -528,7 +497,39 @@
       <option name="project" value="LOCAL" />
       <updated>1745530051418</updated>
     </task>
-    <option name="localTasksCounter" value="539" />
+    <task id="LOCAL-00539" summary="magnetometer">
+      <option name="closed" value="true" />
+      <created>1745536359024</created>
+      <option name="number" value="00539" />
+      <option name="presentableId" value="LOCAL-00539" />
+      <option name="project" value="LOCAL" />
+      <updated>1745536359024</updated>
+    </task>
+    <task id="LOCAL-00540" summary="magnetometer">
+      <option name="closed" value="true" />
+      <created>1745537310699</created>
+      <option name="number" value="00540" />
+      <option name="presentableId" value="LOCAL-00540" />
+      <option name="project" value="LOCAL" />
+      <updated>1745537310699</updated>
+    </task>
+    <task id="LOCAL-00541" summary="magnetometer">
+      <option name="closed" value="true" />
+      <created>1745538715660</created>
+      <option name="number" value="00541" />
+      <option name="presentableId" value="LOCAL-00541" />
+      <option name="project" value="LOCAL" />
+      <updated>1745538715660</updated>
+    </task>
+    <task id="LOCAL-00542" summary="magnetometer">
+      <option name="closed" value="true" />
+      <created>1745540386992</created>
+      <option name="number" value="00542" />
+      <option name="presentableId" value="LOCAL-00542" />
+      <option name="project" value="LOCAL" />
+      <updated>1745540386992</updated>
+    </task>
+    <option name="localTasksCounter" value="543" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -640,7 +641,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_cw2.py</url>
-          <line>1097</line>
+          <line>1103</line>
           <option name="timeStamp" value="23" />
         </line-breakpoint>
       </breakpoints>
