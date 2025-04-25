@@ -1254,7 +1254,7 @@ def main():
     global Gobstacles
 
     print("Starting the UAV program...")
-    Gobstacles = not check_usb_device()
+    Gobstacles = check_usb_device()
     if Gobstacles:
         print("Obstacle Race")
     else:
