@@ -1370,7 +1370,7 @@ def main():
             parking_led(device)
 
             print("Starting the parking procedure")
-            print(f">>> Car race end heading: {orientation(Gheading_estimate):.2f} {time.time()}")
+            print(f">>> Car race end heading: {Gheading_estimate:.2f} {time.time()}")
             print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
             print(f"Heading start: {orientation(Gheading_start):.2f}")
             park(pca, sock, shared_race_mode, device)
