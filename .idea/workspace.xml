@@ -134,14 +134,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00496" summary="magnetometer based lap counting">
-      <option name="closed" value="true" />
-      <created>1743865229284</created>
-      <option name="number" value="00496" />
-      <option name="presentableId" value="LOCAL-00496" />
-      <option name="project" value="LOCAL" />
-      <updated>1743865229284</updated>
-    </task>
     <task id="LOCAL-00497" summary="magnetometer based lap counting">
       <option name="closed" value="true" />
       <created>1743933454358</created>
@@ -526,7 +518,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745580655624</updated>
     </task>
-    <option name="localTasksCounter" value="545" />
+    <task id="LOCAL-00545" summary="magnetometer">
+      <option name="closed" value="true" />
+      <created>1745581125452</created>
+      <option name="number" value="00545" />
+      <option name="presentableId" value="LOCAL-00545" />
+      <option name="project" value="LOCAL" />
+      <updated>1745581125453</updated>
+    </task>
+    <option name="localTasksCounter" value="546" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

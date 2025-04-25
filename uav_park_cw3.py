@@ -1226,7 +1226,8 @@ def blank_led(device):
     led_out(device, pattern)
 
 
-def check_usb_device(self, vendor_id, product_id):
+# ID 2357:012e TP-Link 802.11ac NIC
+def check_usb_device(self, vendor_id="2357", product_id="012e"):
     # Convert vendor_id and product_id from hexadecimal string to integer
     vendor_id = int(vendor_id, 16)
     product_id = int(product_id, 16)
