@@ -739,17 +739,15 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                         else:
                             if parking_lot_reached and num_laps >= TOTAL_LAPS:
                                 shared_race_mode.value = 2
+                                print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
+                                print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
+                                print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                                 print("Parking initiated")
                     else:
-                        if Glap_end: num_laps += 1
+                        if Glap_end: num_laps += 1  # here is something missing !
                         if num_laps >= TOTAL_LAPS:
                             shared_race_mode.value = 2
                             print("Race completed.")
-
-                    if Glap_end:
-                        print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
-                        print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
-                        print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
