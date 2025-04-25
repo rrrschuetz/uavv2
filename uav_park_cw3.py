@@ -66,7 +66,7 @@ Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
 Gline_orientation = None
-
+Gobstacles = True
 Gpitch = 0.0
 Groll = 0.0
 Gyaw = 0.0
@@ -322,6 +322,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     global Glidar_string, Gcolor_string
     global Gx_coords
     global Glidar_moving_avg_fps
+    global Gobstacles
 
     model_cc = None
     model_cw = None
@@ -352,8 +353,12 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 model_cw = CNNModel(LIDAR_LEN, COLOR_LEN).to(device)
 
                 # Load the trained weights into the model
-                state_dict_cc = torch.load('./model_cc.pth', map_location=torch.device('cpu'))
-                state_dict_cw = torch.load('./model_cw.pth', map_location=torch.device('cpu'))
+                if Gobstacles:
+                    state_dict_cc = torch.load('./model_cc.pth', map_location=torch.device('cpu'))
+                    state_dict_cw = torch.load('./model_cw.pth', map_location=torch.device('cpu'))
+                else:
+                    state_dict_cc = torch.load('./model_cc_o.pth', map_location=torch.device('cpu'))
+                    state_dict_cw = torch.load('./model_cw_o.pth', map_location=torch.device('cpu'))
 
                 # Convert all weights to float32 if they are in float64
                 for key, value in state_dict_cc.items():
@@ -1227,7 +1232,7 @@ def blank_led(device):
 
 
 # ID 2357:012e TP-Link 802.11ac NIC
-def check_usb_device(self, vendor_id="2357", product_id="012e"):
+def check_usb_device(vendor_id="2357", product_id="012e"):
     # Convert vendor_id and product_id from hexadecimal string to integer
     vendor_id = int(vendor_id, 16)
     product_id = int(product_id, 16)
@@ -1235,7 +1240,7 @@ def check_usb_device(self, vendor_id="2357", product_id="012e"):
     device = usb.core.find(idVendor=vendor_id, idProduct=product_id)
     # Return True if device is found, else False
     if device is not None:
-        self.get_logger().info("Device Found: ID {0}:{1}".format(vendor_id, product_id))
+        print("Device Found: ID {0}:{1}".format(vendor_id, product_id))
         return True
     else:
         return False
@@ -1246,6 +1251,9 @@ def main():
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
     global shared_race_mode
     global Glidar_moving_avg_fps, Gcamera_moving_avg_fps
+    global Gobstacles
+
+    Gobstacles = not check_usb_device()
 
     print("Starting the UAV program...")
     # Create shared variables
