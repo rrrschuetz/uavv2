@@ -1096,7 +1096,7 @@ def align_angular(pca, sock, angle, shared_race_mode):
     print(f"Car final angle {Gheading_estimate:.2f}")
 
 
-def park(pca, sock, shared_race_mode):
+def park(pca, sock, shared_race_mode, device):
     global Gheading_estimate, Gheading_start
 
     position = navigate(sock, narrow=False)
@@ -1111,6 +1111,7 @@ def park(pca, sock, shared_race_mode):
 
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
+    first_line_led(device)
     align_parallel(pca, sock, shared_race_mode, stop_distance)
 
     # while True:
@@ -1118,6 +1119,7 @@ def park(pca, sock, shared_race_mode):
     #    front_distance = position['front_distance']
     #    print(f"front_distance {front_distance}")
 
+    second_line_led(device)
     align_angular(pca, sock, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
     print(f"Car final heading: {orientation(Gheading_estimate) - orientation(Gheading_start):.2f}")
 
@@ -1340,7 +1342,7 @@ def main():
             print("Starting the parking procedure")
             print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
             print(f"Heading start: {orientation(Gheading_start):.2f}")
-            park(pca, sock, shared_race_mode)
+            park(pca, sock, shared_race_mode, device)
             print(f"Race & parking time: {time.time() - start_time:.2f} seconds")
 
         set_motor_speed(pca, 13, MOTOR_BASIS)
