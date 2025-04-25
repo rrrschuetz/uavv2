@@ -269,7 +269,7 @@ def full_scan(sock):
 
 def navigate(sock, narrow=True):
     window_size = 10  # Adjust based on desired robustness
-    input_size = window_size if narrow else 400
+    input_size = window_size if narrow else 500
     min_distance = 3.0
     min_angle = 0.0
     left_min_distance = 3.0
@@ -381,7 +381,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                 set_motor_speed(pca, 13, MOTOR_BASIS - EMERGENCY_SPEED * MOTOR_FACTOR)
                 time.sleep(0.5)
                 set_motor_speed(pca, 13, MOTOR_BASIS)
-                #set_servo_angle(pca, 12, SERVO_BASIS)
+                set_servo_angle(pca, 12, SERVO_BASIS)
+                time.sleep(0.5)
                 continue
 
             ld = interpolated_distances[:LIDAR_LEN]
@@ -1087,7 +1088,7 @@ def park(pca, sock, shared_race_mode):
     if not Gclock_wise:
         stop_distance = 1.4 if dl > dr else 1.5
     else:
-        stop_distance = 1.4 if dl > dr else 1.5
+        stop_distance = 1.4 if dl > dr else 1.3
     #stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
 
     print(f"Front distance: {position['front_distance']:.2f}")
