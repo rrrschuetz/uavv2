@@ -1076,7 +1076,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, min_yaw=10):
         set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
         time.sleep(0.05)
 
-    # set_motor_speed(pca, 13, MOTOR_BASIS)
+    set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
     print(f"Car aligned")
 
@@ -1119,6 +1119,7 @@ def park(pca, sock, shared_race_mode, device):
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     first_line_led(device)
     align_parallel(pca, sock, shared_race_mode, stop_distance)
+    time.sleep(5)
 
     # while True:
     #    position = navigate(sock,True)
