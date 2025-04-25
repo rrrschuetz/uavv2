@@ -1103,7 +1103,7 @@ def align_angular(pca, sock, angle, shared_race_mode):
 def park(pca, sock, shared_race_mode, device):
     global Gheading_estimate, Gheading_start
 
-    print(f">>> Parking start heading: {Gheading_estimate})
+    print(f">>> Parking start heading: {Gheading_estimate}")
     position = navigate(sock, narrow=False)
     dl = position['left_min_distance']
     dr = position['right_min_distance']
@@ -1114,7 +1114,7 @@ def park(pca, sock, shared_race_mode, device):
         stop_distance = 1.4 if dl > dr else 1.3
     # stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
 
-    print(f">>> Car alignment heading: {Gheading_estimate})
+    print(f">>> Car alignment heading: {Gheading_estimate}")
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     first_line_led(device)
@@ -1126,7 +1126,7 @@ def park(pca, sock, shared_race_mode, device):
     #    front_distance = position['front_distance']
     #    print(f"front_distance {front_distance}")
 
-    print(f">>> Car turn heading: {Gheading_estimate})
+    print(f">>> Car turn heading: {Gheading_estimate}")
     second_line_led(device)
     align_angular(pca, sock, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
     print(f">>> Car final heading: {Gheading_estimate} {orientation(Gheading_estimate) - orientation(Gheading_start):.2f}")
