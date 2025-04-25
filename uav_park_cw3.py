@@ -1103,7 +1103,7 @@ def align_angular(pca, sock, angle, shared_race_mode):
 def park(pca, sock, shared_race_mode, device):
     global Gheading_estimate, Gheading_start
 
-    print(f">>> Parking start heading: {Gheading_estimate}")
+    print(f">>> Parking start heading: {Gheading_estimate} {time.time()}")
     position = navigate(sock, narrow=False)
     dl = position['left_min_distance']
     dr = position['right_min_distance']
@@ -1114,7 +1114,7 @@ def park(pca, sock, shared_race_mode, device):
         stop_distance = 1.4 if dl > dr else 1.3
     # stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
 
-    print(f">>> Car alignment heading: {Gheading_estimate}")
+    print(f">>> Car alignment heading: {Gheading_estimate} {time.time()}")
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     first_line_led(device)
@@ -1338,7 +1338,7 @@ def main():
 
     time.sleep(2)
     Gheading_start = Gheading_estimate
-    print(f"All processes have started: {Gheading_start:.2f} degrees")
+    print(f">>> All processes have started: {Gheading_start:.2f} degrees")
     print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
     print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
     get_clock_wise(sock)
@@ -1370,6 +1370,7 @@ def main():
             parking_led(device)
 
             print("Starting the parking procedure")
+            print(f">>> Car race end heading: {orientation(Gheading_estimate):.2f} {time.time()}")
             print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
             print(f"Heading start: {orientation(Gheading_start):.2f}")
             park(pca, sock, shared_race_mode, device)
