@@ -1253,9 +1253,13 @@ def main():
     global Glidar_moving_avg_fps, Gcamera_moving_avg_fps
     global Gobstacles
 
-    Gobstacles = not check_usb_device()
-
     print("Starting the UAV program...")
+    Gobstacles = not check_usb_device()
+    if Gobstacles:
+        print("Obstacle Race")
+    else:
+        print("Opening Race")
+
     # Create shared variables
     shared_GX = Value('d', 0.0)  # 'd' for double precision float
     shared_GY = Value('d', 0.0)
