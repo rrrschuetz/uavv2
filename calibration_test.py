@@ -111,33 +111,21 @@ def vector_2_degrees(x, y):
     hdg = math.atan2(y, x)
     return (math.degrees(hdg) + 360) % 360
 
-def get_magnetometer_heading(debug=False):
-    """
-    Liest aus, wendet Kalibrierung an, optional Tilt-Compensation,
-    und gibt Heading zurück. Bei debug=True werden alle Zwischenschritte gedruckt.
-    """
+def get_magnetometer_heading():
     offsets, scales = load_compass_calibration()
-    raw = qmc.magnetic
-    # 1) Offset & Scale
-    mx, my, mz = calibrate_magnetometer_data(raw, offsets, scales)
-    # 2) ggf. Tilt-Compensation nur bei signifikantem Tilt (>1°)
-    pitch_rad = math.radians(Gpitch)
-    roll_rad  = math.radians(Groll)
-    if abs(Gpitch) > 1 or abs(Groll) > 1:
-        xh, yh = tilt_compensate(mx, my, mz, pitch_rad, roll_rad)
-    else:
-        xh, yh = mx, my
+    raw_x, raw_y, raw_z = qmc.magnetic
+    # 1) Offset + Scale
+    mx = (raw_x - offsets[0]) * scales[0]
+    my = (raw_y - offsets[1]) * scales[1]
+    # 2) keine Tilt-Compensation
+    xh, yh = mx, my
+    # 3) Heading auspfiffen (je nach Achsenlage Variante wählen)
+    heading_raw = math.atan2(yh, xh)
+    heading_cal = (math.degrees(heading_raw) + 360) % 360
+    # 4) Nullpunkt-Offset (z.B. 12° Nordabweichung)
+    H0 = 12.0  # ersetzen durch deinen Messwert für echte Nord-Ausrichtung
+    return (heading_cal - H0 + 360) % 360
 
-    heading = vector_2_degrees(xh, yh)
-
-    if debug:
-        print(f"RAW:       {raw}")
-        print(f"CAL:       {(mx,my,mz)}")
-        print(f"Tilt rad:  (pitch={pitch_rad:.3f}, roll={roll_rad:.3f})")
-        print(f"XY proj.:  (Xh={xh:.3f}, Yh={yh:.3f})")
-        print(f"Heading:   {heading:.1f}°\n")
-
-    return heading
 
 if __name__ == "__main__":
     # Schritt 1: Kalibrierung durchführen (einmalig!)
