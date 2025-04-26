@@ -1272,10 +1272,11 @@ def main():
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
-    while True:
-        position = navigate(sock,True)
-        front_distance = position['front_distance']
-        print(f"front_distance {front_distance:.2f} Gheading_estimate {Gheading_estimate:.2f}")
+    # compass testing only
+    #while True:
+    #    position = navigate(sock,True)
+    #    front_distance = position['front_distance']
+    #    print(f"front_distance {front_distance:.2f} Gheading_estimate {Gheading_estimate:.2f}")
 
     try:
         while (shared_race_mode.value != 3):
