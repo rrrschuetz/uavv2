@@ -869,15 +869,12 @@ def load_compass_calibration(filename="compass_calibration.json"):
 
 def get_magnetometer_heading():
     offsets, scales = load_compass_calibration()
-    # Rohdaten lesen
     raw_x, raw_y, raw_z = qmc.magnetic
     # Hard-Iron + Soft-Iron
     x_corr = (raw_x - offsets[0]) * scales[0]
     y_corr = (raw_y - offsets[1]) * scales[1]
-    # Heading 0–360°
     heading = (math.degrees(math.atan2(y_corr, x_corr)) + 360) % 360
     return heading
-
 
 def parse_wt61_data(data):
     if len(data) == 11 and data[0] == 0x55 and sum(data[0:-1]) & 0xFF == data[-1]:
