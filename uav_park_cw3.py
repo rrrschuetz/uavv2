@@ -57,7 +57,7 @@ MOTOR_BASIS = 0.1
 RACE_SPEED = -0.35
 EMERGENCY_SPEED = -0.45
 PARK_SPEED = -0.3 #-0.35  # -0.55
-PARK_STEER = 2.5
+PARK_STEER = 1.0   #2.5
 
 # Global variables
 Gclock_wise = False
