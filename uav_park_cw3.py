@@ -1275,7 +1275,7 @@ def main():
     while True:
         position = navigate(sock,True)
         front_distance = position['front_distance']
-        print(f"front_distance {front_distance} Gheading_estimate {Gheading_estimate} GPitch {Gpitch} Groll {Groll}")
+        print(f"front_distance {front_distance:.2f} Gheading_estimate {Gheading_estimate:.2f}")
 
     try:
         while (shared_race_mode.value != 3):
