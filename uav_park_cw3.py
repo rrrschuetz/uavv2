@@ -51,14 +51,13 @@ DISTANCE_CORRECTION = -0.10
 
 SERVO_FACTOR = 0.5  # 0.4
 SERVO_BASIS = 0.5  # 1.55 # 0.55
-MOTOR_FACTOR = 0.45  # 0.3
+MOTOR_FACTOR = 0.4 #0.45  # 0.3
 MOTOR_BASIS = 0.1
 
 RACE_SPEED = -0.35
 EMERGENCY_SPEED = -0.45
-PARK_SPEED = -0.35  # -0.55
+PARK_SPEED = -0.3 #-0.35  # -0.55
 PARK_STEER = 2.5
-PARK_ANGLE = 90
 
 # Global variables
 Gclock_wise = False
@@ -976,17 +975,19 @@ def gyro_thread(shared_race_mode):
         print("Stopping data read.")
 
 
-def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, min_yaw=10):
+def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, max_yaw_diff=10):
     global Gheading_estimate, Gheading_start
 
     distance2stop = 1.0
     yaw_diff = 90
-    while shared_race_mode.value == 2 and (abs(yaw_diff) > min_yaw or distance2stop > 0):
+    while shared_race_mode.value == 2 and (abs(yaw_diff) > max_yaw_diff or distance2stop > 0):
         yaw_diff = orientation(yaw_difference(Gheading_start, Gheading_estimate))
-        steer = abs(yaw_diff) / 90 * 1  # 1.7
-        if yaw_diff > 0: steer = - steer
+        #steer = 0.3 # abs(yaw_diff) / 90
+        #if yaw_diff > 0: steer = - steer
+        steer = - (yaw_diff / max_yaw_diff)
         steer = max(min(steer, 1), -1)
-        narrow = abs(yaw_diff) < min_yaw
+        #narrow = abs(yaw_diff) < max_yaw_diff
+        narrow = False
         position = navigate(sock, narrow)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
@@ -1032,7 +1033,7 @@ def park(pca, sock, shared_race_mode, device):
     dr = position['right_min_distance']
 
     if not Gclock_wise:
-        stop_distance = 1.4 if dl > dr else 1.5
+        stop_distance = 1.6 if dl > dr else 1.5
     else:
         stop_distance = 1.4 if dl > dr else 1.3
     # stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
@@ -1041,8 +1042,8 @@ def park(pca, sock, shared_race_mode, device):
     print(f"Front distance: {position['front_distance']:.2f}")
     print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
     first_line_led(device)
-    align_parallel(pca, sock, shared_race_mode, stop_distance)
-    time.sleep(5)
+    align_parallel(pca, sock, shared_race_mode, stop_distance, max_yaw_diff=10)
+    #time.sleep(5)
 
     #while True:
     #    position = navigate(sock,True)
@@ -1051,7 +1052,8 @@ def park(pca, sock, shared_race_mode, device):
 
     print(f">>> Car turn heading: {Gheading_estimate}")
     second_line_led(device)
-    align_angular(pca, sock, PARK_ANGLE if Gclock_wise else - PARK_ANGLE, shared_race_mode)
+    angle = 90 - orientation(yaw_difference(Gheading_start, Gheading_estimate))
+    align_angular(pca, sock, angle if Gclock_wise else - angle, shared_race_mode)
     print(f">>> Car final heading: {Gheading_estimate} {orientation(Gheading_estimate) - orientation(Gheading_start):.2f}")
 
     while True:
@@ -1062,6 +1064,7 @@ def park(pca, sock, shared_race_mode, device):
         set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
+    blank_led(device)
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
     # set_servo_angle(pca, 11, 1.7)
