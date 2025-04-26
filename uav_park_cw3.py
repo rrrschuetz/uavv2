@@ -1121,10 +1121,10 @@ def park(pca, sock, shared_race_mode, device):
     align_parallel(pca, sock, shared_race_mode, stop_distance)
     time.sleep(5)
 
-    # while True:
+    #while True:
     #    position = navigate(sock,True)
     #    front_distance = position['front_distance']
-    #    print(f"front_distance {front_distance}")
+    #    print(f"front_distance {front_distance} Gheading_estimate {Gheading_estimate}")
 
     print(f">>> Car turn heading: {Gheading_estimate}")
     second_line_led(device)
@@ -1348,6 +1348,11 @@ def main():
     print("Steering and power neutral.")
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
+
+    while True:
+        position = navigate(sock,True)
+        front_distance = position['front_distance']
+        print(f"front_distance {front_distance} Gheading_estimate {Gheading_estimate}")
 
     try:
         while (shared_race_mode.value != 3):
