@@ -865,7 +865,6 @@ def vector_2_degrees(x, y):
         angle += 360
     return angle
 
-
 # Tilt compensation for magnetometer using pitch and roll
 def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
     mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
@@ -874,83 +873,69 @@ def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
                   - mag_z * math.sin(roll) * math.cos(pitch))
     return mag_x_comp, mag_y_comp
 
-
-# Funktionen zum Laden der Kalibrierungsdaten und Anwenden der Korrektur
+# Cache
 Gcalibration_cache = None
-
-
 def load_compass_calibration(filename="compass_calibration.json"):
-    """
-    Loads calibration data from the JSON file only once.
-    Subsequent calls return the cached values.
-
-    Returns:
-        offsets: List of offsets for X, Y, Z axes.
-        scales: List of scale factors for X, Y, Z axes.
-    """
     global Gcalibration_cache
     if Gcalibration_cache is None:
         try:
             with open(filename, "r") as f:
                 data = json.load(f)
-            offsets = data.get("offsets", [0, 0, 0])
-            scales = data.get("scales", [1, 1, 1])
+            offsets = data.get("offsets", [0,0,0])
+            scales  = data.get("scales",  [1,1,1])
             Gcalibration_cache = (offsets, scales)
-            print("Calibration data loaded from file.")
+            print("Calibration data loaded.")
         except Exception as e:
             print(f"Error loading calibration data: {e}")
-            Gcalibration_cache = ([0, 0, 0], [1, 1, 1])
+            Gcalibration_cache = ([0,0,0], [1,1,1])
     return Gcalibration_cache
-
 
 def calibrate_magnetometer_data(raw_data, offsets, scales):
     """
-    Wendet die Kalibrierungsdaten auf die Rohwerte an.
-
-    Args:
-        raw_data: Tupel (x, y, z) mit Rohwerten.
-        offsets: Liste der Offsets.
-        scales: Liste der Skalenfaktoren.
-
-    Returns:
-        Tupel mit kalibrierten Werten.
+    Wendet Hard-Iron-Offset und Soft-Iron-Skalierung an:
+      calibrated = (raw - offset) * scale
     """
     calibrated = []
     for raw, offset, scale in zip(raw_data, offsets, scales):
-        if scale != 0:
-            calibrated_val = (raw - offset) / scale
-        else:
-            calibrated_val = raw - offset
-        calibrated.append(calibrated_val)
+        calibrated.append((raw - offset) * scale)
     return tuple(calibrated)
 
+def tilt_compensate(x, y, z, pitch_rad, roll_rad):
+    """
+    Tilt-Compensation gemäß:
+      Xh = x*cos(pitch) + z*sin(pitch)
+      Yh = x*sin(roll)*sin(pitch) + y*cos(roll) - z*sin(roll)*cos(pitch)
+    """
+    Xh = x*math.cos(pitch_rad) + z*math.sin(pitch_rad)
+    Yh = x*math.sin(roll_rad)*math.sin(pitch_rad) + \
+         y*math.cos(roll_rad) - \
+         z*math.sin(roll_rad)*math.cos(pitch_rad)
+    return Xh, Yh
+
+def vector_2_degrees(x, y):
+    """Wandelt (X,Y) in einen 0–360° Heading um."""
+    heading = math.atan2(y, x)
+    heading_deg = (math.degrees(heading) + 360) % 360
+    return heading_deg
 
 def get_magnetometer_heading():
-    retries = 10  # Anzahl der Wiederholungsversuche
-    # Kalibrierungsdaten laden
-    offsets, scales = load_compass_calibration("compass_calibration.json")
-
-    for attempt in range(retries):
+    offsets, scales = load_compass_calibration()
+    retries = 10
+    for _ in range(retries):
         try:
-            # Lese Rohwerte vom Magnetometer
-            raw_data = qmc.magnetic  # Liefert (mag_x, mag_y, mag_z)
-            # Wende die Kalibrierung an
-            mag_x, mag_y, mag_z = calibrate_magnetometer_data(raw_data, offsets, scales)
-            # Optional: Hier kannst du die kalibrierten Werte ausgeben
-            # print(f"Kalibrierte Rohwerte: X={mag_x}, Y={mag_y}, Z={mag_z}")
-
-            # Führe Neigungskompensation anhand von Pitch und Roll durch
-            mag_x_comp, mag_y_comp = tilt_compensate(
-                mag_x, mag_y, mag_z,
-                math.radians(Gpitch), math.radians(Groll)
-            )
-            # Berechne den Kompasswinkel aus den kompensierten Werten
-            mag_heading = vector_2_degrees(mag_x_comp, mag_y_comp)
-            return mag_heading
-        except OSError as e:
-            # Fehler beim Lesen – kurze Wartezeit und erneuter Versuch
+            raw = qmc.magnetic  # (x_raw, y_raw, z_raw)
+            # 1) Offset + Scale (hier multiplizieren!)
+            mag_x, mag_y, mag_z = calibrate_magnetometer_data(raw, offsets, scales)
+            # 2) Tilt-Compensation
+            pitch_rad = math.radians(Gpitch)
+            roll_rad  = math.radians(Groll)
+            mag_xc, mag_yc = tilt_compensate(mag_x, mag_y, mag_z, pitch_rad, roll_rad)
+            # 3) Heading berechnen
+            return vector_2_degrees(mag_xc, mag_yc)
+        except OSError:
             time.sleep(0.5)
-    return 0
+    # Fallback
+    return None
 
 
 def parse_wt61_data(data):
