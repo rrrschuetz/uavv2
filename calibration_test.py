@@ -114,16 +114,11 @@ def vector_2_degrees(x, y):
 def get_magnetometer_heading():
     offsets, scales = load_compass_calibration()
     raw_x, raw_y, raw_z = qmc.magnetic
-    # 1) Offset + Scale
-    mx = (raw_x - offsets[0]) * scales[0]
-    my = (raw_y - offsets[1]) * scales[1]
-    # 2) keine Tilt-Compensation
-    xh, yh = mx, my
-    # 3) Heading auspfiffen (je nach Achsenlage Variante wählen)
-    heading_raw = math.atan2(yh, xh)
+    xh = (raw_x - offsets[0]) * scales[0]
+    yh = (raw_y - offsets[1]) * scales[1]
+    heading_raw = math.atan2(-yh, -xh)
     heading_cal = (math.degrees(heading_raw) + 360) % 360
-    # 4) Nullpunkt-Offset (z.B. 12° Nordabweichung)
-    H0 = 12.0  # ersetzen durch deinen Messwert für echte Nord-Ausrichtung
+    H0 = 267.9
     return (heading_cal - H0 + 360) % 360
 
 
@@ -133,7 +128,8 @@ if __name__ == "__main__":
 
     # Schritt 2: Endlosschleife mit Heading und Debug-Ausgabe
     while True:
-        hdg = get_magnetometer_heading(debug=True)
+        hdg = get_magnetometer_heading()
+        print(f"Heading {hdg}")
         # hier ggf. Deklination hinzufügen:
         # hdg_true = (hdg - 2.0) % 360
         time.sleep(0.5)

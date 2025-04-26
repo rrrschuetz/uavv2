@@ -858,84 +858,25 @@ def yaw_difference(yaw1, yaw2):
     return diff
 
 
-# Get magnetometer heading
-def vector_2_degrees(x, y):
-    angle = math.degrees(math.atan2(y, x))
-    if angle < 0:
-        angle += 360
-    return angle
-
-# Tilt compensation for magnetometer using pitch and roll
-def tilt_compensate(mag_x, mag_y, mag_z, pitch, roll):
-    mag_x_comp = mag_x * math.cos(pitch) + mag_z * math.sin(pitch)
-    mag_y_comp = (mag_x * math.sin(roll) * math.sin(pitch)
-                  + mag_y * math.cos(roll)
-                  - mag_z * math.sin(roll) * math.cos(pitch))
-    return mag_x_comp, mag_y_comp
-
-# Cache
 Gcalibration_cache = None
 def load_compass_calibration(filename="compass_calibration.json"):
     global Gcalibration_cache
     if Gcalibration_cache is None:
-        try:
-            with open(filename, "r") as f:
-                data = json.load(f)
-            offsets = data.get("offsets", [0,0,0])
-            scales  = data.get("scales",  [1,1,1])
-            Gcalibration_cache = (offsets, scales)
-            print("Calibration data loaded.")
-        except Exception as e:
-            print(f"Error loading calibration data: {e}")
-            Gcalibration_cache = ([0,0,0], [1,1,1])
+        with open(filename, "r") as f:
+            d = json.load(f)
+        Gcalibration_cache = (d["offsets"], d["scales"])
     return Gcalibration_cache
-
-def calibrate_magnetometer_data(raw_data, offsets, scales):
-    """
-    Wendet Hard-Iron-Offset und Soft-Iron-Skalierung an:
-      calibrated = (raw - offset) * scale
-    """
-    calibrated = []
-    for raw, offset, scale in zip(raw_data, offsets, scales):
-        calibrated.append((raw - offset) * scale)
-    return tuple(calibrated)
-
-def tilt_compensate(x, y, z, pitch_rad, roll_rad):
-    """
-    Tilt-Compensation gemäß:
-      Xh = x*cos(pitch) + z*sin(pitch)
-      Yh = x*sin(roll)*sin(pitch) + y*cos(roll) - z*sin(roll)*cos(pitch)
-    """
-    Xh = x*math.cos(pitch_rad) + z*math.sin(pitch_rad)
-    Yh = x*math.sin(roll_rad)*math.sin(pitch_rad) + \
-         y*math.cos(roll_rad) - \
-         z*math.sin(roll_rad)*math.cos(pitch_rad)
-    return Xh, Yh
-
-def vector_2_degrees(x, y):
-    """Wandelt (X,Y) in einen 0–360° Heading um."""
-    heading = math.atan2(y, x)
-    heading_deg = (math.degrees(heading) + 360) % 360
-    return heading_deg
 
 def get_magnetometer_heading():
     offsets, scales = load_compass_calibration()
-    retries = 10
-    for _ in range(retries):
-        try:
-            raw = qmc.magnetic  # (x_raw, y_raw, z_raw)
-            # 1) Offset + Scale (hier multiplizieren!)
-            mag_x, mag_y, mag_z = calibrate_magnetometer_data(raw, offsets, scales)
-            # 2) Tilt-Compensation
-            pitch_rad = math.radians(Gpitch)
-            roll_rad  = math.radians(Groll)
-            mag_xc, mag_yc = tilt_compensate(mag_x, mag_y, mag_z, pitch_rad, roll_rad)
-            # 3) Heading berechnen
-            return vector_2_degrees(mag_xc, mag_yc)
-        except OSError:
-            time.sleep(0.5)
-    # Fallback
-    return None
+    # Rohdaten lesen
+    raw_x, raw_y, raw_z = qmc.magnetic
+    # Hard-Iron + Soft-Iron
+    x_corr = (raw_x - offsets[0]) * scales[0]
+    y_corr = (raw_y - offsets[1]) * scales[1]
+    # Heading 0–360°
+    heading = (math.degrees(math.atan2(y_corr, x_corr)) + 360) % 360
+    return heading
 
 
 def parse_wt61_data(data):
@@ -1028,7 +969,7 @@ def gyro_thread(shared_race_mode):
                     # Get the magnetometer heading (absolute heading)
                     Gheading_estimate = get_magnetometer_heading()
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
-                    print(f"... Gheading_estimate: {Gheading_estimate:.2f}")
+                    #print(f"... Gheading_estimate: {Gheading_estimate:.2f}")
                     Glap_end = yaw_diff < 10
                     time.sleep(0.1)
 
