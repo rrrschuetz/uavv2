@@ -998,15 +998,15 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, max_yaw_diff=
     print(f"Car aligned")
 
 
-def align_orthogonal(pca, sock, angle, shared_race_mode, stop_distance = 0.05, max_yaw_diff = 5):
+def align_orthogonal(pca, sock, shared_race_mode, stop_distance = 0.05, max_yaw_diff = 5):
     global Gheading_estimate, Gheading_start, Gclock_wise
 
     distance2stop = 1.0
     yaw_diff = 90
     while shared_race_mode.value == 2 and abs(yaw_diff) > max_yaw_diff or distance2stop >0:
-        yaw_diff = orientation(yaw_difference(Gheading_start, Gheading_estimate))
+        yaw_diff = 90 - orientation(yaw_difference(Gheading_start, Gheading_estimate))
         steer = - (yaw_diff / max_yaw_diff) / 2
-        if Gclockwise: steer = -steer
+        if Gclock_wise: steer = -steer
         steer = max(min(steer, 1), -1)
         position = navigate(sock, narrow=True)
         front_distance = position['front_distance']
