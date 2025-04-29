@@ -723,35 +723,28 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                 if shared_race_mode.value == 1:
 
-                    parking_lot_reached = parking_lot_reached or parking_lot
-                    if parking_lot_reached:
-                        parking_led(device)
-                        if Glap_end:
-                            parking_lot_reached = False
-                            blank_led(device)
-
+                    print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
                     max_heading = max(max_heading, Gheading_estimate)
-                    if Glap_end and Gheading_estimate < max_heading:
+                    if Glap_end and max_heading > 350:
                         num_laps += 1
                         max_heading = 0
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                         print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
                         print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                         if num_laps >= TOTAL_LAPS:
-                            if not PARKING_MODE:
-                                shared_race_mode.value = 0
-                                print("END OF RACE")
+                            shared_race_mode.value = 3 if PARKING_MODE else 2
+                                print("End of race.")
                                 break
-                            else:
-                                time.sleep(sleeping_time)
-                                sleeping_time = 0
-                                if parking_lot_reached and not Glap_end:
-                                    shared_race_mode.value = 2
-                                    print("START OF PARKING")
-                                    break
 
+                elif shared_race_mode.value in [3, 4]:
 
-                # Save the image with labeled contours
+                    parking_lot_reached = parking_lot_reached or parking_lot
+                    if parking_lot_reached and not Glap_end:
+                        shared_race_mode.value = 2
+                        print("Parking lot reached")
+                        break
+
+            # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
                     video_writer.write(image)
                     frame_count += 1
@@ -1294,7 +1287,11 @@ def main():
         race_led(device)
 
         while shared_race_mode.value != 2:
-            time.sleep(0.1)
+            if shared_race_mode.value == 3:
+                set_motor_speed(pca, 13, MOTOR_BASIS)
+                time.sleep(3)
+            else:
+                time.sleep(0.1)
 
         # set_motor_speed(pca, 13, MOTOR_BASIS)
         # set_servo_angle(pca, 12, SERVO_BASIS)
