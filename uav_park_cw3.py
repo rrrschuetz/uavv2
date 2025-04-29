@@ -57,7 +57,7 @@ MOTOR_BASIS = 0.1
 RACE_SPEED = -0.35
 EMERGENCY_SPEED = -0.45
 PARK_SPEED = -0.3 #-0.35  # -0.55
-PARK_STEER = 1.0   #2.5
+PARK_STEER = 0.5   #2.5
 
 # Global variables
 Gclock_wise = False
@@ -697,6 +697,8 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
     num_detector_calls = 0
     num_laps = 0
     parking_lot_reached = False
+    max_heading = 0
+    sleeping_time = 3
 
     try:
         while True:
@@ -720,33 +722,34 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                 if first_line and Gline_orientation is None: Gline_orientation = line_orientation
 
                 if shared_race_mode.value == 1:
-                    # blank_led(device)
 
-                    if PARKING_MODE:
-                        parking_lot_reached = parking_lot_reached or parking_lot
-                        # if parking_lot_reached: print("Parking lot reached.")
-
-                        if parking_lot_reached:
-                            parking_led(device)
-                        else:
-                            blank_led(device)
-
-                        if Glap_end and parking_lot_reached:
+                    parking_lot_reached = parking_lot_reached or parking_lot
+                    if parking_lot_reached:
+                        parking_led(device)
+                        if Glap_end:
                             parking_lot_reached = False
-                            num_laps += 1
                             blank_led(device)
-                        else:
-                            if parking_lot_reached and num_laps >= TOTAL_LAPS:
-                                shared_race_mode.value = 2
-                                print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
-                                print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
-                                print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
-                                print("Parking initiated")
-                    else:
-                        if Glap_end: num_laps += 1  # here is something missing !
+
+                    max_heading = max(max_heading, Gheading_estimate)
+                    if Glap_end and Gheading_estimate < max_heading:
+                        num_laps += 1
+                        max_heading = 0
+                        print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
+                        print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
+                        print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                         if num_laps >= TOTAL_LAPS:
-                            shared_race_mode.value = 2
-                            print("Race completed.")
+                            if not PARKING_MODE:
+                                shared_race_mode.value = 0
+                                print("END OF RACE")
+                                break
+                            else:
+                                time.sleep(sleeping_time)
+                                sleeping_time = 0
+                                if parking_lot_reached and not Glap_end:
+                                    shared_race_mode.value = 2
+                                    print("START OF PARKING")
+                                    break
+
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
@@ -1003,8 +1006,9 @@ def align_orthogonal(pca, sock, shared_race_mode, stop_distance = 0.05, max_yaw_
 
     distance2stop = 1.0
     yaw_diff = 90
+    yaw_start = Gheading_estimate
     while shared_race_mode.value == 2 and abs(yaw_diff) > max_yaw_diff or distance2stop >0:
-        yaw_diff = 90 - orientation(yaw_difference(Gheading_start, Gheading_estimate))
+        yaw_diff = 90 - yaw_difference(Gheading_estimate,yaw_start)
         steer = (yaw_diff / max_yaw_diff) / 2
         if Gclock_wise: steer = -steer
         steer = max(min(steer, 1), -1)
