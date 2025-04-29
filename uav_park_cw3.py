@@ -815,7 +815,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode):
                 if event.button == 0:  # A button
                     if shared_race_mode.value == 0:
                         print("Race started")
-                        shared_race_mode.value = 3
+                        shared_race_mode.value = 1
                 elif event.button == 1:  # B button
                     if shared_race_mode.value == 0:
                         print("Training started")
@@ -1285,17 +1285,13 @@ def main():
         start_time = time.time()
         shared_race_mode.value = 1
         race_led(device)
-
         while shared_race_mode.value != 2:
             time.sleep(1)
-
         set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
 
         if PARKING_MODE:
-            print(f"Time to start the parking procedure: {time.time() - start_time:.2f} seconds")
-            parking_led(device)
             time.sleep(3)
             shared_race_mode.value = 3
             while shared_race_mode.value != 2:
