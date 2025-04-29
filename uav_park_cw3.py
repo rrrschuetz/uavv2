@@ -733,8 +733,8 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                         print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                         if num_laps >= TOTAL_LAPS:
                             shared_race_mode.value = 3 if PARKING_MODE else 2
-                                print("End of race.")
-                                break
+                            print("End of race.")
+                            break
 
                 elif shared_race_mode.value in [3, 4]:
 
