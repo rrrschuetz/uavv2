@@ -1278,7 +1278,7 @@ def main():
     #    print(f"front_distance {front_distance:.2f} Gheading_estimate {Gheading_estimate:.2f}")
 
     try:
-        while (shared_race_mode.value != 4):
+        while shared_race_mode.value == 0:
             time.sleep(0.1)
 
         start_time = time.time()
