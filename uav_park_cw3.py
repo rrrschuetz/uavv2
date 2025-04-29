@@ -698,7 +698,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
     num_laps = 0
     parking_lot_reached = False
     max_heading = 0
-    sleeping_time = 3
 
     try:
         while True:
@@ -1071,7 +1070,7 @@ def sensor_callback():
     global shared_race_mode, shared_blue_line_count
     if shared_race_mode.value == 0:
         print("Race started")
-        shared_race_mode.value = 3
+        shared_race_mode.value = 1
 
 
 def get_clock_wise(sock):
