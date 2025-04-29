@@ -339,7 +339,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
             with open("data_file.txt", "a") as file:
                 file.write(f"{shared_GX.value},{shared_GY.value},{Glidar_string},{Gcolor_string}\n")
 
-        elif shared_race_mode.value == 1:  # Race
+        elif shared_race_mode.value in [1, 3]:  # Race
             # print("LIDAR in autonomous mode")
             interpolated_distances, angles = full_scan(sock)
 
@@ -732,11 +732,11 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                         print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
                         print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                         if num_laps >= TOTAL_LAPS:
-                            shared_race_mode.value = 3 if PARKING_MODE else 2
+                            shared_race_mode.value = 2
                             print("End of race.")
                             break
 
-                elif shared_race_mode.value in [3, 4]:
+                elif shared_race_mode.value == 3:
 
                     parking_lot_reached = parking_lot_reached or parking_lot
                     if parking_lot_reached and not Glap_end:
@@ -1287,22 +1287,19 @@ def main():
         race_led(device)
 
         while shared_race_mode.value != 2:
-            if shared_race_mode.value == 3:
-                set_motor_speed(pca, 13, MOTOR_BASIS)
-                time.sleep(3)
-            else:
-                time.sleep(0.1)
+            time.sleep(1)
 
-        # set_motor_speed(pca, 13, MOTOR_BASIS)
-        # set_servo_angle(pca, 12, SERVO_BASIS)
+        set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
 
         if PARKING_MODE:
             print(f"Time to start the parking procedure: {time.time() - start_time:.2f} seconds")
             parking_led(device)
-
-            print("Starting the parking procedure")
+            time.sleep(3)
+            shared_race_mode.value = 3
+            while shared_race_mode.value != 2:
+                time.sleep(0.1)
             print(f">>> Car race end heading: {Gheading_estimate:.2f} {time.time()}")
             print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
             print(f"Heading start: {orientation(Gheading_start):.2f}")
