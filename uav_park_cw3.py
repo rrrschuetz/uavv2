@@ -697,13 +697,20 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
     num_detector_calls = 0
     num_laps = 0
     parking_lot_reached = False
+    heading_prev_lap = Gheading_estimate
     max_heading = 0
+    cum_heading = 0
 
     try:
         while True:
             num_detector_calls += 1
             if shared_race_mode.value in [0, 1, 3, 4]:
                 start_time = time.time()
+
+                cum_heading += yaw_difference(heading_prev_lap, Gheading_estimate)
+                heading_prev_lap = Gheading_estimate
+                print("cum_heading ",cum_heading)
+
                 image0 = picam0.capture_array()
                 image1 = picam1.capture_array()
                 image0_flipped = cv2.flip(image0, -1)
@@ -724,9 +731,10 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                     print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
                     max_heading = max(max_heading, Gheading_estimate)
-                    if Glap_end and max_heading > 350:
+                    if Glap_end and max_heading > 350 and cum_heading > 100:
                         num_laps += 1
                         max_heading = 0
+                        cum_heading = 0
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                         print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
                         print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
