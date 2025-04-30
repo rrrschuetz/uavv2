@@ -1027,7 +1027,7 @@ def park(pca, sock, shared_race_mode, device):
     if not Gclock_wise:
         stop_distance = 1.6 if dl > dr else 1.5
     else:
-        stop_distance = 1.5 if dl > dr else 1.3
+        stop_distance = 1.3 if dl > dr else 1.3   #1.3/1.3
     # stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
 
     print(f">>> Car alignment heading: {Gheading_estimate} {time.time()}")
@@ -1285,6 +1285,7 @@ def main():
         race_led(device)
         while shared_race_mode.value != 2:
             time.sleep(1)
+        time.sleep(1) # avoid standing on line
         set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
