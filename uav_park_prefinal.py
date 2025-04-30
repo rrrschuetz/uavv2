@@ -1297,9 +1297,16 @@ def main():
         race_led(device)
         while shared_race_mode.value != 2:
             time.sleep(0.1)
+
         set_servo_angle(pca, 12, SERVO_BASIS)
-        time.sleep(1)
+        front_distance = 3.0
+        while front_distance > 1.8:
+            position = navigate(sock,True)
+            front_distance = position['front_distance']
+            print(f"front_distance {front_distance:.2f}")
+            sleep(0.1)
         set_motor_speed(pca, 13, MOTOR_BASIS)
+
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
 
