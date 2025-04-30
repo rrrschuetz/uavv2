@@ -745,7 +745,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                 elif shared_race_mode.value == 3:
 
                     parking_lot_reached = parking_lot_reached or parking_lot
-                    print("Waiting for parking lot")
+                    #print("Waiting for parking lot")
                     if parking_lot_reached and not Glap_end:
                         shared_race_mode.value = 2
                         print("Parking lot reached")
