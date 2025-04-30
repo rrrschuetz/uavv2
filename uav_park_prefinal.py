@@ -709,7 +709,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                 cum_heading += yaw_difference(heading_prev_lap, Gheading_estimate)
                 heading_prev_lap = Gheading_estimate
-                print("cum_heading ",cum_heading)
+                #print("cum_heading ",cum_heading)
 
                 image0 = picam0.capture_array()
                 image1 = picam1.capture_array()
@@ -729,7 +729,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                 if shared_race_mode.value == 1:
 
-                    print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
+                    #print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
                     max_heading = max(max_heading, Gheading_estimate)
                     if Glap_end and max_heading > 350 and abs(cum_heading) > 100:
                         num_laps += 1
