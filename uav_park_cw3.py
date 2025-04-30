@@ -1010,7 +1010,8 @@ def align_orthogonal(pca, sock, shared_race_mode, stop_distance = 0.05, max_yaw_
     yaw_diff = 90
     yaw_start = Gheading_estimate
     while shared_race_mode.value == 2 and abs(yaw_diff) > max_yaw_diff or distance2stop >0:
-        yaw_diff = 90 - yaw_difference(Gheading_estimate,yaw_start)
+        sign = 1.0 if Gclock_wise else -1.0
+        yaw_diff = 90 - sign*yaw_difference(Gheading_estimate,yaw_start)
         steer = (yaw_diff / max_yaw_diff) / 2
         if Gclock_wise: steer = -steer
         steer = max(min(steer, 1), -1)
@@ -1036,9 +1037,9 @@ def park(pca, sock, shared_race_mode, device):
     dr = position['right_min_distance']
 
     if not Gclock_wise:
-        stop_distance = 1.6 if dl > dr else 1.3  #1.6/1.5
+        stop_distance = 1.6 if dl > dr else 1.4  #1.6/1.5
     else:
-        stop_distance = 1.6 if dl > dr else 1.4   #1.5/1.3
+        stop_distance = 1.4 if dl > dr else 1.4   #1.5/1.3
     # stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
 
     print(f">>> Car alignment heading: {Gheading_estimate} {time.time()}")
@@ -1296,6 +1297,8 @@ def main():
         race_led(device)
         while shared_race_mode.value != 2:
             time.sleep(0.1)
+        set_servo_angle(pca, 12, SERVO_BASIS)
+        time.sleep(1)
         set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
