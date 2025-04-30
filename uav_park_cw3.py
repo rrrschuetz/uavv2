@@ -709,7 +709,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                 cum_heading += yaw_difference(heading_prev_lap, Gheading_estimate)
                 heading_prev_lap = Gheading_estimate
-                print("cum_heading ",cum_heading)
+                #print("cum_heading ",cum_heading)
 
                 image0 = picam0.capture_array()
                 image1 = picam1.capture_array()
@@ -729,7 +729,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                 if shared_race_mode.value == 1:
 
-                    print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
+                    #print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
                     max_heading = max(max_heading, Gheading_estimate)
                     if Glap_end and max_heading > 350 and abs(cum_heading) > 100:
                         num_laps += 1
@@ -1035,7 +1035,7 @@ def park(pca, sock, shared_race_mode, device):
     if not Gclock_wise:
         stop_distance = 1.6 if dl > dr else 1.5
     else:
-        stop_distance = 1.6 if dl > dr else 1.3   #1.5/1.3
+        stop_distance = 1.7 if dl > dr else 1.3   #1.5/1.3
     # stop_distance = 1.5 if (Gclock_wise and dl < dr) or (not Gclock_wise and dl > dr) else 1.4  # 1.6,1.4
 
     print(f">>> Car alignment heading: {Gheading_estimate} {time.time()}")
@@ -1292,8 +1292,7 @@ def main():
         shared_race_mode.value = 1
         race_led(device)
         while shared_race_mode.value != 2:
-            time.sleep(1)
-        time.sleep(1) # avoid standing on line
+            time.sleep(0.1)
         set_motor_speed(pca, 13, MOTOR_BASIS)
         print(f"Race time: {time.time() - start_time:.2f} seconds")
         smiley_led(device)
