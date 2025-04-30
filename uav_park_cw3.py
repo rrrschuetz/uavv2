@@ -733,17 +733,16 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
                         if num_laps >= TOTAL_LAPS:
                             shared_race_mode.value = 2
                             print("End of race.")
-                            break
 
                 elif shared_race_mode.value == 3:
 
                     parking_lot_reached = parking_lot_reached or parking_lot
+                    print("Waiting for parking lot")
                     if parking_lot_reached and not Glap_end:
                         shared_race_mode.value = 2
                         print("Parking lot reached")
-                        break
 
-            # Save the image with labeled contours
+                # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
                     video_writer.write(image)
                     frame_count += 1
