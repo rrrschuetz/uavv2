@@ -731,7 +731,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
 
                     print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
                     max_heading = max(max_heading, Gheading_estimate)
-                    if Glap_end and max_heading > 350 and cum_heading > 100:
+                    if Glap_end and max_heading > 350 and abs(cum_heading) > 100:
                         num_laps += 1
                         max_heading = 0
                         cum_heading = 0
