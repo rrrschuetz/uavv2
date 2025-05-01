@@ -1215,7 +1215,7 @@ def main():
     arm_esc(pca, 1)
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
-    set_servo_angle(pca, 11, 1.55)   # Lifter neutral
+    set_servo_angle(pca, 11, 1.7)   # Lifter neutral
 
     # gyro setup
     print("Initializing WT61 gyroscope sensor...")
@@ -1288,7 +1288,7 @@ def main():
 
     # lifter testing only
     print("Lifting")
-    set_servo_angle(pca, 11, 0.01)
+    set_servo_angle(pca, 11, 1.55)
     while True:
         time.sleep(1)
 
