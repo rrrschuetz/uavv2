@@ -1071,11 +1071,10 @@ def park(pca, sock, shared_race_mode, device):
     set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
     time.sleep(1)
-
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
     set_servo_angle(pca, 11, 1.7)
-
+    #set_servo_angle(pca, 11, 1.7)
 
 def sensor_callback():
     global shared_race_mode, shared_blue_line_count
@@ -1287,6 +1286,12 @@ def main():
     #    position = navigate(sock,True)
     #    front_distance = position['front_distance']
     #    print(f"front_distance {front_distance:.2f} Gheading_estimate {Gheading_estimate:.2f}")
+
+    # lifter testing only
+    #print("Lifting")
+    #set_servo_angle(pca, 11, 0.01)
+    #while True:
+    #    time.sleep(1)
 
     try:
         while shared_race_mode.value == 0:
