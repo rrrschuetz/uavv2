@@ -126,7 +126,7 @@ def connect_lidar(ip=IP_ADDRESS, port=PORT):
     return sock
 
 
-def receive_full_data(sock, expected_length, timeout=5):
+def receive_full_data(sock, expected_length, timeout=1):  #5
     sock.settimeout(timeout)
     data = b''
     try:
@@ -1306,7 +1306,7 @@ def main():
         set_servo_angle(pca, 12, SERVO_BASIS)
         front_distance = 3.0
         while front_distance > 1.8:
-            position = navigate(sock,True)
+            position = navigate(sock,False)
             front_distance = position['front_distance']
             print(f"front_distance {front_distance:.2f}")
             time.sleep(0.1)
