@@ -1073,7 +1073,6 @@ def park(pca, sock, shared_race_mode, device):
     time.sleep(1)
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
-    set_servo_angle(pca, 11, 1.7)
     #set_servo_angle(pca, 11, 1.7)
 
 def sensor_callback():
@@ -1216,7 +1215,7 @@ def main():
     arm_esc(pca, 1)
     set_motor_speed(pca, 13, MOTOR_BASIS)
     set_servo_angle(pca, 12, SERVO_BASIS)
-    set_servo_angle(pca, 11, 0.0)
+    set_servo_angle(pca, 11, 1.55)   # Lifter neutral
 
     # gyro setup
     print("Initializing WT61 gyroscope sensor...")
@@ -1288,10 +1287,10 @@ def main():
     #    print(f"front_distance {front_distance:.2f} Gheading_estimate {Gheading_estimate:.2f}")
 
     # lifter testing only
-    #print("Lifting")
-    #set_servo_angle(pca, 11, 0.01)
-    #while True:
-    #    time.sleep(1)
+    print("Lifting")
+    set_servo_angle(pca, 11, 0.01)
+    while True:
+        time.sleep(1)
 
     try:
         while shared_race_mode.value == 0:
