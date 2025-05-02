@@ -1100,6 +1100,7 @@ def get_clock_wise(sock):
 
 
 def led_out(device, pattern):
+    if not LED_DISPLAY: return
     # Display the pattern on the LED matrix
     with canvas(device) as draw:
         for y, row in enumerate(pattern):
@@ -1200,10 +1201,12 @@ def main():
     shared_GX = Value('d', 0.0)  # 'd' for double precision float
     shared_GY = Value('d', 0.0)
 
-    # Initialize SPI connection and LED matrix device
-    serial = spi(port=0, device=0, gpio=noop())
-    device = max7219(serial, width=8, height=8)
-    device.contrast(10)  # Adjust contrast if needed
+    # Initialize SPI connection and LED matrix
+    device = None
+    if LED_DISPAY:
+        serial = spi(port=0, device=0, gpio=noop())
+        device = max7219(serial, width=8, height=8)
+        device.contrast(10)  # Adjust contrast if needed
 
     # Initialize touch button
     sensor = Button(SENSOR_PIN)
