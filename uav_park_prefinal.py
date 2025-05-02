@@ -2,7 +2,7 @@ import socket
 import struct
 import serial
 import pygame
-import json
+import json, configparser
 import numpy as np
 from scipy.ndimage import median_filter
 from scipy.stats import trim_mean
@@ -30,12 +30,26 @@ from lidar_color_model import CNNModel  # Import the model from model.py
 # from preprocessing import preprocess_input, load_scaler  # Import preprocessing functions
 from preprocessing_no_scaler import preprocess_input  # Import preprocessing functions
 
-#########################################
-WRITE_CAMERA_IMAGE = False
-WRITE_CAMERA_MOVIE = False
-TOTAL_LAPS = 3
-PARKING_MODE = True
-#########################################
+config = configparser.ConfigParser()
+config.read(os.path.expanduser('./config.ini'))
+
+WRITE_CAMERA_IMAGE = bool(config['Race']['WRITE_CAMERA_IMAGE'])  # False
+WRITE_CAMERA_MOVIE = bool(config['Race']['WRITE_CAMERA_MOVIE'])  # False
+TOTAL_LAPS = int(config['Race']['TOTAL_LAPS'])  # 3
+PARKING_MODE = bool(config['Race']['PARKING_MODE'])  # True
+LED_DISPLAY = bool(config['Race']['LED_DISPLAY'])
+
+SERVO_FACTOR = float(config['Steering']['SERVO_FACTOR'])  # 0.5  # 0.4
+SERVO_BASIS = float(config['Steering']['SERVO_BASIS'])  # 0.5  # 1.55 # 0.55
+MOTOR_FACTOR = float(config['Steering']['MOTOR_FACTOR'])  # 0.4 #0.45  # 0.3
+MOTOR_BASIS = float(config['Steering']['MOTOR_BASIS'])   # 0.1
+LIFTER_BASIS = float(config['Steering']['LIFTER_BASIS'])   # 1.45
+LIFTER_UP = float(config['Steering']['LIFTER_UP'])  # 2.7
+
+RACE_SPEED = float(config['Steering']['RACE_SPEED'])  # -0.35
+EMERGENCY_SPEED = float(config['Steering']['EMERGENCY_SPEED'])  # -0.45
+PARK_SPEED = float(config['Steering']['PARK_SPEED'])  # -0.3 #-0.35  # -0.55
+PARK_STEER = float(config['Steering']['PARK_STEER'])  # 0.5   #2.5
 
 # Configuration for WT61 Gyroscope
 SERIAL_PORT = "/dev/ttyAMA0"  # or "/dev/ttyS0" if you have mapped accordingly
@@ -48,18 +62,6 @@ LIDAR_LEN = 1620
 COLOR_LEN = 1280
 ANGLE_CORRECTION = 180.0
 DISTANCE_CORRECTION = -0.10
-
-SERVO_FACTOR = 0.5  # 0.4
-SERVO_BASIS = 0.5  # 1.55 # 0.55
-MOTOR_FACTOR = 0.4 #0.45  # 0.3
-MOTOR_BASIS = 0.1
-LIFTER_BASIS = 1.45
-LIFTER_UP = 2.7
-
-RACE_SPEED = -0.35
-EMERGENCY_SPEED = -0.45
-PARK_SPEED = -0.3 #-0.35  # -0.55
-PARK_STEER = 0.5   #2.5
 
 # Global variables
 Gclock_wise = False
