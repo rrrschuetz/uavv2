@@ -128,7 +128,7 @@ def connect_lidar(ip=IP_ADDRESS, port=PORT):
     return sock
 
 
-def receive_full_data(sock, expected_length, timeout=1):  #5
+def receive_full_data(sock, expected_length, timeout=0.1):  #5
     sock.settimeout(timeout)
     data = b''
     try:
