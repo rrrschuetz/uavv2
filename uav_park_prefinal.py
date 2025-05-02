@@ -1203,7 +1203,7 @@ def main():
 
     # Initialize SPI connection and LED matrix
     device = None
-    if LED_DISPAY:
+    if LED_DISPLAY:
         serial = spi(port=0, device=0, gpio=noop())
         device = max7219(serial, width=8, height=8)
         device.contrast(10)  # Adjust contrast if needed
