@@ -17,7 +17,7 @@ from board import SCL, SDA
 import busio
 from gpiozero import Button
 import qmc5883l as qmc5883
-import time, sys
+import time, sys, os
 import usb.core, usb.util
 import math, statistics
 import torch
