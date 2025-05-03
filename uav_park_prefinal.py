@@ -1041,9 +1041,9 @@ def park(pca, sock, shared_race_mode, device):
     dr = position['right_min_distance']
 
     if not Gclock_wise:
-        stop_distance = 1.6 if dl > dr else 1.4  #1.6/1.5
+        stop_distance = COUNTERCLOCKWISE_TURN_RED if dl > dr else COUNTERCLOCKWISE_TURN_GREEN  #1.6/1.5
     else:
-        stop_distance = 1.4 if dl > dr else 1.4   #1.5/1.3
+        stop_distance = CLOCKWISE_TURN_RED if dl > dr else CLOCKWISE_TURN_GREEN   #1.5/1.3
 
     print(f">>> Car alignment heading: {Gheading_estimate} {time.time()}")
     print(f"Front distance: {position['front_distance']:.2f}")
