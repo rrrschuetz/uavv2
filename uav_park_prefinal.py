@@ -930,7 +930,7 @@ def orientation(angle):
         return mod - 90
 
 
-def gyro_thread(shared_race_mode):
+def gyro_thread(shared_race_mode, stop_event):
     global Gaccel_x, Gaccel_y, Gaccel_z
     global Gpitch, Groll, Gyaw
     global Gheading_estimate, Gheading_start, Glap_end
@@ -1341,7 +1341,7 @@ def main():
             print(f"Race time: {time.time() - start_time:.2f} seconds")
             smiley_led(device)
 
-            if PARKING_MODE:
+            if PARKING_MODE and Gobstacles:
                 time.sleep(3)
                 shared_race_mode.value = 3
                 while shared_race_mode.value != 2:
@@ -1352,6 +1352,7 @@ def main():
                 park(pca, sock, shared_race_mode, device)
                 print(f"Race & parking time: {time.time() - start_time:.2f} seconds")
 
+            print("Prepare for shutdown")
             shared_race_mode.value = 5 # Termination
             set_motor_speed(pca, 13, MOTOR_BASIS)
             set_servo_angle(pca, 12, SERVO_BASIS)
@@ -1365,6 +1366,7 @@ def main():
         print("Program interrupted.")
 
     finally:
+        print("Shutdown.")
         stop_event.set()       # Threads stoppen
         proc_stop.set()        # Process stoppen
         lidar_thread_instance.join()
