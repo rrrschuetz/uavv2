@@ -1109,7 +1109,7 @@ def get_clock_wise(sock):
         dl = position['left_min_distance']
         dr = position['right_min_distance']
         Gclock_wise = dq > 1.0
-        if Gobstacle:
+        if not Gobstacles:
             if dr < 0.1: Gclock_wise = True
             elif dl < 0.1: Gclock_wise = False
         print(f"distance_ratio: {dq} left distance {dl} right distance {dr}")
