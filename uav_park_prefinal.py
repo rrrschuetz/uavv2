@@ -24,6 +24,7 @@ import torch
 from luma.led_matrix.device import max7219
 from luma.core.interface.serial import spi, noop
 from luma.core.render import canvas
+from sympy.codegen.ast import continue_
 from torch.distributions.constraints import positive
 
 from lidar_color_model import CNNModel  # Import the model from model.py
@@ -1299,8 +1300,9 @@ def main():
     #    time.sleep(1)
 
     try:
-        while shared_race_mode.value == 0:
+        while shared_race_mode.value == 4:
             time.sleep(0.1)
+        if shared_race_mode.value == 0: continue
 
         start_time = time.time()
         shared_race_mode.value = 1
