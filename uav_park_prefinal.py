@@ -366,8 +366,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
                     state_dict_cc = torch.load('./model_cc.pth', map_location=torch.device('cpu'))
                     state_dict_cw = torch.load('./model_cw.pth', map_location=torch.device('cpu'))
                 else:
-                    state_dict_cc = torch.load('./model_cc_o.pth', map_location=torch.device('cpu'))
-                    state_dict_cw = torch.load('./model_cw_o.pth', map_location=torch.device('cpu'))
+                    state_dict_cc = torch.load('./model_cc_opening.pth', map_location=torch.device('cpu'))
+                    state_dict_cw = torch.load('./model_cw_opening.pth', map_location=torch.device('cpu'))
 
                 # Convert all weights to float32 if they are in float64
                 for key, value in state_dict_cc.items():
@@ -1363,6 +1363,7 @@ def main():
         sock.close()
         print("Stopping remote control")
         pygame.quit()
+        print("Exiting")
         sys.exit()
 
 
