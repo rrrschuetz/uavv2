@@ -1309,7 +1309,8 @@ def main():
         if shared_race_mode.value == 1: # Race
 
             start_time = time.time()
-            race_led(device)
+            set_motor_speed(pca, 13, MOTOR_BASIS)
+            set_servo_angle(pca, 12, SERVO_BASIS)
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
 
