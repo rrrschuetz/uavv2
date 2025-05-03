@@ -837,7 +837,10 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode):
                     set_motor_speed(pca, 13, MOTOR_BASIS)
                     set_servo_angle(pca, 12, SERVO_BASIS)
                 elif event.button == 4:  # Y button
-                    print("Y Button pressed")
+                    print("Training terminated")
+                    shared_race_mode.value = 5
+                    set_motor_speed(pca, 13, MOTOR_BASIS)
+                    set_servo_angle(pca, 12, SERVO_BASIS)
 
             elif event.type == pygame.JOYBUTTONUP:
                 print(f"JOYBUTTONUP: button={event.button}")
@@ -1300,50 +1303,51 @@ def main():
     #    time.sleep(1)
 
     try:
-        while shared_race_mode.value == 4:
-            time.sleep(0.1)
-        if shared_race_mode.value == 0: continue
-
-        start_time = time.time()
-        shared_race_mode.value = 1
-        race_led(device)
-        while shared_race_mode.value != 2:
+        while shared_race_mode.value == 0:
             time.sleep(0.1)
 
-        set_servo_angle(pca, 12, SERVO_BASIS)
-        front_distance = 3.0
-        while front_distance > 1.8:
-            position = navigate(sock,False)
-            front_distance = position['front_distance']
-            print(f"front_distance {front_distance:.2f}")
-            time.sleep(0.1)
-        set_motor_speed(pca, 13, MOTOR_BASIS)
+        if shared_race_mode.value == 1: # Race
 
-        print(f"Race time: {time.time() - start_time:.2f} seconds")
-        smiley_led(device)
-
-        if PARKING_MODE:
-            time.sleep(3)
-            shared_race_mode.value = 3
+            start_time = time.time()
+            race_led(device)
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
-            print(f">>> Car race end heading: {Gheading_estimate:.2f} {time.time()}")
-            print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
-            print(f"Heading start: {orientation(Gheading_start):.2f}")
-            park(pca, sock, shared_race_mode, device)
-            print(f"Race & parking time: {time.time() - start_time:.2f} seconds")
 
-        set_motor_speed(pca, 13, MOTOR_BASIS)
-        set_servo_angle(pca, 12, SERVO_BASIS)
+            set_servo_angle(pca, 12, SERVO_BASIS)
+            front_distance = 3.0
+            while front_distance > 1.8:
+                position = navigate(sock,False)
+                front_distance = position['front_distance']
+                print(f"front_distance {front_distance:.2f}")
+                time.sleep(0.1)
+            set_motor_speed(pca, 13, MOTOR_BASIS)
 
-        picam0.stop()
-        picam1.stop()
-        stop_scan(sock)
-        sock.close()
-        pygame.quit()
-        sys.exit()
+            print(f"Race time: {time.time() - start_time:.2f} seconds")
+            smiley_led(device)
+
+            if PARKING_MODE:
+                time.sleep(3)
+                shared_race_mode.value = 3
+                while shared_race_mode.value != 2:
+                    time.sleep(0.1)
+                print(f">>> Car race end heading: {Gheading_estimate:.2f} {time.time()}")
+                print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
+                print(f"Heading start: {orientation(Gheading_start):.2f}")
+                park(pca, sock, shared_race_mode, device)
+                print(f"Race & parking time: {time.time() - start_time:.2f} seconds")
+
+            set_motor_speed(pca, 13, MOTOR_BASIS)
+            set_servo_angle(pca, 12, SERVO_BASIS)
+
+        else: # Training
+
+            while shared_race_mode.value != 5: # End of training
+                time.sleep(0.1)
 
     except KeyboardInterrupt:
+        print("Program interrupted.")
+
+    finally:
         picam0.stop()
         picam1.stop()
         stop_scan(sock)
