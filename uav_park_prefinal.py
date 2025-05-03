@@ -21,9 +21,13 @@ import time, sys, os
 import usb.core, usb.util
 import math, statistics
 import torch
+
+# LED and LCD output
 from luma.led_matrix.device import max7219
 from luma.core.interface.serial import spi, noop
 from luma.core.render import canvas
+from RPLCD.i2c import CharLCD
+
 from sympy.codegen.ast import continue_
 from torch.distributions.constraints import positive
 
@@ -1133,6 +1137,23 @@ def get_clock_wise(sock):
         print(f"distance_ratio: {dq} left distance {dl} right distance {dr}")
 
 
+def class LCD(self):
+    def __init__(self):
+        self.lcd = CharLCD('PCF8574', 0x27)
+        self.display_buffer = []
+
+    def display_message(self, message):
+        self.display_buffer.append(message)
+        # Keep only the last 2 lines for LCD1602
+        self.display_buffer = self.display_buffer[-2:]
+        self.lcd.clear()
+        for line in self.display_buffer:
+            self.lcd.write_string(line)
+            self.lcd.crlf()
+
+def lcd_out(device, message):
+    device.display_message(message)
+
 def led_out(device, pattern):
     if not LED_DISPLAY: return
     # Display the pattern on the LED matrix
@@ -1241,6 +1262,9 @@ def main():
         serial = spi(port=0, device=0, gpio=noop())
         device = max7219(serial, width=8, height=8)
         device.contrast(10)  # Adjust contrast if needed
+    else:
+        device = LCD()
+
 
     # Initialize touch button
     sensor = Button(SENSOR_PIN)
@@ -1317,6 +1341,7 @@ def main():
     get_clock_wise(sock)
     print(f"Clockwise: {Gclock_wise}")
     smiley_led(device)
+    lcd_out(device,f"READY - Clockwise: {Gclock_wise}")
 
     print("Steering and power neutral.")
     set_motor_speed(pca, 13, MOTOR_BASIS)
