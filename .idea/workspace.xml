@@ -134,30 +134,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00573" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1745661142902</created>
-      <option name="number" value="00573" />
-      <option name="presentableId" value="LOCAL-00573" />
-      <option name="project" value="LOCAL" />
-      <updated>1745661142902</updated>
-    </task>
-    <task id="LOCAL-00574" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1745661626349</created>
-      <option name="number" value="00574" />
-      <option name="presentableId" value="LOCAL-00574" />
-      <option name="project" value="LOCAL" />
-      <updated>1745661626349</updated>
-    </task>
-    <task id="LOCAL-00575" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1745955824924</created>
-      <option name="number" value="00575" />
-      <option name="presentableId" value="LOCAL-00575" />
-      <option name="project" value="LOCAL" />
-      <updated>1745955824924</updated>
-    </task>
     <task id="LOCAL-00576" summary="magnetometer">
       <option name="closed" value="true" />
       <created>1745965607201</created>
@@ -526,7 +502,31 @@
       <option name="project" value="LOCAL" />
       <updated>1746272484780</updated>
     </task>
-    <option name="localTasksCounter" value="622" />
+    <task id="LOCAL-00622" summary="magnetometer">
+      <option name="closed" value="true" />
+      <created>1746278894859</created>
+      <option name="number" value="00622" />
+      <option name="presentableId" value="LOCAL-00622" />
+      <option name="project" value="LOCAL" />
+      <updated>1746278894859</updated>
+    </task>
+    <task id="LOCAL-00623" summary="magnetometer">
+      <option name="closed" value="true" />
+      <created>1746279546810</created>
+      <option name="number" value="00623" />
+      <option name="presentableId" value="LOCAL-00623" />
+      <option name="project" value="LOCAL" />
+      <updated>1746279546810</updated>
+    </task>
+    <task id="LOCAL-00624" summary="magnetometer">
+      <option name="closed" value="true" />
+      <created>1746279696277</created>
+      <option name="number" value="00624" />
+      <option name="presentableId" value="LOCAL-00624" />
+      <option name="project" value="LOCAL" />
+      <updated>1746279696277</updated>
+    </task>
+    <option name="localTasksCounter" value="625" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -688,12 +688,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1131</line>
+          <line>1132</line>
           <option name="timeStamp" value="37" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1155</line>
+          <line>1156</line>
           <option name="timeStamp" value="38" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -703,7 +703,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1341</line>
+          <line>1342</line>
           <option name="timeStamp" value="41" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">

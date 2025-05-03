@@ -327,7 +327,7 @@ def navigate(sock, narrow=True):
     }
 
 
-def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
+def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
     global Glidar_string, Gcolor_string
     global Gx_coords
     global Glidar_moving_avg_fps
@@ -339,7 +339,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode):
     device = None
 
     fps_list = deque(maxlen=10)
-    while True:
+    while not stop_event.is_set():
         start_time = time.time()
 
         if shared_race_mode.value == 4:  # Training
@@ -682,7 +682,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     return x_coords, first_line, second_line, magenta_rectangle, line_orientation, image
 
 
-def camera_thread(pca, picam0, picam1, shared_race_mode, device):
+def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
     global Gcolor_string, Gx_coords
     global Gline_orientation
     global Glap_end, Gheading_estimate  # heading
@@ -712,7 +712,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
     cum_heading = 0
 
     try:
-        while True:
+        while not stop_event.is_set():
             num_detector_calls += 1
             if shared_race_mode.value in [0, 1, 3, 4]:
                 start_time = time.time()
@@ -791,7 +791,8 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device):
             video_writer.release()
 
 
-def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode):
+def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, stop_event):
+
     pygame.init()
     pygame.joystick.init()
 
@@ -809,7 +810,7 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode):
     print(f"Number of buttons: {joystick.get_numbuttons()}")
     print(f"Number of hats: {joystick.get_numhats()}")
 
-    while True:
+    while not stop_event.is_set():
         for event in pygame.event.get():
             if event.type == pygame.JOYAXISMOTION:
                 # print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
@@ -941,7 +942,7 @@ def gyro_thread(shared_race_mode):
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
             ser.reset_input_buffer()  # Clear old data at the start
 
-            while True:
+            while not stop_event.is_set():
                 if ser.in_waiting:
                     # Read all available data and append it to the buffer
                     data = ser.read(ser.in_waiting)
@@ -1275,14 +1276,16 @@ def main():
     picam1.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
 
     # Start threads and processes
+    stop_event = threading.Event()
     lidar_thread_instance = threading.Thread(target=lidar_thread,
-                                             args=(sock, pca, shared_GX, shared_GY, shared_race_mode))
+                                             args=(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event))
     camera_thread_instance = threading.Thread(target=camera_thread,
-                                              args=(pca, picam0, picam1, shared_race_mode, device))
-    gyro_thread_instance = threading.Thread(target=gyro_thread, args=(shared_race_mode,))
+                                              args=(pca, picam0, picam1, shared_race_mode, device, stop_event))
+    gyro_thread_instance = threading.Thread(target=gyro_thread, args=(shared_race_mode, stop_event))
 
+    proc_stop = multiprocessing.Event()
     xbox_controller_process_instance = Process(target=xbox_controller_process,
-                                               args=(pca, shared_GX, shared_GY, shared_race_mode))
+                                               args=(pca, shared_GX, shared_GY, shared_race_mode, proc_stop))
 
     lidar_thread_instance.start()
     camera_thread_instance.start()
@@ -1349,6 +1352,7 @@ def main():
                 park(pca, sock, shared_race_mode, device)
                 print(f"Race & parking time: {time.time() - start_time:.2f} seconds")
 
+            shared_race_mode.value = 5 # Termination
             set_motor_speed(pca, 13, MOTOR_BASIS)
             set_servo_angle(pca, 12, SERVO_BASIS)
 
@@ -1361,6 +1365,14 @@ def main():
         print("Program interrupted.")
 
     finally:
+        stop_event.set()       # Threads stoppen
+        proc_stop.set()        # Process stoppen
+        lidar_thread_instance.join()
+        camera_thread_instance.join()
+        gyro_thread_instance.join()
+        xbox_controller_process_instance.join()
+        print("All threads and processes stopped cleanly")
+
         print("Stopping camera 0")
         picam0.stop()
         print("Stopping camera 1")
