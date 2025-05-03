@@ -1095,7 +1095,8 @@ def sensor_callback():
 
 
 def get_clock_wise(sock):
-    global Gline_orientation, Gclock_wise
+    global Gline_orientation, Gclock_wise, Gobstacles
+
     if Gline_orientation == "UP":
         print(f"Gline orientation: UP")
         Gclock_wise = False
@@ -1104,8 +1105,14 @@ def get_clock_wise(sock):
         Gclock_wise = True
     else:
         position = navigate(sock)
-        Gclock_wise = position['distance_ratio'] > 1.0
-        print(f"distance_ratio: {position['distance_ratio']}")
+        dq = position['distance_ratio']
+        dl = position['left_min_distance']
+        dr = position['right_min_distance']
+        Gclock_wise = dq > 1.0
+        if Gobstacle:
+            if dr < 0.1: Gclock_wise = True
+            elif dl < 0.1: Gclock_wise = False
+        print(f"distance_ratio: {dq} left distance {dl} right distance {dr}")
 
 
 def led_out(device, pattern):
