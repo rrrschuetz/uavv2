@@ -52,6 +52,11 @@ EMERGENCY_SPEED = float(config['Steering']['EMERGENCY_SPEED'])  # -0.45
 PARK_SPEED = float(config['Steering']['PARK_SPEED'])  # -0.3 #-0.35  # -0.55
 PARK_STEER = float(config['Steering']['PARK_STEER'])  # 0.5   #2.5
 
+CLOCKWISE_TURN_GREEN = float(config['Parking']['CLOCKWISE_TURN_GREEN'])
+CLOCKWISE_TURN_RED = float(config['Parking']['CLOCKWISE_TURN_RED'])
+COUNTERCLOCKWISE_TURN_GREEN = float(config['Parking']['COUNTERCLOCKWISE_TURN_GREEN'])
+COUNTERCLOCKWISE_TURN_RED = float(config['Parking']['COUNTERCLOCKWISE_TURN_RED'])
+
 # Configuration for WT61 Gyroscope
 SERIAL_PORT = "/dev/ttyAMA0"  # or "/dev/ttyS0" if you have mapped accordingly
 BAUD_RATE = 115200
