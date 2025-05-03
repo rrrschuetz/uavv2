@@ -9,7 +9,7 @@ from scipy.stats import trim_mean
 import cv2
 from picamera2 import Picamera2
 from multiprocessing import Process, Value
-import threading
+import threading, multiprocessing
 from collections import deque
 from adafruit_pca9685 import PCA9685
 import board
