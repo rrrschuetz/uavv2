@@ -1354,10 +1354,14 @@ def main():
         print("Program interrupted.")
 
     finally:
+        print("Stopping camera 0")
         picam0.stop()
+        print("Stopping camera 1")
         picam1.stop()
+        print("Stopping LIDAR")
         stop_scan(sock)
         sock.close()
+        print("Stopping remote control")
         pygame.quit()
         sys.exit()
 
