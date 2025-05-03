@@ -44,6 +44,7 @@ SERVO_FACTOR = float(config['Steering']['SERVO_FACTOR'])  # 0.5  # 0.4
 SERVO_BASIS = float(config['Steering']['SERVO_BASIS'])  # 0.5  # 1.55 # 0.55
 MOTOR_FACTOR = float(config['Steering']['MOTOR_FACTOR'])  # 0.4 #0.45  # 0.3
 MOTOR_BASIS = float(config['Steering']['MOTOR_BASIS'])   # 0.1
+MOTOR_BOOST = float(config['Steering']['MOTOR_BOOST'])  # 0.2
 LIFTER_BASIS = float(config['Steering']['LIFTER_BASIS'])   # 1.45
 LIFTER_UP = float(config['Steering']['LIFTER_UP'])  # 2.7
 
@@ -85,6 +86,7 @@ Gaccel_z = 0.0
 Gheading_estimate = 0.0
 Gheading_start = 0.0
 Glap_end = False
+Gboost = 0.0
 Glidar_moving_avg_fps = 0.0
 Gcamera_moving_avg_fps = 0.0
 shared_race_mode = Value('i', 0)
@@ -121,6 +123,17 @@ def arm_esc(pca, channel):
     set_motor_speed(pca, channel, 0)
     time.sleep(1)
     print("ESC armed")
+
+
+def start_boost():
+    global Gboost
+    Gboost = MOTOR_BOOST
+    # Nach 1 Sekunde Boost wieder deaktivieren
+    threading.Timer(1.0, stop_boost).start()
+
+def stop_boost():
+    global Gboost
+    Gboost = 0.0
 
 
 # LIDAR functions
@@ -400,6 +413,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                 set_motor_speed(pca, 13, MOTOR_BASIS)
                 set_servo_angle(pca, 12, SERVO_BASIS)
                 time.sleep(0.5)
+                start_boost()
                 continue
 
             ld = interpolated_distances[:LIDAR_LEN]
@@ -428,7 +442,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                 #    X = -X
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
                     set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
-                    set_motor_speed(pca, 13, Y * MOTOR_FACTOR + MOTOR_BASIS)
+                    set_motor_speed(pca, 13, Y * (MOTOR_FACTOR+Gboost) + MOTOR_BASIS)
                 else:
                     pass
                     print("Invalid steering commands:", X, Y)
@@ -1092,6 +1106,7 @@ def sensor_callback():
     global shared_race_mode, shared_blue_line_count
     if shared_race_mode.value == 0:
         print("Race started")
+        start_boost()
         shared_race_mode.value = 1
 
 
@@ -1343,6 +1358,7 @@ def main():
 
             if PARKING_MODE and Gobstacles:
                 time.sleep(3)
+                start_boost()
                 shared_race_mode.value = 3
                 while shared_race_mode.value != 2:
                     time.sleep(0.1)
