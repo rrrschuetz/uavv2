@@ -34,7 +34,7 @@ config.read(os.path.expanduser('./config.ini'))
 
 WRITE_CAMERA_IMAGE = config.getboolean('Race','WRITE_CAMERA_IMAGE')  # False
 WRITE_CAMERA_MOVIE = config.getboolean('Race','WRITE_CAMERA_MOVIE')  # False
-TOTAL_LAPS = config.getboolean('Race','TOTAL_LAPS')  # 3
+TOTAL_LAPS = int(config['Race']['TOTAL_LAPS'])  # 3
 PARKING_MODE = config.getboolean('Race','PARKING_MODE')  # True
 LED_DISPLAY = config.getboolean('Race','LED_DISPLAY') # False
 READY_GESTURE = config.getboolean('Race','READY_GESTURE') # False
