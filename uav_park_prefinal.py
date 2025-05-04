@@ -360,7 +360,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
     global Gobstacles
 
     window_size = 10
-    input_size = 200 # not too wide !
+    input_size = 100 # not too wide !
 
     model_cc = None
     model_cw = None
