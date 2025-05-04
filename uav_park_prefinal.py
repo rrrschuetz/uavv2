@@ -57,7 +57,7 @@ COUNTERCLOCKWISE_TURN_GREEN = float(config['Parking']['COUNTERCLOCKWISE_TURN_GRE
 COUNTERCLOCKWISE_TURN_RED = float(config['Parking']['COUNTERCLOCKWISE_TURN_RED'])
 
 # LED and LCD output
-if LED_DISPAY:
+if LED_DISPLAY:
     from luma.led_matrix.device import max7219
     from luma.core.interface.serial import spi, noop
     from luma.core.render import canvas
