@@ -1147,6 +1147,7 @@ class LCD():
         self.display_buffer = []
 
     def display_message(self, message):
+        return
         self.display_buffer.append(message)
         # Keep only the last 2 lines for LCD1602
         self.display_buffer = self.display_buffer[-2:]
