@@ -1143,7 +1143,7 @@ def get_clock_wise(sock):
 
 class LCD():
     def __init__(self):
-        self.lcd = CharLCD('PCF8574', 0x27)
+        #self.lcd = CharLCD('PCF8574', 0x27)
         self.display_buffer = []
 
     def display_message(self, message):
@@ -1261,7 +1261,6 @@ def main():
     shared_GY = Value('d', 0.0)
 
     # Initialize SPI connection and LED matrix
-    print(f"LED_DISPLAY {LED_DISPLAY}")
     device = None
     if LED_DISPLAY:
         print("LED display instance defined")
