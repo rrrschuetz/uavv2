@@ -32,11 +32,11 @@ from preprocessing_no_scaler import preprocess_input  # Import preprocessing fun
 config = configparser.ConfigParser()
 config.read(os.path.expanduser('./config.ini'))
 
-WRITE_CAMERA_IMAGE = bool(config['Race']['WRITE_CAMERA_IMAGE'])  # False
-WRITE_CAMERA_MOVIE = bool(config['Race']['WRITE_CAMERA_MOVIE'])  # False
-TOTAL_LAPS = int(config['Race']['TOTAL_LAPS'])  # 3
-PARKING_MODE = bool(config['Race']['PARKING_MODE'])  # True
-LED_DISPLAY = bool(config['Race']['LED_DISPLAY'])
+WRITE_CAMERA_IMAGE = config.getboolean('Race','WRITE_CAMERA_IMAGE')  # False
+WRITE_CAMERA_MOVIE = config.getboolean('Race','WRITE_CAMERA_MOVIE')  # False
+TOTAL_LAPS = config.getboolean('Race','TOTAL_LAPS')  # 3
+PARKING_MODE = config.getboolean('Race','PARKING_MODE')  # True
+LED_DISPLAY = config.getboolean('Race','LED_DISPLAY') # False
 
 SERVO_FACTOR = float(config['Steering']['SERVO_FACTOR'])  # 0.5  # 0.4
 SERVO_BASIS = float(config['Steering']['SERVO_BASIS'])  # 0.5  # 1.55 # 0.55
