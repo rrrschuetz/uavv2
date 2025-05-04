@@ -57,6 +57,7 @@ COUNTERCLOCKWISE_TURN_GREEN = float(config['Parking']['COUNTERCLOCKWISE_TURN_GRE
 COUNTERCLOCKWISE_TURN_RED = float(config['Parking']['COUNTERCLOCKWISE_TURN_RED'])
 
 # LED and LCD output
+print(f"LED_DISPLAY {LED_DISPLAY}")
 if LED_DISPLAY:
     from luma.led_matrix.device import max7219
     from luma.core.interface.serial import spi, noop
@@ -1246,7 +1247,7 @@ def main():
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
     global shared_race_mode
     global Glidar_moving_avg_fps, Gcamera_moving_avg_fps
-    global Gobstacles, LED_DISPLAY
+    global Gobstacles
 
     print("Starting the UAV program...")
     Gobstacles = check_usb_device()
@@ -1260,6 +1261,7 @@ def main():
     shared_GY = Value('d', 0.0)
 
     # Initialize SPI connection and LED matrix
+    print(f"LED_DISPLAY {LED_DISPLAY}")
     device = None
     if LED_DISPLAY:
         print("LED display instance defined")
