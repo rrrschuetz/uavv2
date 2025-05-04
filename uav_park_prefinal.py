@@ -360,7 +360,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
     global Gobstacles
 
     window_size = 10
-    input_size = 500
+    input_size = 200 # not too wide !
 
     model_cc = None
     model_cw = None
@@ -1060,17 +1060,22 @@ def align_orthogonal(pca, sock, shared_race_mode, stop_distance = 0.05, max_yaw_
     distance2stop = 1.0
     yaw_diff = 90
     yaw_start = Gheading_estimate
-    while shared_race_mode.value == 2 and abs(yaw_diff) > max_yaw_diff or distance2stop >0:
+    gyro_yaw_start = Gyaw
+    gyro_yaw_diff = 90
+    #while shared_race_mode.value == 2 and abs(yaw_diff) > max_yaw_diff or distance2stop >0:
+    while shared_race_mode.value == 2 and abs(gyro_yaw_diff) > max_yaw_diff or distance2stop > 0:
         sign = 1.0 if Gclock_wise else -1.0
-        yaw_diff = 90 - sign*yaw_difference(Gheading_estimate,yaw_start)
+        #yaw_diff = 90 - sign*yaw_difference(Gheading_estimate,yaw_start)
+        gyro_yaw_diff = 90 -sign*yaw_difference(Gyaw,gyro_yaw_start)
         #steer = (yaw_diff / max_yaw_diff) / 2 # Vorzeichen wichtig !!
-        steer = 1 if yaw_diff > 0 else -1
+        #steer = 1 if yaw_diff > 0 else -1
+        steer = 1 if gyro_yaw_diff > 0 else -1
         if Gclock_wise: steer = -steer
         steer = max(min(steer, 1), -1)
         position = navigate(sock, narrow=True)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
-        print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff}")
+        print(f"Gheading_start: {Gheading_start} Gheading_estimate: {Gheading_estimate} yaw_diff: {yaw_diff} gyro_yaw_diff: {gyro_yaw_diff}")
         print(f"front_distance: {front_distance:.2f} stop_distance: {stop_distance:.2f} distance2stop: {distance2stop:.2f} steer: {steer}")
         set_servo_angle(pca, 12, PARK_STEER * steer * SERVO_FACTOR + SERVO_BASIS)
         set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
