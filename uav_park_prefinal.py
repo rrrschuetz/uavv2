@@ -425,7 +425,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                 set_motor_speed(pca, 13, MOTOR_BASIS)
                 set_servo_angle(pca, 12, SERVO_BASIS)
                 time.sleep(0.5)
-                start_boost()
+                #start_boost()
                 continue
 
             ld = interpolated_distances[:LIDAR_LEN]
@@ -1420,7 +1420,7 @@ def main():
 
             if PARKING_MODE and Gobstacles:
                 time.sleep(3)
-                start_boost()
+                #start_boost()
                 shared_race_mode.value = 3
                 while shared_race_mode.value != 2:
                     time.sleep(0.1)
