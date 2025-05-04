@@ -139,7 +139,7 @@ def arm_esc(pca, channel):
 def start_boost():
     global Gboost
     Gboost = MOTOR_BOOST
-    # Nach 1 Sekunde Boost wieder deaktivieren
+    # Nach 0.5 sec Boost wieder deaktivieren
     threading.Timer(0.5, stop_boost).start()
     print(f"Booster of {Gboost} activated.")
 
