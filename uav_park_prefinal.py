@@ -15,7 +15,7 @@ from adafruit_pca9685 import PCA9685
 import board
 from board import SCL, SDA
 import busio
-from gpiozero import Button
+from gpiozero import Button, LED
 import qmc5883l as qmc5883
 import time, sys, os
 import usb.core, usb.util
@@ -1235,6 +1235,12 @@ def ready_gesture(pca):
         time.sleep(1)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
+def ready_led():
+    led = LED(18)
+    led.on()
+    sleep(3)
+    led.off()
+
 # ID 2357:012e TP-Link 802.11ac NIC
 def check_usb_device(vendor_id="2357", product_id="012e"):
     # Convert vendor_id and product_id from hexadecimal string to integer
@@ -1359,6 +1365,7 @@ def main():
     smiley_led(device)
     lcd_out(device,f"READY - Clockwise: {Gclock_wise}")
     ready_gesture(pca)
+    ready_led()
 
     print("Steering and power neutral.")
     set_motor_speed(pca, 13, MOTOR_BASIS)
