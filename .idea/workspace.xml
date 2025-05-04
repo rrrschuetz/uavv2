@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="LCD Display">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uav_park_prefinal.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_park_prefinal.py" afterDir="false" />
-    </list>
+    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="LCD Display" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -136,22 +133,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00597" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746049128652</created>
-      <option name="number" value="00597" />
-      <option name="presentableId" value="LOCAL-00597" />
-      <option name="project" value="LOCAL" />
-      <updated>1746049128652</updated>
-    </task>
-    <task id="LOCAL-00598" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746049752460</created>
-      <option name="number" value="00598" />
-      <option name="presentableId" value="LOCAL-00598" />
-      <option name="project" value="LOCAL" />
-      <updated>1746049752460</updated>
     </task>
     <task id="LOCAL-00599" summary="magnetometer">
       <option name="closed" value="true" />
@@ -529,7 +510,23 @@
       <option name="project" value="LOCAL" />
       <updated>1746340828590</updated>
     </task>
-    <option name="localTasksCounter" value="646" />
+    <task id="LOCAL-00646" summary="LCD Display">
+      <option name="closed" value="true" />
+      <created>1746343443413</created>
+      <option name="number" value="00646" />
+      <option name="presentableId" value="LOCAL-00646" />
+      <option name="project" value="LOCAL" />
+      <updated>1746343443413</updated>
+    </task>
+    <task id="LOCAL-00647" summary="LCD Display">
+      <option name="closed" value="true" />
+      <created>1746343822411</created>
+      <option name="number" value="00647" />
+      <option name="presentableId" value="LOCAL-00647" />
+      <option name="project" value="LOCAL" />
+      <updated>1746343822411</updated>
+    </task>
+    <option name="localTasksCounter" value="648" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -689,11 +686,6 @@
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
           <line>1013</line>
           <option name="timeStamp" value="36" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1158</line>
-          <option name="timeStamp" value="37" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
