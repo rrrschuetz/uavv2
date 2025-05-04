@@ -778,7 +778,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
 
                     #print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
                     max_heading = max(max_heading, Gheading_estimate)
-                    if Glap_end and max_heading > 350 and abs(cum_heading) > 100 and Gfront_distance < 1.8:
+                    if Glap_end and max_heading > 350 and abs(cum_heading) > 100 and Gfront_distance < 1.7:
                         num_laps += 1
                         max_heading = 0
                         cum_heading = 0
@@ -1039,7 +1039,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, max_yaw_diff=
         yaw_diff = orientation(yaw_difference(Gheading_start, Gheading_estimate))
         steer = - (yaw_diff / max_yaw_diff) / 2
         steer = max(min(steer, 1), -1)
-        narrow = abs(yaw_diff) < max_yaw_diff
+        narrow = abs(yaw_diff) < max_yaw_diff * 2
         position = navigate(sock, narrow)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
