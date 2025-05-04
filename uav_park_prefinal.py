@@ -1262,10 +1262,12 @@ def main():
     # Initialize SPI connection and LED matrix
     device = None
     if LED_DISPLAY:
+        print("LED display instance defined")
         serial = spi(port=0, device=0, gpio=noop())
         device = max7219(serial, width=8, height=8)
         device.contrast(10)  # Adjust contrast if needed
     else:
+        print("LCD display instance defined")
         device = LCD()
 
 
