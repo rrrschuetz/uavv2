@@ -1132,8 +1132,8 @@ def park(pca, sock, shared_race_mode, device):
     set_servo_angle(pca, 11, LIFTER_UP)
 
 def sensor_callback():
-    global shared_race_mode, shared_blue_line_count
-    if shared_race_mode.value == 0:
+    global shared_race_mode
+    if shared_race_mode.value in [0, 2]:
         print("Race started")
         start_boost()
         shared_race_mode.value = 1
