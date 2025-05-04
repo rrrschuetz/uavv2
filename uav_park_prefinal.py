@@ -1427,7 +1427,7 @@ def main():
 
             if PARKING_MODE and Gobstacles:
                 time.sleep(3)
-                #start_boost()
+                start_boost()
                 shared_race_mode.value = 3
                 while shared_race_mode.value != 2:
                     time.sleep(0.1)
