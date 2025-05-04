@@ -780,7 +780,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
                     max_heading = max(max_heading, Gheading_estimate)
                     if Glap_end and max_heading > 350 and abs(cum_heading) > 100 and Gfront_distance < 1.8:
                         num_laps += 1
-                        Glap_end = False
                         max_heading = 0
                         cum_heading = 0
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
@@ -1020,7 +1019,7 @@ def gyro_thread(shared_race_mode, stop_event):
                     Gheading_estimate = get_magnetometer_heading()
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
                     #print(f"... Gheading_estimate: {Gheading_estimate:.2f}")
-                    Glap_end = Glap_end or yaw_diff < 10
+                    Glap_end = yaw_diff < 20
                     time.sleep(0.1)
 
     except serial.SerialException as e:
