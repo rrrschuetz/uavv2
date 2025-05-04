@@ -1137,7 +1137,7 @@ def get_clock_wise(sock):
         print(f"distance_ratio: {dq} left distance {dl} right distance {dr}")
 
 
-def class LCD(self):
+class LCD(self):
     def __init__(self):
         self.lcd = CharLCD('PCF8574', 0x27)
         self.display_buffer = []
