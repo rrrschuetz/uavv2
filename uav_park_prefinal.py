@@ -1066,7 +1066,7 @@ def align_orthogonal(pca, sock, shared_race_mode, stop_distance = 0.05, max_yaw_
     while shared_race_mode.value == 2 and abs(gyro_yaw_diff) > max_yaw_diff or distance2stop > 0:
         sign = 1.0 if Gclock_wise else -1.0
         yaw_diff = 90 - sign*yaw_difference(Gheading_estimate,yaw_start)
-        gyro_yaw_diff = sign*yaw_difference(Gyaw,gyro_yaw_start) - 90
+        gyro_yaw_diff = 90 + sign*yaw_difference(Gyaw,gyro_yaw_start)
         #steer = (yaw_diff / max_yaw_diff) / 2 # Vorzeichen wichtig !!
         #steer = 1 if yaw_diff > 0 else -1
         steer = -1 if gyro_yaw_diff > 0 else 1
