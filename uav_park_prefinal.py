@@ -22,12 +22,6 @@ import usb.core, usb.util
 import math, statistics
 import torch
 
-# LED and LCD output
-from luma.led_matrix.device import max7219
-from luma.core.interface.serial import spi, noop
-from luma.core.render import canvas
-from RPLCD.i2c import CharLCD
-
 from sympy.codegen.ast import continue_
 from torch.distributions.constraints import positive
 
@@ -61,6 +55,15 @@ CLOCKWISE_TURN_GREEN = float(config['Parking']['CLOCKWISE_TURN_GREEN'])
 CLOCKWISE_TURN_RED = float(config['Parking']['CLOCKWISE_TURN_RED'])
 COUNTERCLOCKWISE_TURN_GREEN = float(config['Parking']['COUNTERCLOCKWISE_TURN_GREEN'])
 COUNTERCLOCKWISE_TURN_RED = float(config['Parking']['COUNTERCLOCKWISE_TURN_RED'])
+
+# LED and LCD output
+if LED_DISPAY:
+    from luma.led_matrix.device import max7219
+    from luma.core.interface.serial import spi, noop
+    from luma.core.render import canvas
+else:
+    from RPLCD.i2c import CharLCD
+
 
 # Configuration for WT61 Gyroscope
 SERIAL_PORT = "/dev/ttyAMA0"  # or "/dev/ttyS0" if you have mapped accordingly
