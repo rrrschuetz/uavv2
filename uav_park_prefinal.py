@@ -1463,7 +1463,7 @@ def main():
         print("Stopping remote control")
         pygame.quit()
         print("Exiting")
-        sys.exit()
+        sys.exit(0)
 
 
 if __name__ == '__main__':
