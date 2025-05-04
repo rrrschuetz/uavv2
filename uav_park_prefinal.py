@@ -1352,10 +1352,15 @@ def main():
                                                args=(pca, shared_GX, shared_GY, shared_race_mode, proc_stop))
 
     print("Starting processes ...")
+    print("LIDAR ...")
     lidar_thread_instance.start()
+    print("Cameras ...")
     camera_thread_instance.start()
+    print("Gyro and compass ...")
     gyro_thread_instance.start()
+    print("Remote controller for training ...")
     xbox_controller_process_instance.start()
+    print("Passed.")
 
     time.sleep(2)
     Gheading_start = Gheading_estimate
