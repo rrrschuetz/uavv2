@@ -1236,7 +1236,7 @@ def ready_gesture(pca):
     set_servo_angle(pca, 12, SERVO_BASIS)
 
 def ready_led():
-    led = LED(18)
+    led = LED(4)
     led.on()
     time.sleep(3)
     led.off()
