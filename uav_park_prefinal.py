@@ -140,7 +140,7 @@ def start_boost():
     global Gboost
     Gboost = MOTOR_BOOST
     # Nach 1 Sekunde Boost wieder deaktivieren
-    threading.Timer(1.0, stop_boost).start()
+    threading.Timer(0.5, stop_boost).start()
     print(f"Booster of {Gboost} activated.")
 
 def stop_boost():
