@@ -772,7 +772,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
                 if first_line and Gline_orientation is None: Gline_orientation = line_orientation
 
                 # Avoid mix of red obstacles and magenta parking lot in curves
-                if orientation(yaw_difference(Gheading_start, Gheading_estimate)) > 10: parking_lot = False
+                #if orientation(yaw_difference(Gheading_start, Gheading_estimate)) > 10: parking_lot = False
 
                 if shared_race_mode.value == 1:
 
