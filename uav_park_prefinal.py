@@ -794,7 +794,6 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
                     parking_lot_reached = parking_lot_reached or parking_lot
                     #print("Waiting for parking lot")
                     if parking_lot_reached and not Glap_end:
-                        orientation(yaw_difference(Gheading_start, Gheading_estimate)) < 10:
                         shared_race_mode.value = 2
                         print("Parking lot reached")
 
