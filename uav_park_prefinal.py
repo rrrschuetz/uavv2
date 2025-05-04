@@ -1429,7 +1429,10 @@ def main():
             #    front_distance = position['front_distance']
             #    print(f"front_distance {front_distance:.2f}")
             #    time.sleep(0.1)
-            set_motor_speed(pca, 13, MOTOR_BASIS)
+
+            for _ in range(10):
+                set_motor_speed(pca, 13, MOTOR_BASIS)
+                time.sleep(0.1)
 
             print(f"Race time: {time.time() - start_time:.2f} seconds")
             smiley_led(device)
