@@ -86,6 +86,7 @@ Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
 Gline_orientation = None
+Gfront_distance = 0.0
 Gobstacles = True
 Gpitch = 0.0
 Groll = 0.0
@@ -354,9 +355,12 @@ def navigate(sock, narrow=True):
 
 def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
     global Glidar_string, Gcolor_string
-    global Gx_coords
+    global Gx_coords, Gfront_distance
     global Glidar_moving_avg_fps
     global Gobstacles
+
+    window_size = 10
+    input_size = 500
 
     model_cc = None
     model_cw = None
@@ -377,6 +381,9 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
         elif shared_race_mode.value in [1, 3]:  # Race
             # print("LIDAR in autonomous mode")
             interpolated_distances, angles = full_scan(sock)
+
+            valid_distances = median_filter(interpolated_distances[:LIDAR_LEN], size=window_size)
+            Gfront_distance = np.max(valid_distances[LIDAR_LEN // 2 - input_size // 2:LIDAR_LEN // 2 + input_size // 2])
 
             if model_cc is None:
                 # Load the trained model and the scaler
@@ -710,7 +717,7 @@ def detect_and_label_blobs(image, num_detector_calls):
 
 
 def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
-    global Gcolor_string, Gx_coords
+    global Gcolor_string, Gx_coords, Gfront_distance
     global Gline_orientation
     global Glap_end, Gheading_estimate  # heading
     global Gcamera_moving_avg_fps, Glidar_moving_avg_fps
@@ -768,7 +775,7 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
 
                     #print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
                     max_heading = max(max_heading, Gheading_estimate)
-                    if Glap_end and max_heading > 350 and abs(cum_heading) > 100:
+                    if Glap_end and max_heading > 350 and abs(cum_heading) > 100 and Gfront_distance < 1.8:
                         num_laps += 1
                         max_heading = 0
                         cum_heading = 0
@@ -1406,13 +1413,13 @@ def main():
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
 
-            set_servo_angle(pca, 12, SERVO_BASIS)
-            front_distance = 3.0
-            while front_distance > 1.8:
-                position = navigate(sock,False)
-                front_distance = position['front_distance']
-                print(f"front_distance {front_distance:.2f}")
-                time.sleep(0.1)
+            #set_servo_angle(pca, 12, SERVO_BASIS)
+            #front_distance = 3.0
+            #while front_distance > 1.8:
+            #    position = navigate(sock,False)
+            #    front_distance = position['front_distance']
+            #    print(f"front_distance {front_distance:.2f}")
+            #    time.sleep(0.1)
             set_motor_speed(pca, 13, MOTOR_BASIS)
 
             print(f"Race time: {time.time() - start_time:.2f} seconds")
