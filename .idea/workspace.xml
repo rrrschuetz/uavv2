@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="LCD Display" />
+    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="Readiness gesture" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -133,14 +133,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00599" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746093085770</created>
-      <option name="number" value="00599" />
-      <option name="presentableId" value="LOCAL-00599" />
-      <option name="project" value="LOCAL" />
-      <updated>1746093085770</updated>
     </task>
     <task id="LOCAL-00600" summary="magnetometer">
       <option name="closed" value="true" />
@@ -526,7 +518,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746343822411</updated>
     </task>
-    <option name="localTasksCounter" value="648" />
+    <task id="LOCAL-00648" summary="Readiness gesture">
+      <option name="closed" value="true" />
+      <created>1746343841224</created>
+      <option name="number" value="00648" />
+      <option name="presentableId" value="LOCAL-00648" />
+      <option name="project" value="LOCAL" />
+      <updated>1746343841224</updated>
+    </task>
+    <option name="localTasksCounter" value="649" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -548,7 +548,8 @@
     <MESSAGE value="magnetometer based lap counting" />
     <MESSAGE value="magnetometer" />
     <MESSAGE value="LCD Display" />
-    <option name="LAST_COMMIT_MESSAGE" value="LCD Display" />
+    <MESSAGE value="Readiness gesture" />
+    <option name="LAST_COMMIT_MESSAGE" value="Readiness gesture" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
