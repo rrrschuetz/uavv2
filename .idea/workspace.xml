@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="magnetometer" />
+    <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="LCD Display" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -133,30 +133,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00589" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746043076715</created>
-      <option name="number" value="00589" />
-      <option name="presentableId" value="LOCAL-00589" />
-      <option name="project" value="LOCAL" />
-      <updated>1746043076715</updated>
-    </task>
-    <task id="LOCAL-00590" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746043488424</created>
-      <option name="number" value="00590" />
-      <option name="presentableId" value="LOCAL-00590" />
-      <option name="project" value="LOCAL" />
-      <updated>1746043488424</updated>
-    </task>
-    <task id="LOCAL-00591" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746044781036</created>
-      <option name="number" value="00591" />
-      <option name="presentableId" value="LOCAL-00591" />
-      <option name="project" value="LOCAL" />
-      <updated>1746044781036</updated>
     </task>
     <task id="LOCAL-00592" summary="magnetometer">
       <option name="closed" value="true" />
@@ -526,7 +502,31 @@
       <option name="project" value="LOCAL" />
       <updated>1746339192366</updated>
     </task>
-    <option name="localTasksCounter" value="638" />
+    <task id="LOCAL-00638" summary="LCD Display">
+      <option name="closed" value="true" />
+      <created>1746339209427</created>
+      <option name="number" value="00638" />
+      <option name="presentableId" value="LOCAL-00638" />
+      <option name="project" value="LOCAL" />
+      <updated>1746339209427</updated>
+    </task>
+    <task id="LOCAL-00639" summary="LCD Display">
+      <option name="closed" value="true" />
+      <created>1746339315802</created>
+      <option name="number" value="00639" />
+      <option name="presentableId" value="LOCAL-00639" />
+      <option name="project" value="LOCAL" />
+      <updated>1746339315802</updated>
+    </task>
+    <task id="LOCAL-00640" summary="LCD Display">
+      <option name="closed" value="true" />
+      <created>1746339559766</created>
+      <option name="number" value="00640" />
+      <option name="presentableId" value="LOCAL-00640" />
+      <option name="project" value="LOCAL" />
+      <updated>1746339559766</updated>
+    </task>
+    <option name="localTasksCounter" value="641" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -547,7 +547,8 @@
     <MESSAGE value="N/A" />
     <MESSAGE value="magnetometer based lap counting" />
     <MESSAGE value="magnetometer" />
-    <option name="LAST_COMMIT_MESSAGE" value="magnetometer" />
+    <MESSAGE value="LCD Display" />
+    <option name="LAST_COMMIT_MESSAGE" value="LCD Display" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

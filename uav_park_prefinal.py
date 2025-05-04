@@ -1246,7 +1246,7 @@ def main():
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
     global shared_race_mode
     global Glidar_moving_avg_fps, Gcamera_moving_avg_fps
-    global Gobstacles
+    global Gobstacles, LED_DISPLAY
 
     print("Starting the UAV program...")
     Gobstacles = check_usb_device()
