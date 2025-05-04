@@ -1349,6 +1349,7 @@ def main():
     xbox_controller_process_instance = Process(target=xbox_controller_process,
                                                args=(pca, shared_GX, shared_GY, shared_race_mode, proc_stop))
 
+    print("Starting processes ...")
     lidar_thread_instance.start()
     camera_thread_instance.start()
     gyro_thread_instance.start()
