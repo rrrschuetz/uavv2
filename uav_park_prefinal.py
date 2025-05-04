@@ -42,6 +42,7 @@ READY_GESTURE = config.getboolean('Race','READY_GESTURE') # False
 SERVO_FACTOR = float(config['Steering']['SERVO_FACTOR'])  # 0.5  # 0.4
 SERVO_BASIS = float(config['Steering']['SERVO_BASIS'])  # 0.5  # 1.55 # 0.55
 MOTOR_FACTOR = float(config['Steering']['MOTOR_FACTOR'])  # 0.4 #0.45  # 0.3
+MOTOR_FACTOR_OPENING = float(config['Steering']['MOTOR_FACTOR_OPENING'])  # 0.4 #0.45  # 0.3
 MOTOR_BASIS = float(config['Steering']['MOTOR_BASIS'])   # 0.1
 MOTOR_BOOST = float(config['Steering']['MOTOR_BOOST'])  # 0.2
 LIFTER_BASIS = float(config['Steering']['LIFTER_BASIS'])   # 1.45
@@ -451,9 +452,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                 Y = RACE_SPEED
                 # if Gclock_wise:
                 #    X = -X
+                motor = Gboost + MOTOR_FACTOR if Gobstacles else MOTOR_FACTOR_OPENING
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
                     set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
-                    set_motor_speed(pca, 13, Y * (MOTOR_FACTOR+Gboost) + MOTOR_BASIS)
+                    set_motor_speed(pca, 13, Y * motor + MOTOR_BASIS)
                 else:
                     pass
                     print("Invalid steering commands:", X, Y)
