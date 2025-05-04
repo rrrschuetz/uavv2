@@ -1325,6 +1325,7 @@ def main():
     print(f"Front distance {position['front_distance']:.2f}")
 
     # Camera setup
+    print("Camera setup ...")
     picam0 = Picamera2(camera_num=0)
     picam1 = Picamera2(camera_num=1)
     config = {"format": 'RGB888', "size": (640, 400)}
@@ -1338,6 +1339,7 @@ def main():
     picam1.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
 
     # Start threads and processes
+    print("Preparing processes ...")
     stop_event = threading.Event()
     lidar_thread_instance = threading.Thread(target=lidar_thread,
                                              args=(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event))
