@@ -1227,6 +1227,12 @@ def blank_led(device):
     ]
     led_out(device, pattern)
 
+def ready_gesture(pca):
+    set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR)
+    time.sleep(1)
+    set_servo_angle(pca, 12, SERVO_BASIS - SERVO_FACTOR)
+    time.sleep(1)
+    set_servo_angle(pca, 12, SERVO_BASIS)
 
 # ID 2357:012e TP-Link 802.11ac NIC
 def check_usb_device(vendor_id="2357", product_id="012e"):
@@ -1347,8 +1353,11 @@ def main():
     print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
     get_clock_wise(sock)
     print(f"Clockwise: {Gclock_wise}")
+
+    # Show readiness for race
     smiley_led(device)
     lcd_out(device,f"READY - Clockwise: {Gclock_wise}")
+    ready_gesture(pca)
 
     print("Steering and power neutral.")
     set_motor_speed(pca, 13, MOTOR_BASIS)
