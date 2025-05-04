@@ -1238,7 +1238,7 @@ def ready_gesture(pca):
 def ready_led():
     led = LED(18)
     led.on()
-    sleep(3)
+    time.sleep(3)
     led.off()
 
 # ID 2357:012e TP-Link 802.11ac NIC
