@@ -134,30 +134,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00614" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746258820776</created>
-      <option name="number" value="00614" />
-      <option name="presentableId" value="LOCAL-00614" />
-      <option name="project" value="LOCAL" />
-      <updated>1746258820776</updated>
-    </task>
-    <task id="LOCAL-00615" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746259479944</created>
-      <option name="number" value="00615" />
-      <option name="presentableId" value="LOCAL-00615" />
-      <option name="project" value="LOCAL" />
-      <updated>1746259479944</updated>
-    </task>
-    <task id="LOCAL-00616" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746263153556</created>
-      <option name="number" value="00616" />
-      <option name="presentableId" value="LOCAL-00616" />
-      <option name="project" value="LOCAL" />
-      <updated>1746263153556</updated>
-    </task>
     <task id="LOCAL-00617" summary="magnetometer">
       <option name="closed" value="true" />
       <created>1746268098553</created>
@@ -526,7 +502,31 @@
       <option name="project" value="LOCAL" />
       <updated>1746364581554</updated>
     </task>
-    <option name="localTasksCounter" value="663" />
+    <task id="LOCAL-00663" summary="Readiness gesture">
+      <option name="closed" value="true" />
+      <created>1746371106365</created>
+      <option name="number" value="00663" />
+      <option name="presentableId" value="LOCAL-00663" />
+      <option name="project" value="LOCAL" />
+      <updated>1746371106366</updated>
+    </task>
+    <task id="LOCAL-00664" summary="Readiness gesture">
+      <option name="closed" value="true" />
+      <created>1746371126823</created>
+      <option name="number" value="00664" />
+      <option name="presentableId" value="LOCAL-00664" />
+      <option name="project" value="LOCAL" />
+      <updated>1746371126823</updated>
+    </task>
+    <task id="LOCAL-00665" summary="Readiness gesture">
+      <option name="closed" value="true" />
+      <created>1746373500621</created>
+      <option name="number" value="00665" />
+      <option name="presentableId" value="LOCAL-00665" />
+      <option name="project" value="LOCAL" />
+      <updated>1746373500621</updated>
+    </task>
+    <option name="localTasksCounter" value="666" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
