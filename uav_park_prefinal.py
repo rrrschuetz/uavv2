@@ -1359,7 +1359,7 @@ def main():
     print("Gyro and compass ...")
     gyro_thread_instance.start()
     print("Remote controller for training ...")
-    #xbox_controller_process_instance.start()
+    xbox_controller_process_instance.start()
     print("Passed.")
 
     time.sleep(2)
