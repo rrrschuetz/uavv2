@@ -696,7 +696,7 @@ def detect_and_label_blobs(image, num_detector_calls):
                 box = np.int32(box)
                 left_end = min(box[:, 0])
                 right_end = max(box[:, 0])
-                if (not Gclock_wise and left_end > COLOR_LEN / 2) or (Gclock_wise and right_end < COLOR_LEN / 2):
+                if (not Gclock_wise and left_end > COLOR_LEN * 3 / 4) or (Gclock_wise and right_end < COLOR_LEN / 4):
                     # print(f"Magenta rectangle detected: {area} pixels")
                     magenta_rectangle = True
                     cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
