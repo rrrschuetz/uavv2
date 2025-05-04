@@ -37,6 +37,7 @@ WRITE_CAMERA_MOVIE = config.getboolean('Race','WRITE_CAMERA_MOVIE')  # False
 TOTAL_LAPS = config.getboolean('Race','TOTAL_LAPS')  # 3
 PARKING_MODE = config.getboolean('Race','PARKING_MODE')  # True
 LED_DISPLAY = config.getboolean('Race','LED_DISPLAY') # False
+READY_GESTURE = config.getboolean('Race','READY_GESTURE') # False
 
 SERVO_FACTOR = float(config['Steering']['SERVO_FACTOR'])  # 0.5  # 0.4
 SERVO_BASIS = float(config['Steering']['SERVO_BASIS'])  # 0.5  # 1.55 # 0.55
@@ -1364,7 +1365,7 @@ def main():
     # Show readiness for race
     smiley_led(device)
     lcd_out(device,f"READY - Clockwise: {Gclock_wise}")
-    ready_gesture(pca)
+    if READY_GESTURE: ready_gesture(pca)
     ready_led()
 
     print("Steering and power neutral.")
