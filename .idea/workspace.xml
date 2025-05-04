@@ -134,22 +134,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00620" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746269701198</created>
-      <option name="number" value="00620" />
-      <option name="presentableId" value="LOCAL-00620" />
-      <option name="project" value="LOCAL" />
-      <updated>1746269701198</updated>
-    </task>
-    <task id="LOCAL-00621" summary="magnetometer">
-      <option name="closed" value="true" />
-      <created>1746272484780</created>
-      <option name="number" value="00621" />
-      <option name="presentableId" value="LOCAL-00621" />
-      <option name="project" value="LOCAL" />
-      <updated>1746272484780</updated>
-    </task>
     <task id="LOCAL-00622" summary="magnetometer">
       <option name="closed" value="true" />
       <created>1746278894859</created>
@@ -526,7 +510,23 @@
       <option name="project" value="LOCAL" />
       <updated>1746375232283</updated>
     </task>
-    <option name="localTasksCounter" value="669" />
+    <task id="LOCAL-00669" summary="Readiness gesture">
+      <option name="closed" value="true" />
+      <created>1746375313880</created>
+      <option name="number" value="00669" />
+      <option name="presentableId" value="LOCAL-00669" />
+      <option name="project" value="LOCAL" />
+      <updated>1746375313880</updated>
+    </task>
+    <task id="LOCAL-00670" summary="Readiness gesture">
+      <option name="closed" value="true" />
+      <created>1746375673442</created>
+      <option name="number" value="00670" />
+      <option name="presentableId" value="LOCAL-00670" />
+      <option name="project" value="LOCAL" />
+      <updated>1746375673442</updated>
+    </task>
+    <option name="localTasksCounter" value="671" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
