@@ -1228,10 +1228,11 @@ def blank_led(device):
     led_out(device, pattern)
 
 def ready_gesture(pca):
-    set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR)
-    time.sleep(1)
-    set_servo_angle(pca, 12, SERVO_BASIS - SERVO_FACTOR)
-    time.sleep(1)
+    for i in range(2):
+        set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR/2)
+        time.sleep(1)
+        set_servo_angle(pca, 12, SERVO_BASIS - SERVO_FACTOR/2)
+        time.sleep(1)
     set_servo_angle(pca, 12, SERVO_BASIS)
 
 # ID 2357:012e TP-Link 802.11ac NIC
