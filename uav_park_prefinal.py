@@ -34,6 +34,7 @@ config.read(os.path.expanduser('./config.ini'))
 
 WRITE_CAMERA_IMAGE = config.getboolean('Race','WRITE_CAMERA_IMAGE')  # False
 WRITE_CAMERA_MOVIE = config.getboolean('Race','WRITE_CAMERA_MOVIE')  # False
+Gobstacles = not config.getboolean('Race','OPENING_RACE')  # False
 TOTAL_LAPS = int(config['Race']['TOTAL_LAPS'])  # 3
 PARKING_MODE = config.getboolean('Race','PARKING_MODE')  # True
 LED_DISPLAY = config.getboolean('Race','LED_DISPLAY') # False
@@ -88,7 +89,6 @@ Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
 Gline_orientation = None
 Gfront_distance = 0.0
-Gobstacles = True
 Gpitch = 0.0
 Groll = 0.0
 Gyaw = 0.0
@@ -1290,7 +1290,7 @@ def main():
     global Gobstacles
 
     print("Starting the UAV program...")
-    Gobstacles = check_usb_device()
+    #Gobstacles = check_usb_device()
     if Gobstacles:
         print("Obstacle Race")
     else:
