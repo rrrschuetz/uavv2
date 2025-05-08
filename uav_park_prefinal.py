@@ -45,6 +45,7 @@ MOTOR_FACTOR = float(config['Steering']['MOTOR_FACTOR'])  # 0.4 #0.45  # 0.3
 MOTOR_FACTOR_OPENING = float(config['Steering']['MOTOR_FACTOR_OPENING'])  # 0.4 #0.45  # 0.3
 MOTOR_BASIS = float(config['Steering']['MOTOR_BASIS'])   # 0.1
 MOTOR_BOOST = float(config['Steering']['MOTOR_BOOST'])  # 0.2
+MOTOR_ACCEL = float(config['Steering']['MOTOR_ACCEL'])  # 1.0
 LIFTER_BASIS = float(config['Steering']['LIFTER_BASIS'])   # 1.45
 LIFTER_UP = float(config['Steering']['LIFTER_UP'])  # 2.7
 
@@ -139,17 +140,15 @@ def arm_esc(pca, channel):
 def start_boost():
     global Gboost
     Gboost = MOTOR_BOOST
-    # Nach 0.5 sec Boost wieder deaktivieren
-    threading.Timer(0.5, stop_boost).start()
+    # Check acclelaration every 0.1 sec
+    threading.Timer(0.1, stop_boost).start()
     print(f"Booster of {Gboost} activated.")
 
 def stop_boost():
     global Gboost, Gaccel_x, Gaccel_y, Gaccel_z
-    
-    min_accel = 0.0
-    accel=Gaccel_x**2+Gaccel_y**2+Gaccel_z**2
-    print(f"Acceleration: x/y/z/a {Gaccel_x}/{Gaccel_y}/{Gaccel_z}/{accel}")
-    if accel < min_accel: 
+    accel=math.sqrt(Gaccel_x**2+Gaccel_y**2+Gaccel_z**2)
+    print(f"Acceleration: Minimum {MOTOR_ACCEL} x/y/z/a {Gaccel_x}/{Gaccel_y}/{Gaccel_z}/{accel}")
+    if accel < MOTOR_ACCEL: 
         start_boost()
         print("Booster reactivated.")
     else:
