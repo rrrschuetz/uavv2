@@ -153,7 +153,7 @@ def stop_boost():
         print("Booster reactivated.")
     else:
         Gboost = 0.0
-    	print("Booster deactivated.")
+        print("Booster deactivated.")
 
 
 # LIDAR functions
