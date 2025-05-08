@@ -1061,19 +1061,20 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, max_yaw_diff=
     print(f"Car aligned")
 
 
-def align_orthogonal(pca, sock, shared_race_mode, stop_distance = 0.05, max_yaw_diff = 5):
+def align_orthogonal(pca, sock, shared_race_mode, misalignment, stop_distance = 0.05, max_yaw_diff = 5):
     global Gheading_estimate, Gheading_start, Gclock_wise
 
     distance2stop = 1.0
-    yaw_diff = 90
+    yaw_target = 90 + misalignment
+    yaw_diff = yaw_target
     yaw_start = Gheading_estimate
     gyro_yaw_start = Gyaw
-    gyro_yaw_diff = 90
+    gyro_yaw_diff = yaw_target
     #while shared_race_mode.value == 2 and abs(yaw_diff) > max_yaw_diff or distance2stop >0:
     while shared_race_mode.value == 2 and abs(gyro_yaw_diff) > max_yaw_diff or distance2stop > 0:
         sign = 1.0 if Gclock_wise else -1.0
-        yaw_diff = 90 - sign*yaw_difference(Gheading_estimate,yaw_start)
-        gyro_yaw_diff = 90 + sign*yaw_difference(Gyaw,gyro_yaw_start)
+        yaw_diff = yaw_target - sign*yaw_difference(Gheading_estimate,yaw_start)
+        gyro_yaw_diff = yaw_target + sign*yaw_difference(Gyaw,gyro_yaw_start)
         #steer = (yaw_diff / max_yaw_diff) / 2 # Vorzeichen wichtig !!
         #steer = 1 if yaw_diff > 0 else -1
         steer = 1 if gyro_yaw_diff > 0 else -1
@@ -1119,7 +1120,9 @@ def park(pca, sock, shared_race_mode, device):
 
     print(f">>> Car turn heading: {Gheading_estimate}")
     second_line_led(device)
-    align_orthogonal(pca, sock, shared_race_mode, stop_distance=0.05, max_yaw_diff=5)
+    yaw_diff = orientation(yaw_difference(Gheading_start, Gheading_estimate))
+    print(f"Misalignment yaw_diff {yaw_diff}")
+    align_orthogonal(pca, sock, shared_race_mode, yaw_diff, stop_distance=0.05, max_yaw_diff=5)
     print(f">>> Car final heading: {Gheading_estimate} {orientation(Gheading_estimate) - orientation(Gheading_start):.2f}")
 
     while True:
