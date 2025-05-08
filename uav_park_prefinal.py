@@ -144,9 +144,17 @@ def start_boost():
     print(f"Booster of {Gboost} activated.")
 
 def stop_boost():
-    global Gboost
-    Gboost = 0.0
-    print("Booster deactivated.")
+    global Gboost, Gaccel_x, Gaccel_y, Gaccel_z
+    
+    min_accel = 0.0
+    accel=Gaccel_x**2+Gaccel_y**2+Gaccel_z**2
+    print(f"Acceleration: x/y/z/a {Gaccel_x}/{Gaccel_y}/{Gaccel_z}/{accel}")
+    if accel < min_accel: 
+        start_boost()
+        print("Booster reactivated.")
+    else:
+        Gboost = 0.0
+    	print("Booster deactivated.")
 
 
 # LIDAR functions
