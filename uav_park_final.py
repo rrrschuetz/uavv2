@@ -137,9 +137,9 @@ def arm_esc(pca, channel):
     print("ESC armed")
 
 
-def start_boost():
+def start_boost(boost):
     global Gboost
-    Gboost = MOTOR_BOOST
+    Gboost = boost
     # Check acclelaration every 0.1 sec
     threading.Timer(0.1, stop_boost).start()
     print(f"Booster of {Gboost} activated.")
@@ -149,7 +149,8 @@ def stop_boost():
     accel=math.sqrt(Gaccel_x**2+Gaccel_y**2+Gaccel_z**2)
     print(f"Acceleration: Minimum {MOTOR_ACCEL} x/y/z/a {Gaccel_x}/{Gaccel_y}/{Gaccel_z}/{accel}")
     if accel < MOTOR_ACCEL:
-        start_boost()
+        GBoost*=1.2 # escalate if uav is not moving
+        start_boost(GBoost)
         print("Booster reactivated.")
     else:
         Gboost = 0.0
@@ -439,7 +440,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                 set_motor_speed(pca, 13, MOTOR_BASIS)
                 set_servo_angle(pca, 12, SERVO_BASIS)
                 time.sleep(0.5)
-                #start_boost()
+                #start_boost(MOTOR_BOOST)
                 continue
 
             ld = interpolated_distances[:LIDAR_LEN]
@@ -786,13 +787,14 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
                     #print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
                     # 350 too much !
                     max_heading = max(max_heading, Gheading_estimate)
-                    if Glap_end and max_heading > 350 and abs(cum_heading) > 100 and Gfront_distance < 1.7:
+                    if Glap_end and max_heading > 350 and abs(cum_heading) > 100 and Gfront_distance < 1.3:
+                        print(f"max_heading {max_heading} cum_heading {cum_heading} Gfront_distance {Gfront_distance}")
                         num_laps += 1
                         max_heading = 0
                         cum_heading = 0
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
-                        print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
-                        print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
+                        #print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
+                        #print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
                         if num_laps >= TOTAL_LAPS:
                             shared_race_mode.value = 2
                             print("End of race.")
@@ -1146,7 +1148,7 @@ def sensor_callback():
     global shared_race_mode
     if shared_race_mode.value in [0, 2]:
         print("Race started")
-        start_boost()
+        start_boost(MOTOR_BOOST)
         shared_race_mode.value = 1
 
 
@@ -1450,7 +1452,7 @@ def main():
 
             if PARKING_MODE and Gobstacles:
                 time.sleep(3)
-                start_boost()
+                start_boost(MOTOR_BOOST)
                 shared_race_mode.value = 3
                 while shared_race_mode.value != 2:
                     time.sleep(0.1)
