@@ -365,7 +365,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
     global Glidar_string, Gcolor_string
     global Gx_coords, Gfront_distance
     global Glidar_moving_avg_fps
-    global Gobstacles
+    global Gobstacles, Gboost
 
     window_size = 10
     input_size = 100 # not too wide !
