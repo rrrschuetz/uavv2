@@ -149,7 +149,7 @@ def stop_boost():
     accel=math.sqrt(Gaccel_x**2+Gaccel_y**2+Gaccel_z**2)
     print(f"Acceleration: Minimum {MOTOR_ACCEL} x/y/z/a {Gaccel_x}/{Gaccel_y}/{Gaccel_z}/{accel}")
     if accel < MOTOR_ACCEL:
-        Gboost*=1.2 # escalate if uav is not moving
+        Gboost*=1.01 # escalate if uav is not moving
         start_boost(Gboost)
         print("Booster reactivated.")
     else:
@@ -468,7 +468,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                 # if Gclock_wise:
                 #    X = -X
                 motor = Gboost + MOTOR_FACTOR if Gobstacles else MOTOR_FACTOR_OPENING
-                if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
+                if -1.0 < X < 1.0 and -2.0 < Y < 0.0:
                     set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
                     set_motor_speed(pca, 13, Y * motor + MOTOR_BASIS)
                 else:
