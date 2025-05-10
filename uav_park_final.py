@@ -141,7 +141,7 @@ def start_boost(boost):
     global Gboost
     Gboost = boost
     # Check acclelaration every 0.1 sec
-    threading.Timer(0.1, stop_boost).start()
+    threading.Timer(0.02, stop_boost).start()
     print(f"Booster of {Gboost} activated.")
 
 def stop_boost():
@@ -468,7 +468,7 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                 # if Gclock_wise:
                 #    X = -X
                 motor = Gboost + MOTOR_FACTOR if Gobstacles else MOTOR_FACTOR_OPENING
-                if -1.0 < X < 1.0 and -2.0 < Y < 0.0:
+                if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
                     set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
                     set_motor_speed(pca, 13, Y * motor + MOTOR_BASIS)
                 else:
@@ -1030,7 +1030,7 @@ def gyro_thread(shared_race_mode, stop_event):
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
                     #print(f"... Gheading_estimate: {Gheading_estimate:.2f}")
                     Glap_end = yaw_diff < 10  # no larger value !!
-                    time.sleep(0.1)
+                    time.sleep(0.02
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
