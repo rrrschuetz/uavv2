@@ -149,8 +149,8 @@ def stop_boost():
     accel=math.sqrt(Gaccel_x**2+Gaccel_y**2+Gaccel_z**2)
     print(f"Acceleration: Minimum {MOTOR_ACCEL} x/y/z/a {Gaccel_x}/{Gaccel_y}/{Gaccel_z}/{accel}")
     if accel < MOTOR_ACCEL:
-        GBoost*=1.2 # escalate if uav is not moving
-        start_boost(GBoost)
+        Gboost*=1.2 # escalate if uav is not moving
+        start_boost(Gboost)
         print("Booster reactivated.")
     else:
         Gboost = 0.0
