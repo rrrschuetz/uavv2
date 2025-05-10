@@ -134,30 +134,6 @@
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
     </task>
-    <task id="LOCAL-00656" summary="Readiness gesture">
-      <option name="closed" value="true" />
-      <created>1746361042308</created>
-      <option name="number" value="00656" />
-      <option name="presentableId" value="LOCAL-00656" />
-      <option name="project" value="LOCAL" />
-      <updated>1746361042308</updated>
-    </task>
-    <task id="LOCAL-00657" summary="Readiness gesture">
-      <option name="closed" value="true" />
-      <created>1746361394008</created>
-      <option name="number" value="00657" />
-      <option name="presentableId" value="LOCAL-00657" />
-      <option name="project" value="LOCAL" />
-      <updated>1746361394008</updated>
-    </task>
-    <task id="LOCAL-00658" summary="Readiness gesture">
-      <option name="closed" value="true" />
-      <created>1746361510378</created>
-      <option name="number" value="00658" />
-      <option name="presentableId" value="LOCAL-00658" />
-      <option name="project" value="LOCAL" />
-      <updated>1746361510378</updated>
-    </task>
     <task id="LOCAL-00659" summary="Readiness gesture">
       <option name="closed" value="true" />
       <created>1746361524263</created>
@@ -526,7 +502,31 @@
       <option name="project" value="LOCAL" />
       <updated>1746736633666</updated>
     </task>
-    <option name="localTasksCounter" value="705" />
+    <task id="LOCAL-00705" summary="bug fixing">
+      <option name="closed" value="true" />
+      <created>1746808430247</created>
+      <option name="number" value="00705" />
+      <option name="presentableId" value="LOCAL-00705" />
+      <option name="project" value="LOCAL" />
+      <updated>1746808430247</updated>
+    </task>
+    <task id="LOCAL-00706" summary="bug fixing">
+      <option name="closed" value="true" />
+      <created>1746808893227</created>
+      <option name="number" value="00706" />
+      <option name="presentableId" value="LOCAL-00706" />
+      <option name="project" value="LOCAL" />
+      <updated>1746808893227</updated>
+    </task>
+    <task id="LOCAL-00707" summary="bug fixing">
+      <option name="closed" value="true" />
+      <created>1746809574413</created>
+      <option name="number" value="00707" />
+      <option name="presentableId" value="LOCAL-00707" />
+      <option name="project" value="LOCAL" />
+      <updated>1746809574413</updated>
+    </task>
+    <option name="localTasksCounter" value="708" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -676,32 +676,32 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1059</line>
+          <line>1060</line>
           <option name="timeStamp" value="34" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1091</line>
+          <line>1092</line>
           <option name="timeStamp" value="35" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1033</line>
+          <line>1034</line>
           <option name="timeStamp" value="36" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1211</line>
+          <line>1212</line>
           <option name="timeStamp" value="38" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>964</line>
+          <line>965</line>
           <option name="timeStamp" value="39" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1418</line>
+          <line>1419</line>
           <option name="timeStamp" value="41" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -711,12 +711,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1352</line>
+          <line>1353</line>
           <option name="timeStamp" value="43" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>972</line>
+          <line>973</line>
           <option name="timeStamp" value="45" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -736,12 +736,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1266</line>
+          <line>1267</line>
           <option name="timeStamp" value="53" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
-          <line>1143</line>
+          <line>1144</line>
           <option name="timeStamp" value="55" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
