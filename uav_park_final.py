@@ -681,8 +681,8 @@ def detect_and_label_blobs(image, num_detector_calls):
 
     red_mask = mask.red(image)
     green_mask = mask.green(image)
-    
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    combined_mask = cv2.bitwise_or(red_mask, green_mask)
+    contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     filtered_contours = filter_contours(contours)
 
     x_coords = np.zeros(image.shape[1], dtype=float)
