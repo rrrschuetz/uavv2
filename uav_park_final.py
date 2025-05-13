@@ -576,39 +576,40 @@ class uav_cam(camera_num):
 
 class mask():
     
-    def red_green(self, hsv):
+    def red(self, image):
         lower_red1 = np.array([0, 100, 100])
         upper_red1 = np.array([10, 255, 255])
         lower_red2 = np.array([160, 100, 100])
         upper_red2 = np.array([179, 255, 255])
-        red_mask = cv2.inRange(hsv, lower_red1, upper_red1) | cv2.inRange(hsv, lower_red2, upper_red2)
+        red_mask = cv2.inRange(image, lower_red1, upper_red1) | cv2.inRange(image, lower_red2, upper_red2)
+        red_mask = self._remove_small_contours(self._apply_morphological_operations(red_mask))
+        return red_mask
 
+    def green(self, image):
         lower_green = np.array([40, 60, 60])
         upper_green = np.array([90, 255, 255])
-        green_mask = cv2.inRange(hsv, lower_green, upper_green)
-
-        red_mask = self._remove_small_contours(self._apply_morphological_operations(red_mask))
+        green_mask = cv2.inRange(image, lower_green, upper_green)
         green_mask = self._remove_small_contours(self._apply_morphological_operations(green_mask))
-        return red_mask, green_mask
+        return green_mask
 
-    def blue_amber(self, hsv):
+    def blue(self, image):
         blue_lower = np.array([90, 70, 90])  # HSV range for blue detection
         blue_upper = np.array([140, 255, 255])
+        blue_mask = cv2.inRange(image, blue_lower, blue_upper)
+        blue_mask = remove_small_contours(blue_mask)
+        return blue_ ask
 
+    def amber(self, image):
         amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
         amber_upper = np.array([20, 255, 255])  # Upper bound for hue, saturation, and brightness
-
-        blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
-        blue_mask = remove_small_contours(blue_mask)
-        amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
+        amber_mask = cv2.inRange(image, amber_lower, amber_upper)
         amber_mask = remove_small_contours(amber_mask)
-        return blue_mask, amber_mask
+        return amber_mask
 
-    def magenta(self, hsv):
+    def magenta(self, image):
         magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
         magenta_upper = np.array([170, 255, 255])
-
-        magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
+        magenta_mask = cv2.inRange(image, magenta_lower, magenta_upper)
         magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
         return magenta_mask
     
@@ -678,7 +679,8 @@ def detect_and_label_blobs(image, num_detector_calls):
     line_orientation = ""
     magenta_rectangle = False
 
-    red_mask, green_mask = mask.red_green(image)
+    red_mask = mask.red(image)
+    green_mask = mask.green(image)
     
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     filtered_contours = filter_contours(contours)
@@ -704,13 +706,12 @@ def detect_and_label_blobs(image, num_detector_calls):
     if (num_detector_calls % 2 == 0):
 
         # Detect blue and amber lines
-
         if Gclock_wise:
-            first_line_mask = amber_mask
-            second_line_mask = blue_mask
+            first_line_mask = mask.amber(image)
+            second_line_mask = mask.blue(image)
         else:
-            first_line_mask = blue_mask
-            second_line_mask = amber_mask
+            first_line_mask = mask.blue(image)
+            second_line_mask = mask.amber(image)
 
         most_significant_line = None
         max_line_length = 0
@@ -751,10 +752,8 @@ def detect_and_label_blobs(image, num_detector_calls):
                     second_line = True
                     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
-        # Detect magenta parking lot
-
         # Find and filter contours for magenta blobs only with outwards looking camera
-        contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask.amber(image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > 1000:  # 5000 size of parking lot
