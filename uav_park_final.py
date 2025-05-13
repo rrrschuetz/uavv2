@@ -521,11 +521,10 @@ def apply_morphological_operations(mask):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
     return mask
     
-#-------------------------------------------------------------------------------
-class uav_cam(PiCamera2):
+class uav_cam(camera_num):
     def __init__(self):
-        self.picam2 = Picamera2() 
-        self.config = picam2.create_still_configuration(main={"size": (640, 480)})
+        self.picam2 = Picamera2(camera_num = camera_num) 
+        config = picam2.create_still_configuration(main={"format": 'RGB888', "size": (640, 480)})
         self.picam2.configure(config)
         self.picam2.start()
         time.sleep(2)
@@ -541,47 +540,12 @@ class uav_cam(PiCamera2):
         })
         time.sleep(1)
 
-    def red_green_mask(self, hsv):
-        lower_red1 = np.array([0, 100, 100])
-        upper_red1 = np.array([10, 255, 255])
-        lower_red2 = np.array([160, 100, 100])
-        upper_red2 = np.array([179, 255, 255])
-        red_mask = cv2.inRange(hsv, lower_red1, upper_red1) | cv2.inRange(hsv, lower_red2, upper_red2)
-
-        lower_green = np.array([40, 60, 60])
-        upper_green = np.array([90, 255, 255])
-        green_mask = cv2.inRange(hsv, lower_green, upper_green)
-
-        red_mask = self._remove_small_contours(self._apply_morphological_operations(red_mask))
-        green_mask = self._remove_small_contours(self._apply_morphological_operations(green_mask))
-        return red_mask, green_mask
-
-    def blue_amber_mask(self, hsv):
-        blue_lower = np.array([90, 70, 90])  # HSV range for blue detection
-        blue_upper = np.array([140, 255, 255])
-
-        amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
-        amber_upper = np.array([20, 255, 255])  # Upper bound for hue, saturation, and brightness
-
-        blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
-        blue_mask = remove_small_contours(blue_mask)
-        amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
-        amber_mask = remove_small_contours(amber_mask)
-        return blue_mask, amber_mask
-
-    def magenta_mask(self, hsv):
-        magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
-        magenta_upper = np.array([170, 255, 255])
-
-        magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
-        magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
-        return magenta_mask
-    
-    def hsv(self):
-        self.image = picam2.capture_array()
-        self.image = self._gamma_correction(self.image)
-        self.image = self._enhance_lighting(self._image)
-        return = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
+    def image(self):
+        image = picam2.capture_array()
+        image = cv2.flip(image, -1)
+        image = self._gamma_correction(image)
+        image = self._enhance_lighting(image)
+        return cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     # ---------- Bildverbesserung ----------
     def _gamma_correction(self, image, gamma=1.5):
@@ -610,6 +574,44 @@ class uav_cam(PiCamera2):
         b_gain = avg / b if b != 0 else 1.0
         return round(r_gain, 2), round(b_gain, 2)
 
+class mask():
+    
+    def red_green(self, hsv):
+        lower_red1 = np.array([0, 100, 100])
+        upper_red1 = np.array([10, 255, 255])
+        lower_red2 = np.array([160, 100, 100])
+        upper_red2 = np.array([179, 255, 255])
+        red_mask = cv2.inRange(hsv, lower_red1, upper_red1) | cv2.inRange(hsv, lower_red2, upper_red2)
+
+        lower_green = np.array([40, 60, 60])
+        upper_green = np.array([90, 255, 255])
+        green_mask = cv2.inRange(hsv, lower_green, upper_green)
+
+        red_mask = self._remove_small_contours(self._apply_morphological_operations(red_mask))
+        green_mask = self._remove_small_contours(self._apply_morphological_operations(green_mask))
+        return red_mask, green_mask
+
+    def blue_amber(self, hsv):
+        blue_lower = np.array([90, 70, 90])  # HSV range for blue detection
+        blue_upper = np.array([140, 255, 255])
+
+        amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
+        amber_upper = np.array([20, 255, 255])  # Upper bound for hue, saturation, and brightness
+
+        blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
+        blue_mask = remove_small_contours(blue_mask)
+        amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
+        amber_mask = remove_small_contours(amber_mask)
+        return blue_mask, amber_mask
+
+    def magenta(self, hsv):
+        magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
+        magenta_upper = np.array([170, 255, 255])
+
+        magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
+        magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
+        return magenta_mask
+    
     # ---------- Maskenfilterung ----------
     def _apply_morphological_operations(self, mask):
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
@@ -668,7 +670,7 @@ def check_line_thickness(line, mask, min_thickness):
     return thickness_count >= min_thickness
 
 
-def detect_and_label_blobs(mask, num_detector_calls):
+def detect_and_label_blobs(image, num_detector_calls):
     global Gclock_wise
 
     first_line = False
@@ -676,7 +678,8 @@ def detect_and_label_blobs(mask, num_detector_calls):
     line_orientation = ""
     magenta_rectangle = False
 
-    # Find and filter contours
+    red_mask, green_mask = mask.red_green(image)
+    
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     filtered_contours = filter_contours(contours)
 
@@ -780,7 +783,7 @@ def detect_and_label_blobs(mask, num_detector_calls):
     return x_coords, first_line, second_line, magenta_rectangle, line_orientation, image
 
 
-def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
+def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_event):
     global Gcolor_string, Gx_coords, Gfront_distance
     global Gline_orientation
     global Glap_end, Gheading_estimate  # heading
@@ -819,14 +822,12 @@ def camera_thread(pca, picam0, picam1, shared_race_mode, device, stop_event):
                 heading_prev_lap = Gheading_estimate
                 #print("cum_heading ",cum_heading)
 
-                image0 = picam0.capture_array()
-                image1 = picam1.capture_array()
-                image0_flipped = cv2.flip(image0, -1)
-                image1_flipped = cv2.flip(image1, -1)
-                combined_image = np.hstack((image0_flipped, image1_flipped))
-                cropped_image = combined_image[frame_height:, :]
+                image0 = uav_camera0.image()
+                image1 = uav_camera1.image()                
+                image = np.hstack((image0, image1))
+                image = image[frame_height:, :]
                 Gx_coords, first_line, second_line, parking_lot, line_orientation, image \
-                    = detect_and_label_blobs(cropped_image, num_detector_calls)
+                    = detect_and_label_blobs(image, num_detector_calls)
 
                 # if Gclock_wise:
                 #    Gx_coords = Gx_coords * -1.0
@@ -1343,7 +1344,6 @@ def check_usb_device(vendor_id="2357", product_id="012e"):
     else:
         return False
 
-
 def main():
     global Gheading_estimate, Gheading_start, Gclock_wise
     global Gaccel_x, Gaccel_y, Gaccel_z, Gyaw
@@ -1413,17 +1413,8 @@ def main():
 
     # Camera setup
     print("Camera setup ...")
-    picam0 = Picamera2(camera_num=0)
-    picam1 = Picamera2(camera_num=1)
-    config = {"format": 'RGB888', "size": (640, 400)}
-    picam0.configure(picam0.create_preview_configuration(main=config))
-    picam1.configure(picam1.create_preview_configuration(main=config))
-    picam0.start()
-    picam1.start()
-
-    # Set camera controls to adjust exposure time and gain
-    picam0.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
-    picam1.set_controls({"ExposureTime": 10000, "AnalogueGain": 10.0})
+    picam0 = uav_camera(camera_num=0)
+    picam1 = uav_camera(camera_num=1)
 
     # Start threads and processes
     print("Preparing processes ...")
@@ -1544,9 +1535,9 @@ def main():
         print("All threads and processes stopped cleanly")
 
         print("Stopping camera 0")
-        picam0.stop()
+        uav_camera0.stop()
         print("Stopping camera 1")
-        picam1.stop()
+        uav_camera1.stop()
         print("Stopping LIDAR")
         stop_scan(sock)
         sock.close()
