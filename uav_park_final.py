@@ -487,42 +487,142 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
 
 
 # Camera functions
+# ---------- Bildverbesserung ----------
 def gamma_correction(image, gamma=1.5):
     inv_gamma = 1.0 / gamma
-    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    table = np.array([(i / 255.0) ** inv_gamma * 255 for i in range(256)]).astype("uint8")
     return cv2.LUT(image, table)
-
 
 def enhance_lighting(image):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     h, s, v = cv2.split(hsv)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     v = clahe.apply(v)
-    hsv_enhanced = cv2.merge([h, s, v])
-    enhanced = cv2.cvtColor(hsv_enhanced, cv2.COLOR_HSV2BGR)
-    return enhanced
+    hsv = cv2.merge([h, s, v])
+    return cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
+# ---------- Weißabgleich ----------
+def get_mean_rgb(image):
+    h, w, _ = image.shape
+    center = image[h//3:2*h//3, w//3:2*w//3]
+    mean = cv2.mean(center)[:3]  # BGR
+    return mean[2], mean[1], mean[0]  # R, G, B
 
-def preprocess_image(image):
-    gamma_corrected = gamma_correction(image)
-    enhanced = enhance_lighting(gamma_corrected)
-    hsv = cv2.cvtColor(enhanced, cv2.COLOR_BGR2HSV)
-    return hsv
+def compute_awb_gains(r, g, b):
+    avg = (r + g + b) / 3
+    r_gain = avg / r if r != 0 else 1.0
+    b_gain = avg / b if b != 0 else 1.0
+    return round(r_gain, 2), round(b_gain, 2)
 
-
+# ---------- Maskenfilterung ----------
 def apply_morphological_operations(mask):
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=4)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
     return mask
+    
+#-------------------------------------------------------------------------------
+class uav_cam(PiCamera2):
+    def __init__(self):
+        self.picam2 = Picamera2() 
+        self.config = picam2.create_still_configuration(main={"size": (640, 480)})
+        self.picam2.configure(config)
+        self.picam2.start()
+        time.sleep(2)
+        # Automatischer AWB zum Kalibrieren
+        image_auto = self.picam2.capture_array()
+        r, g, b = self._get_mean_rgb(image_auto)
+        r_gain, b_gain = self._compute_awb_gains(r, g, b)
+        print(f"[INFO] AWB-Gains gesetzt: R={r_gain}, B={b_gain}")
+        # Manuellen Weißabgleich setzen
+        self.picam2.set_controls({
+            "AwbEnable": False,
+            "AwbGains": (r_gain, b_gain)
+        })
+        time.sleep(1)
 
+    def red_green_mask(self, hsv):
+        lower_red1 = np.array([0, 100, 100])
+        upper_red1 = np.array([10, 255, 255])
+        lower_red2 = np.array([160, 100, 100])
+        upper_red2 = np.array([179, 255, 255])
+        red_mask = cv2.inRange(hsv, lower_red1, upper_red1) | cv2.inRange(hsv, lower_red2, upper_red2)
 
-def remove_small_contours(mask, min_area=500):
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for contour in contours:
+        lower_green = np.array([40, 60, 60])
+        upper_green = np.array([90, 255, 255])
+        green_mask = cv2.inRange(hsv, lower_green, upper_green)
+
+        red_mask = self._remove_small_contours(self._apply_morphological_operations(red_mask))
+        green_mask = self._remove_small_contours(self._apply_morphological_operations(green_mask))
+        return red_mask, green_mask
+
+    def blue_amber_mask(self, hsv):
+        blue_lower = np.array([90, 70, 90])  # HSV range for blue detection
+        blue_upper = np.array([140, 255, 255])
+
+        amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
+        amber_upper = np.array([20, 255, 255])  # Upper bound for hue, saturation, and brightness
+
+        blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
+        blue_mask = remove_small_contours(blue_mask)
+        amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
+        amber_mask = remove_small_contours(amber_mask)
+        return blue_mask, amber_mask
+
+    def magenta_mask(self, hsv):
+        magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
+        magenta_upper = np.array([170, 255, 255])
+
+        magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
+        magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
+        return magenta_mask
+    
+    def hsv(self):
+        self.image = picam2.capture_array()
+        self.image = self._gamma_correction(self.image)
+        self.image = self._enhance_lighting(self._image)
+        return = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
+
+    # ---------- Bildverbesserung ----------
+    def _gamma_correction(self, image, gamma=1.5):
+        inv_gamma = 1.0 / gamma
+        table = np.array([(i / 255.0) ** inv_gamma * 255 for i in range(256)]).astype("uint8")
+        return cv2.LUT(image, table)
+
+    def _enhance_lighting(self, image):
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(hsv)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        v = clahe.apply(v)
+        hsv = cv2.merge([h, s, v])
+        return cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+    # ---------- Weißabgleich ----------
+    def _get_mean_rgb(self, image):
+        h, w, _ = image.shape
+        center = image[h//3:2*h//3, w//3:2*w//3]
+        mean = cv2.mean(center)[:3]  # BGR
+        return mean[2], mean[1], mean[0]  # R, G, B
+
+    def _compute_awb_gains(self, r, g, b):
+        avg = (r + g + b) / 3
+        r_gain = avg / r if r != 0 else 1.0
+        b_gain = avg / b if b != 0 else 1.0
+        return round(r_gain, 2), round(b_gain, 2)
+
+    # ---------- Maskenfilterung ----------
+    def _apply_morphological_operations(self, mask):
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=4)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
+        return mask
+
+    def _remove_small_contours(self, mask, min_area=500):
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for contour in contours:
         if cv2.contourArea(contour) < min_area:
             cv2.drawContours(mask, [contour], -1, 0, -1)
-    return mask
+        return mask
 
 
 def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle_range=(80, 100)):
@@ -568,7 +668,7 @@ def check_line_thickness(line, mask, min_thickness):
     return thickness_count >= min_thickness
 
 
-def detect_and_label_blobs(image, num_detector_calls):
+def detect_and_label_blobs(mask, num_detector_calls):
     global Gclock_wise
 
     first_line = False
@@ -576,46 +676,8 @@ def detect_and_label_blobs(image, num_detector_calls):
     line_orientation = ""
     magenta_rectangle = False
 
-    hsv = preprocess_image(image)
-    # cv2.imwrite('hsv.jpg', hsv)
-
-    # Adaptive color ranges for red and green detection
-    red_lower1 = np.array([0, 50, 50])
-    red_upper1 = np.array([10, 255, 255])
-    red_lower2 = np.array([160, 50, 50])
-    red_upper2 = np.array([180, 255, 255])
-
-    green_lower1 = np.array([35, 40, 40])
-    green_upper1 = np.array([70, 255, 255])
-    green_lower2 = np.array([70, 40, 40])
-    green_upper2 = np.array([90, 255, 255])
-
-    blue_lower = np.array([90, 70, 90])  # HSV range for blue detection
-    blue_upper = np.array([140, 255, 255])
-
-    amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
-    amber_upper = np.array([20, 255, 255])  # Upper bound for hue, saturation, and brightness
-
-    magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
-    magenta_upper = np.array([170, 255, 255])
-
-    # Detect red and green blocks
-    red_mask1 = cv2.inRange(hsv, red_lower1, red_upper1)
-    red_mask2 = cv2.inRange(hsv, red_lower2, red_upper2)
-    red_mask = cv2.bitwise_or(red_mask1, red_mask2)
-
-    green_mask1 = cv2.inRange(hsv, green_lower1, green_upper1)
-    green_mask2 = cv2.inRange(hsv, green_lower2, green_upper2)
-    green_mask = cv2.bitwise_or(green_mask1, green_mask2)
-
-    # Apply morphological operations and remove small contours
-    red_mask = remove_small_contours(apply_morphological_operations(red_mask))
-    green_mask = remove_small_contours(apply_morphological_operations(green_mask))
-    # Combine masks
-    combined_mask = cv2.bitwise_or(red_mask, green_mask)
-
     # Find and filter contours
-    contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     filtered_contours = filter_contours(contours)
 
     x_coords = np.zeros(image.shape[1], dtype=float)
@@ -639,10 +701,6 @@ def detect_and_label_blobs(image, num_detector_calls):
     if (num_detector_calls % 2 == 0):
 
         # Detect blue and amber lines
-        blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
-        blue_mask = remove_small_contours(blue_mask)
-        amber_mask = cv2.inRange(hsv, amber_lower, amber_upper)
-        amber_mask = remove_small_contours(amber_mask)
 
         if Gclock_wise:
             first_line_mask = amber_mask
@@ -691,8 +749,6 @@ def detect_and_label_blobs(image, num_detector_calls):
                     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
         # Detect magenta parking lot
-        magenta_mask = cv2.inRange(hsv, magenta_lower, magenta_upper)
-        magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
 
         # Find and filter contours for magenta blobs only with outwards looking camera
         contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
