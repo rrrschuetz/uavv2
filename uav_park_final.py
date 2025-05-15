@@ -525,7 +525,6 @@ class uav_cam(Picamera2):
     def __init__(self, camera_num):
         super().__init__()
         self.camera_num = camera_num
-        self.picam2 = Picamera2(camera_num = self.camera_num)
         config = self.create_still_configuration(main={"format": 'RGB888', "size": (640, 480)})
         self.configure(config)
         self.start()
