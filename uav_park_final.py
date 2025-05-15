@@ -521,7 +521,7 @@ def apply_morphological_operations(mask):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
     return mask
     
-class uav_cam(camera_num):
+class uav_cam():
     def __init__(self, camera_num):
         self.camera_num = camera_num
 
