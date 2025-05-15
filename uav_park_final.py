@@ -491,13 +491,14 @@ class uav_cam(Picamera2):
     def __init__(self, camera_num):
         super().__init__(camera_num = camera_num)
         self.camera_num = camera_num
-        self.config = self.create_still_configuration(main={"format": 'BGR888', "size": (640, 480)})
+        self.config = self.create_still_configuration(main={"format": 'RBG888', "size": (640, 480)})
         self.configure(self.config)
         self.start()
         time.sleep(2)
 
         # Automatischer AWB zum Kalibrieren
         image_auto = self.capture_array()
+        image_auto = cv2.cvtColor(image_auto, cv2.COLOR_RGB2BGR)
         r, g, b = self._get_mean_rgb(image_auto)
         self.r_gain, self.b_gain = self._compute_awb_gains(r, g, b)
         print(f"[INFO] Camera {self.camera_num} AWB-Gains gesetzt: R={self.r_gain}, B={self.b_gain}")
@@ -511,6 +512,7 @@ class uav_cam(Picamera2):
 
     def image(self):
         image = self.capture_array()
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         image = cv2.flip(image, -1)
         image = self._gamma_correction(image)
         image = self._enhance_lighting(image)
@@ -724,7 +726,7 @@ def detect_and_label_blobs(image, num_detector_calls):
                     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
         # Find and filter contours for magenta blobs only with outwards looking camera
-        contours, _ = cv2.findContours(mask_filter.amber(hsv_image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask_filter.magenta(hsv_image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > 1000:  # 5000 size of parking lot
