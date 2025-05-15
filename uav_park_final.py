@@ -487,45 +487,11 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
 
 
 # Camera functions
-# ---------- Bildverbesserung ----------
-def gamma_correction(image, gamma=1.5):
-    inv_gamma = 1.0 / gamma
-    table = np.array([(i / 255.0) ** inv_gamma * 255 for i in range(256)]).astype("uint8")
-    return cv2.LUT(image, table)
-
-def enhance_lighting(image):
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    h, s, v = cv2.split(hsv)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    v = clahe.apply(v)
-    hsv = cv2.merge([h, s, v])
-    return cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-
-# ---------- Weißabgleich ----------
-def get_mean_rgb(image):
-    h, w, _ = image.shape
-    center = image[h//3:2*h//3, w//3:2*w//3]
-    mean = cv2.mean(center)[:3]  # BGR
-    return mean[2], mean[1], mean[0]  # R, G, B
-
-def compute_awb_gains(r, g, b):
-    avg = (r + g + b) / 3
-    r_gain = avg / r if r != 0 else 1.0
-    b_gain = avg / b if b != 0 else 1.0
-    return round(r_gain, 2), round(b_gain, 2)
-
-# ---------- Maskenfilterung ----------
-def apply_morphological_operations(mask):
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=4)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
-    return mask
-    
 class uav_cam(Picamera2):
     def __init__(self, camera_num):
         super().__init__(camera_num = camera_num)
         self.camera_num = camera_num
-        self.config = self.create_still_configuration(main={"format": 'RGB888', "size": (640, 480)})
+        self.config = self.create_still_configuration(main={"format": 'BGR888', "size": (640, 480)})
         self.configure(self.config)
         self.start()
         time.sleep(2)
@@ -539,7 +505,7 @@ class uav_cam(Picamera2):
         # Manuellen Weißabgleich setzen
         self.set_controls({
             "AwbEnable": False,
-            "ColourGains": (self.r_gain, self.b_gain)
+            "ColourGains": (self.b_gain, self.r_gain)
         })
         time.sleep(1)
 
