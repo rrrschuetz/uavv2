@@ -521,13 +521,13 @@ def apply_morphological_operations(mask):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=4)
     return mask
     
-class uav_cam():
+class uav_cam(Picamera2):
     def __init__(self, camera_num):
         self.camera_num = camera_num
         self.picam2 = Picamera2(camera_num = self.camera_num)
-        config = picam2.create_still_configuration(main={"format": 'RGB888', "size": (640, 480)})
-        self.picam2.configure(config)
-        self.picam2.start()
+        config = self.create_still_configuration(main={"format": 'RGB888', "size": (640, 480)})
+        self.configure(config)
+        self.start()
         time.sleep(2)
 
         # Automatischer AWB zum Kalibrieren
