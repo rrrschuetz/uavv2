@@ -916,7 +916,7 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
                 image = np.hstack((image0, image1))
                 image = image[frame_height:, :]
 
-                result_path = detector.detect_and_save("input.jpg")
+                #result_path = detector.detect_and_save("input.jpg")
                 
                 Gx_coords, first_line, second_line, parking_lot, line_orientation, image \
                     = detect_and_label_blobs(image, num_detector_calls)
