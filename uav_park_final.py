@@ -539,7 +539,7 @@ class uav_cam(Picamera2):
         # Manuellen Weißabgleich setzen
         self.set_controls({
             "AwbEnable": False,
-            "AwbGains": (r_gain, b_gain)
+            "ColourGains": (r_gain, b_gain)
         })
         time.sleep(1)
 
