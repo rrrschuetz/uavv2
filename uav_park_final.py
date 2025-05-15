@@ -535,7 +535,8 @@ class uav_cam(Picamera2):
         h, w, _ = image.shape
         center = image[h//3:2*h//3, w//3:2*w//3]
         mean = cv2.mean(center)[:3]  # BGR
-        return mean[2], mean[1], mean[0]  # R, G, B
+        #return mean[2], mean[1], mean[0]  # R, G, B
+        return mean[0], mean[1], mean[2]  # R, G, B
 
     def _compute_awb_gains(self, r, g, b):
         avg = (r + g + b) / 3
