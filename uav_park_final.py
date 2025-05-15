@@ -823,18 +823,14 @@ class MarkingDetector:
         existing = [f for f in os.listdir(self.output_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
         self.counter = len(existing) + 1
 
-    def detect_and_save(self, image_path: str) -> str:
+    def detect_and_save(self, img_rbg) -> str:
         """
         Führt die Erkennung auf dem gegebenen Bild aus und speichert das Ergebnis.
 
         :param image_path: Pfad zur Eingabedatei
         :return: Pfad zur Ausgabedatei mit Overlay
         """
-        # Bild einlesen und in RGB umwandeln
-        img_bgr = cv2.imread(image_path)
-        if img_bgr is None:
-            raise FileNotFoundError(f"Bild nicht gefunden: {image_path}")
-        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+        #img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
         # SAM-Masken generieren
         masks = self.mask_generator.generate(img_rgb)
