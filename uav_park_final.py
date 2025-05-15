@@ -580,16 +580,16 @@ class uav_cam(Picamera2):
 class mask():
     
     def red(self, image):
-        lower_red1 = np.array([0, 100, 100])
+        lower_red1 = np.array([0, 50, 50])
         upper_red1 = np.array([10, 255, 255])
-        lower_red2 = np.array([160, 100, 100])
-        upper_red2 = np.array([179, 255, 255])
+        lower_red2 = np.array([160, 50, 50])
+        upper_red2 = np.array([180, 255, 255])
         red_mask = cv2.inRange(image, lower_red1, upper_red1) | cv2.inRange(image, lower_red2, upper_red2)
         red_mask = self._remove_small_contours(self._apply_morphological_operations(red_mask))
         return red_mask
 
     def green(self, image):
-        lower_green = np.array([40, 60, 60])
+        lower_green = np.array([35, 40, 40])
         upper_green = np.array([90, 255, 255])
         green_mask = cv2.inRange(image, lower_green, upper_green)
         green_mask = self._remove_small_contours(self._apply_morphological_operations(green_mask))
