@@ -877,7 +877,7 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
     global Gcamera_moving_avg_fps, Glidar_moving_avg_fps
 
     fps_list = deque(maxlen=10)
-    frame_height, frame_width, _ = picam0.capture_array().shape
+    frame_height, frame_width, _ = uav_camera0.capture_array().shape
     frame_width *= 2
     frame_height //= 2
     print(f"Frame width: {frame_width}, Frame height: {frame_height}")
