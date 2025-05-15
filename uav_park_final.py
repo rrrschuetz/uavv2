@@ -523,7 +523,7 @@ def apply_morphological_operations(mask):
     
 class uav_cam(Picamera2):
     def __init__(self, camera_num):
-        super().__init__()
+        super().__init__(camera_num = camera_num)
         self.camera_num = camera_num
         self.config = self.create_still_configuration(main={"format": 'RGB888', "size": (640, 480)})
         self.configure(self.config)
@@ -533,13 +533,13 @@ class uav_cam(Picamera2):
         # Automatischer AWB zum Kalibrieren
         image_auto = self.capture_array()
         r, g, b = self._get_mean_rgb(image_auto)
-        r_gain, b_gain = self._compute_awb_gains(r, g, b)
-        print(f"[INFO] AWB-Gains gesetzt: R={r_gain}, B={b_gain}")
+        self.r_gain, self.b_gain = self._compute_awb_gains(r, g, b)
+        print(f"[INFO] Camera {self.camera_num} AWB-Gains gesetzt: R={self.r_gain}, B={self.b_gain}")
 
         # Manuellen Weißabgleich setzen
         self.set_controls({
             "AwbEnable": False,
-            "ColourGains": (r_gain, b_gain)
+            "ColourGains": (self.r_gain, self.b_gain)
         })
         time.sleep(1)
 
