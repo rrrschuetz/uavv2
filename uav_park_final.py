@@ -1415,8 +1415,8 @@ def main():
 
     # Camera setup
     print("Camera setup ...")
-    picam0 = uav_camera(camera_num=0)
-    picam1 = uav_camera(camera_num=1)
+    picam0 = uav_cam(camera_num=0)
+    picam1 = uav_cam(camera_num=1)
 
     # Start threads and processes
     print("Preparing processes ...")
