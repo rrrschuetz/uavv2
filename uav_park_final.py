@@ -623,8 +623,8 @@ class mask():
     def _remove_small_contours(self, mask, min_area=500):
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
-        if cv2.contourArea(contour) < min_area:
-            cv2.drawContours(mask, [contour], -1, 0, -1)
+            if cv2.contourArea(contour) < min_area:
+                cv2.drawContours(mask, [contour], -1, 0, -1)
         return mask
 
 
