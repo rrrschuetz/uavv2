@@ -681,9 +681,10 @@ def detect_and_label_blobs(image, num_detector_calls):
     second_line = False
     line_orientation = ""
     magenta_rectangle = False
+    mask_filter = mask()
 
-    red_mask = mask.red(image)
-    green_mask = mask.green(image)
+    red_mask = mask_filter.red(image)
+    green_mask = mask_filter.green(image)
     combined_mask = cv2.bitwise_or(red_mask, green_mask)
     contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     filtered_contours = filter_contours(contours)
@@ -710,11 +711,11 @@ def detect_and_label_blobs(image, num_detector_calls):
 
         # Detect blue and amber lines
         if Gclock_wise:
-            first_line_mask = mask.amber(image)
-            second_line_mask = mask.blue(image)
+            first_line_mask = mask_filter.amber(image)
+            second_line_mask = mask_filter.blue(image)
         else:
-            first_line_mask = mask.blue(image)
-            second_line_mask = mask.amber(image)
+            first_line_mask = mask_filter.blue(image)
+            second_line_mask = mask_filter.amber(image)
 
         most_significant_line = None
         max_line_length = 0
@@ -756,7 +757,7 @@ def detect_and_label_blobs(image, num_detector_calls):
                     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
         # Find and filter contours for magenta blobs only with outwards looking camera
-        contours, _ = cv2.findContours(mask.amber(image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask_filter.amber(image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > 1000:  # 5000 size of parking lot
