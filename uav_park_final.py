@@ -531,7 +531,7 @@ class uav_cam(Picamera2):
         time.sleep(2)
 
         # Automatischer AWB zum Kalibrieren
-        image_auto = self.picam2.capture_array()
+        image_auto = self.capture_array()
         r, g, b = self._get_mean_rgb(image_auto)
         r_gain, b_gain = self._compute_awb_gains(r, g, b)
         print(f"[INFO] AWB-Gains gesetzt: R={r_gain}, B={b_gain}")
@@ -544,7 +544,7 @@ class uav_cam(Picamera2):
         time.sleep(1)
 
     def image(self):
-        image = picam2.capture_array()
+        image = self.capture_array()
         image = cv2.flip(image, -1)
         image = self._gamma_correction(image)
         image = self._enhance_lighting(image)
