@@ -788,86 +788,86 @@ def detect_and_label_blobs(image, num_detector_calls):
 # pip install git+https://github.com/facebookresearch/segment-anything.git
 # pip install git+https://github.com/openai/CLIP.git
 
-import clip
-from PIL import Image
-from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
+#import clip
+#from PIL import Image
+#from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 
-class MarkingDetector:
-    def __init__(self,
-                 sam_checkpoint: str = "sam_vit_b_01ec64.pth",
-                 clip_model_name: str = "ViT-B/32",
-                 output_dir: str = "output"):
-        """
-        Initialisiert das MarkingDetector-Objekt:
-        - Lädt SAM- und CLIP-Modelle
-        - Erstellt den Output-Ordner, falls nicht vorhanden
-        """
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+#class MarkingDetector:
+#    def __init__(self,
+#                 sam_checkpoint: str = "sam_vit_b_01ec64.pth",
+#                 clip_model_name: str = "ViT-B/32",
+#                 output_dir: str = "output"):
+#        """
+#        Initialisiert das MarkingDetector-Objekt:
+#        - Lädt SAM- und CLIP-Modelle
+#        - Erstellt den Output-Ordner, falls nicht vorhanden
+#        """
+#        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        # SAM laden
-        sam = sam_model_registry["vit_b"](checkpoint=sam_checkpoint)
-        sam.to(self.device)
-        self.mask_generator = SamAutomaticMaskGenerator(sam)
+#        # SAM laden
+#        sam = sam_model_registry["vit_b"](checkpoint=sam_checkpoint)
+#        sam.to(self.device)
+#        self.mask_generator = SamAutomaticMaskGenerator(sam)
 
-        # CLIP laden
-        self.clip_model, self.preprocess_clip = clip.load(clip_model_name, device=self.device)
-        text_inputs = clip.tokenize(["a red marking", "a green marking"]).to(self.device)
-        with torch.no_grad():
-            self.text_features = self.clip_model.encode_text(text_inputs)
+#        # CLIP laden
+#        self.clip_model, self.preprocess_clip = clip.load(clip_model_name, device=self.device)
+#        text_inputs = clip.tokenize(["a red marking", "a green marking"]).to(self.device)
+#        with torch.no_grad():
+#            self.text_features = self.clip_model.encode_text(text_inputs)
 
-        # Output-Verzeichnis
-        self.output_dir = output_dir
-        os.makedirs(self.output_dir, exist_ok=True)
+#        # Output-Verzeichnis
+#        self.output_dir = output_dir
+#        os.makedirs(self.output_dir, exist_ok=True)
 
-        # Zähler für Dateinamen
-        existing = [f for f in os.listdir(self.output_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
-        self.counter = len(existing) + 1
+#        # Zähler für Dateinamen
+#        existing = [f for f in os.listdir(self.output_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
+#        self.counter = len(existing) + 1
 
-    def detect_and_save(self, img_rbg) -> str:
-        """
-        Führt die Erkennung auf dem gegebenen Bild aus und speichert das Ergebnis.
+#    def detect_and_save(self, img_rbg) -> str:
+#        """
+#        Führt die Erkennung auf dem gegebenen Bild aus und speichert das Ergebnis.
 
-        :param image_path: Pfad zur Eingabedatei
-        :return: Pfad zur Ausgabedatei mit Overlay
-        """
-        #img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+#        :param image_path: Pfad zur Eingabedatei
+#        :return: Pfad zur Ausgabedatei mit Overlay
+#        """
+#        #img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-        # SAM-Masken generieren
-        masks = self.mask_generator.generate(img_rgb)
+#        # SAM-Masken generieren
+#        masks = self.mask_generator.generate(img_rgb)
 
-        detections = []
-        for m in masks:
-            mask = m["segmentation"]  # bool Array HxW
-            # Region extrahieren
-            region = Image.fromarray((img_rgb * mask[..., None]).astype(np.uint8))
-            clip_in = self.preprocess_clip(region).unsqueeze(0).to(self.device)
-            with torch.no_grad():
-                img_feat = self.clip_model.encode_image(clip_in)
-                sims = (img_feat @ self.text_features.T).squeeze(0)
-            cls = sims.argmax().item()  # 0=rot,1=grün
-            score = sims[cls].item()
-            # Nur sichere Detections (optional Schwelle)
-            if score > 0:
-                detections.append((mask, cls, score))
+#        detections = []
+#        for m in masks:
+#            mask = m["segmentation"]  # bool Array HxW
+#            # Region extrahieren
+#            region = Image.fromarray((img_rgb * mask[..., None]).astype(np.uint8))
+#            clip_in = self.preprocess_clip(region).unsqueeze(0).to(self.device)
+#            with torch.no_grad():
+#                img_feat = self.clip_model.encode_image(clip_in)
+#                sims = (img_feat @ self.text_features.T).squeeze(0)
+#            cls = sims.argmax().item()  # 0=rot,1=grün
+#            score = sims[cls].item()
+#            # Nur sichere Detections (optional Schwelle)
+#            if score > 0:
+#                detections.append((mask, cls, score))
 
-        # Ergebnisbild kopieren
-        out = img_bgr.copy()
-        for idx, (mask, cls, score) in enumerate(detections, start=1):
-            ys, xs = np.where(mask)
-            x0, x1 = int(xs.min()), int(xs.max())
-            y0, y1 = int(ys.min()), int(ys.max())
-            color = (0, 0, 255) if cls == 0 else (0, 255, 0)
-            label = "rot" if cls == 0 else "grün"
-            cv2.rectangle(out, (x0, y0), (x1, y1), color, 2)
-            cv2.putText(out, f"{idx}: {label}", (x0, y0 - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+#        # Ergebnisbild kopieren
+#        out = img_bgr.copy()
+#        for idx, (mask, cls, score) in enumerate(detections, start=1):
+#            ys, xs = np.where(mask)
+#            x0, x1 = int(xs.min()), int(xs.max())
+#            y0, y1 = int(ys.min()), int(ys.max())
+#            color = (0, 0, 255) if cls == 0 else (0, 255, 0)
+#            label = "rot" if cls == 0 else "grün"
+#            cv2.rectangle(out, (x0, y0), (x1, y1), color, 2)
+#            cv2.putText(out, f"{idx}: {label}", (x0, y0 - 10),
+#                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-        # Ausgabepfad
-        filename = f"result_{self.counter:03d}.png"
-        out_path = os.path.join(self.output_dir, filename)
-        cv2.imwrite(out_path, out)
-        self.counter += 1
-        return out_path
+#        # Ausgabepfad
+#        filename = f"result_{self.counter:03d}.png"
+#        out_path = os.path.join(self.output_dir, filename)
+#        cv2.imwrite(out_path, out)
+#        self.counter += 1
+#        return out_path
 ######################################################################
 
 def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_event):
