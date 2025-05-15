@@ -536,7 +536,7 @@ class uav_cam(camera_num):
     r_gain, b_gain = self._compute_awb_gains(r, g, b)
     print(f"[INFO] AWB-Gains gesetzt: R={r_gain}, B={b_gain}")
     # Manuellen Weißabgleich setzen
-   self.picam2.set_controls({
+    self.picam2.set_controls({
         "AwbEnable": False,
         "AwbGains": (r_gain, b_gain)
     })
