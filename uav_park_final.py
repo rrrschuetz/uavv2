@@ -613,7 +613,7 @@ class mask():
         magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
         magenta_upper = np.array([170, 255, 255])
         magenta_mask = cv2.inRange(image, magenta_lower, magenta_upper)
-        magenta_mask = self._remove_small_contours(apply_morphological_operations(magenta_mask))
+        magenta_mask = self._remove_small_contours(self._apply_morphological_operations(magenta_mask))
         return magenta_mask
     
     # ---------- Maskenfilterung ----------
