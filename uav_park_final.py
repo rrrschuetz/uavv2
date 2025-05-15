@@ -540,7 +540,7 @@ class uav_cam(camera_num):
         "AwbEnable": False,
         "AwbGains": (r_gain, b_gain)
     })
-        time.sleep(1)
+    time.sleep(1)
 
     def image(self):
         image = picam2.capture_array()
