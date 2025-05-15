@@ -599,21 +599,21 @@ class mask():
         blue_lower = np.array([90, 70, 90])  # HSV range for blue detection
         blue_upper = np.array([140, 255, 255])
         blue_mask = cv2.inRange(image, blue_lower, blue_upper)
-        blue_mask = remove_small_contours(blue_mask)
+        blue_mask = self._remove_small_contours(blue_mask)
         return blue_mask
 
     def amber(self, image):
         amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
         amber_upper = np.array([20, 255, 255])  # Upper bound for hue, saturation, and brightness
         amber_mask = cv2.inRange(image, amber_lower, amber_upper)
-        amber_mask = remove_small_contours(amber_mask)
+        amber_mask = self._remove_small_contours(amber_mask)
         return amber_mask
 
     def magenta(self, image):
         magenta_lower = np.array([140, 50, 50])  # HSV range for magenta color detection
         magenta_upper = np.array([170, 255, 255])
         magenta_mask = cv2.inRange(image, magenta_lower, magenta_upper)
-        magenta_mask = remove_small_contours(apply_morphological_operations(magenta_mask))
+        magenta_mask = self._remove_small_contours(apply_morphological_operations(magenta_mask))
         return magenta_mask
     
     # ---------- Maskenfilterung ----------
