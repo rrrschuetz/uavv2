@@ -507,7 +507,7 @@ class uav_cam(Picamera2):
         self.r_gain = 1.0
         self.b_gain = 1.0
         self.set_controls({
-            "AwbEnable": False,
+            "AwbEnable": True,
             "ColourGains": (self.b_gain, self.r_gain)
         })
         time.sleep(1)
