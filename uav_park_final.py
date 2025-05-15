@@ -597,7 +597,7 @@ class mask():
         blue_upper = np.array([140, 255, 255])
         blue_mask = cv2.inRange(image, blue_lower, blue_upper)
         blue_mask = remove_small_contours(blue_mask)
-        return blue_ ask
+        return blue_mask
 
     def amber(self, image):
         amber_lower = np.array([10, 50, 50])  # Lower bound for hue, saturation, and brightness
