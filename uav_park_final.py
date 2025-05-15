@@ -1086,7 +1086,7 @@ def gyro_thread(shared_race_mode, stop_event):
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
                     #print(f"... Gheading_estimate: {Gheading_estimate:.2f}")
                     Glap_end = yaw_diff < 10  # no larger value !!
-                    time.sleep(0.02
+                    time.sleep(0.02)
 
     except serial.SerialException as e:
         print(f"Serial error: {e}")
