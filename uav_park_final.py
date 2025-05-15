@@ -899,7 +899,7 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
     max_heading = 0
     cum_heading = 0
 
-    detector = MarkingDetector(output_dir="detections")
+    #detector = MarkingDetector(output_dir="detections")
 
     try:
         while not stop_event.is_set():
