@@ -522,22 +522,24 @@ def apply_morphological_operations(mask):
     return mask
     
 class uav_cam(camera_num):
-    def __init__(self):
-        self.picam2 = Picamera2(camera_num = camera_num) 
-        config = picam2.create_still_configuration(main={"format": 'RGB888', "size": (640, 480)})
-        self.picam2.configure(config)
-        self.picam2.start()
-        time.sleep(2)
-        # Automatischer AWB zum Kalibrieren
-        image_auto = self.picam2.capture_array()
-        r, g, b = self._get_mean_rgb(image_auto)
-        r_gain, b_gain = self._compute_awb_gains(r, g, b)
-        print(f"[INFO] AWB-Gains gesetzt: R={r_gain}, B={b_gain}")
-        # Manuellen Weißabgleich setzen
-        self.picam2.set_controls({
-            "AwbEnable": False,
-            "AwbGains": (r_gain, b_gain)
-        })
+    def __init__(self, camera_num):
+        self.camera_num = camera_num
+
+    self.picam2 = Picamera2(camera_num = camera_num)
+    config = picam2.create_still_configuration(main={"format": 'RGB888', "size": (640, 480)})
+    self.picam2.configure(config)
+    self.picam2.start()
+    time.sleep(2)
+    # Automatischer AWB zum Kalibrieren
+    image_auto = self.picam2.capture_array()
+    r, g, b = self._get_mean_rgb(image_auto)
+    r_gain, b_gain = self._compute_awb_gains(r, g, b)
+    print(f"[INFO] AWB-Gains gesetzt: R={r_gain}, B={b_gain}")
+    # Manuellen Weißabgleich setzen
+   self.picam2.set_controls({
+        "AwbEnable": False,
+        "AwbGains": (r_gain, b_gain)
+    })
         time.sleep(1)
 
     def image(self):
