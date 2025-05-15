@@ -548,7 +548,7 @@ class uav_cam(Picamera2):
         image = cv2.flip(image, -1)
         image = self._gamma_correction(image)
         image = self._enhance_lighting(image)
-        return cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        return image     # cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     # ---------- Bildverbesserung ----------
     def _gamma_correction(self, image, gamma=1.5):
@@ -683,6 +683,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     magenta_rectangle = False
     mask_filter = mask()
 
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     red_mask = mask_filter.red(image)
     green_mask = mask_filter.green(image)
     combined_mask = cv2.bitwise_or(red_mask, green_mask)
