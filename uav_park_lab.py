@@ -732,7 +732,7 @@ def detect_and_label_blobs(image, num_detector_calls):
             #first_line_mask = mask_filter.blue(hsv_image)
             #second_line_mask = mask_filter.amber(hsv_image)
             first_line_mask = mask_filter.blue(lab_image)
-            second_line_mask = mask_filter.amber(labv_image)
+            second_line_mask = mask_filter.amber(lab_image)
 
         most_significant_line = None
         max_line_length = 0
