@@ -701,7 +701,8 @@ def detect_and_label_blobs(image, num_detector_calls):
     contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     filtered_contours = filter_contours(contours)
 
-    x_coords = np.zeros(hsv_image.shape[1], dtype=float)
+    #x_coords = np.zeros(hsv_image.shape[1], dtype=float)
+    x_coords = np.zeros(lab_image.shape[1], dtype=float)
 
     for box in filtered_contours:
         rect = cv2.minAreaRect(box)
