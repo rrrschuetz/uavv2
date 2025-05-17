@@ -724,15 +724,20 @@ def detect_and_label_blobs(image, num_detector_calls):
 
         # Detect blue and amber lines
         if Gclock_wise:
-            first_line_mask = mask_filter.amber(hsv_image)
-            second_line_mask = mask_filter.blue(hsv_image)
+            #first_line_mask = mask_filter.amber(hsv_image)
+            #second_line_mask = mask_filter.blue(hsv_image)
+            first_line_mask = mask_filter.amber(lab_image)
+            second_line_mask = mask_filter.blue(lab_image)
         else:
-            first_line_mask = mask_filter.blue(hsv_image)
-            second_line_mask = mask_filter.amber(hsv_image)
+            #first_line_mask = mask_filter.blue(hsv_image)
+            #second_line_mask = mask_filter.amber(hsv_image)
+            first_line_mask = mask_filter.blue(lab_image)
+            second_line_mask = mask_filter.amber(labv_image)
 
         most_significant_line = None
         max_line_length = 0
-        height, width = hsv_image.shape[:2]
+        #height, width = hsv_image.shape[:2]
+        height, width = lab_image.shape[:2]
 
         lines = cv2.HoughLinesP(first_line_mask, 1, np.pi / 180, threshold=250, minLineLength=150, maxLineGap=1)
         if lines is not None:
@@ -770,7 +775,8 @@ def detect_and_label_blobs(image, num_detector_calls):
                     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 255), 5)
 
         # Find and filter contours for magenta blobs only with outwards looking camera
-        contours, _ = cv2.findContours(mask_filter.magenta(hsv_image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        #contours, _ = cv2.findContours(mask_filter.magenta(hsv_image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask_filter.magenta(lab_image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > 1000:  # 5000 size of parking lot
