@@ -1663,9 +1663,9 @@ def main():
         print("All threads and processes stopped cleanly")
 
         print("Stopping camera 0")
-        uav_camera0.stop()
+        picam0.stop()
         print("Stopping camera 1")
-        uav_camera1.stop()
+        picam1.stop()
         print("Stopping LIDAR")
         stop_scan(sock)
         sock.close()

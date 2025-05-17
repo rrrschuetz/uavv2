@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="bug fixing">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uav_park_lab.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_park_lab.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,14 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00704" summary="bug fixing">
-      <option name="closed" value="true" />
-      <created>1746736633666</created>
-      <option name="number" value="00704" />
-      <option name="presentableId" value="LOCAL-00704" />
-      <option name="project" value="LOCAL" />
-      <updated>1746736633666</updated>
     </task>
     <task id="LOCAL-00705" summary="bug fixing">
       <option name="closed" value="true" />
@@ -529,7 +520,15 @@
       <option name="project" value="LOCAL" />
       <updated>1747522238415</updated>
     </task>
-    <option name="localTasksCounter" value="753" />
+    <task id="LOCAL-00753" summary="bug fixing">
+      <option name="closed" value="true" />
+      <created>1747523247893</created>
+      <option name="number" value="00753" />
+      <option name="presentableId" value="LOCAL-00753" />
+      <option name="project" value="LOCAL" />
+      <updated>1747523247893</updated>
+    </task>
+    <option name="localTasksCounter" value="754" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -761,6 +760,11 @@
           <url>file://$PROJECT_DIR$/uav_park_prefinal.py</url>
           <line>725</line>
           <option name="timeStamp" value="59" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/uav_park_lab.py</url>
+          <line>982</line>
+          <option name="timeStamp" value="60" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
