@@ -565,8 +565,8 @@ class mask():
     #    return red_mask
 
     def red(self, image):
-        lower_red = np.array([20, 150, 140])
-        upper_red = np.array([255, 200, 200])
+        lower_red = np.array([0, 140, 180])  #2ß.15ß.14ß
+        upper_red = np.array([255, 255, 255])  #255,200,200
         red_mask = cv2.inRange(image, lower_red, upper_red)
         return red_mask
 
@@ -578,7 +578,7 @@ class mask():
     #    return green_mask
 
     def green(self, image):
-        lower_green = np.array([0, 0, 140])  #20,0,0
+        lower_green = np.array([0, 0, 120]) #0,0,120 #20,0,0
         upper_green = np.array([255, 120, 255])  #255,100,255
         green_mask = cv2.inRange(image, lower_green, upper_green)
         return green_mask
