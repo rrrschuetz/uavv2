@@ -565,7 +565,7 @@ class mask():
     #    return red_mask
 
     def red(self, image):
-        lower_red = np.array([0, 140, 180])  #2ß.15ß.14ß
+        lower_red = np.array([0, 130, 0])  #2ß.15ß.14ß
         upper_red = np.array([255, 255, 255])  #255,200,200
         red_mask = cv2.inRange(image, lower_red, upper_red)
         return red_mask
