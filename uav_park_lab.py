@@ -504,6 +504,7 @@ class uav_cam(Picamera2):
 
         # Manuellen Weißabgleich setzen
         self.set_controls({
+            "Saturation": 4.0,
             "AwbEnable": True,
             "ColourGains": (self.r_gain, self.b_gain)
         })
