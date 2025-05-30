@@ -698,6 +698,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     red_mask = mask_filter.red(lab_image)
     green_mask = mask_filter.green(lab_image)
+    magenta_mask = mask_filter.magenta(lab_image)
 
     combined_mask = cv2.bitwise_or(red_mask, green_mask)
     contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -778,7 +779,7 @@ def detect_and_label_blobs(image, num_detector_calls):
 
         # Find and filter contours for magenta blobs only with outwards looking camera
         #contours, _ = cv2.findContours(mask_filter.magenta(hsv_image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours, _ = cv2.findContours(mask_filter.magenta(lab_image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > 1000:  # 5000 size of parking lot
@@ -804,7 +805,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         # cv2.imwrite('red_mask.jpg', red_mask)
         # cv2.imwrite('green_mask.jpg', green_mask)
 
-    return x_coords, first_line, second_line, magenta_rectangle, line_orientation, image, red_mask, green_mask
+    return x_coords, first_line, second_line, magenta_rectangle, line_orientation, image, red_mask, green_mask, magenta_mask
 
 
 ######################################################################
@@ -941,7 +942,7 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
 
                 # result_path = detector.detect_and_save("input.jpg")
 
-                Gx_coords, first_line, second_line, parking_lot, line_orientation, image, red_mask, green_mask \
+                Gx_coords, first_line, second_line, parking_lot, line_orientation, image, red_mask, green_mask, magenta_mask \
                     = detect_and_label_blobs(image, num_detector_calls)
 
                 # if Gclock_wise:
@@ -984,10 +985,12 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
                     # Farbliche Masken erzeugen
                     red_colored = cv2.merge([red_mask, np.zeros_like(red_mask), np.zeros_like(red_mask)])
                     green_colored = cv2.merge([np.zeros_like(green_mask), green_mask, np.zeros_like(green_mask)])
+                    magenta_colored = cv2.merge([np.zeros_like(magenta_mask), magenta_mask, np.zeros_like(magenta_mask)])
 
                     # Originalbild overlayen
                     overlayed_image = cv2.addWeighted(image, 0.5, red_colored, 0.5, 0)
                     overlayed_image = cv2.addWeighted(overlayed_image, 0.5, green_colored, 0.5, 0)
+                    overlayed_image = cv2.addWeighted(overlayed_image, 0.5, magenta_colored, 0.5, 0)
 
                     video_writer.write(overlayed_image)
                     frame_count += 1
