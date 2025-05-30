@@ -620,7 +620,7 @@ class mask():
 
     def magenta(self, image):
         lower_magenta = np.array([0, 160, 0])   #20,150,150
-        upper_magenta = np.array([255, 255, 125])
+        upper_magenta = np.array([255, 255, 127])
         magenta_mask = cv2.inRange(image, lower_magenta, upper_magenta)
         return magenta_mask
 
@@ -791,7 +791,7 @@ def detect_and_label_blobs(image, num_detector_calls):
                 if (not Gclock_wise and left_end > COLOR_LEN * 3 / 4) or (Gclock_wise and right_end < COLOR_LEN / 4):
                     # print(f"Magenta rectangle detected: {area} pixels")
                     magenta_rectangle = True
-                    cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)  # Draw the magenta rectangle
+                    cv2.drawContours(image, [contour], -1, (255, 255, 255), 3)  # Draw the magenta rectangle
 
         # Add timestamp in the lower left corner
         timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
