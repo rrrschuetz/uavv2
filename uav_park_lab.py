@@ -986,8 +986,8 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
                     green_colored = cv2.merge([np.zeros_like(green_mask), green_mask, np.zeros_like(green_mask)])
 
                     # Originalbild overlayen
-                    overlayed_image = cv2.addWeighted(image, 0.7, red_colored, 0.3, 0)
-                    overlayed_image = cv2.addWeighted(overlayed_image, 0.7, green_colored, 0.3, 0)
+                    overlayed_image = cv2.addWeighted(image, 0.5, red_colored, 0.5, 0)
+                    overlayed_image = cv2.addWeighted(overlayed_image, 0.5, green_colored, 0.5, 0)
 
                     video_writer.write(overlayed_image)
                     frame_count += 1
