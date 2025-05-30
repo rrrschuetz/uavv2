@@ -567,7 +567,7 @@ class mask():
     #    return red_mask
 
     def red(self, image):
-        lower_red = np.array([0, 140, 0])  #0,140,50  #0,150,80  #0,130,0 #20.150.140
+        lower_red = np.array([0, 160, 0])  #0,140,50  #0,150,80  #0,130,0 #20.150.140
         upper_red = np.array([255, 255, 255])  #255,255,210 #255,255,170 #255,255,255 #255,200,200
         red_mask = cv2.inRange(image, lower_red, upper_red)
         return red_mask
@@ -581,7 +581,7 @@ class mask():
 
     def green(self, image):
         lower_green = np.array([0, 0, 0]) #0,0,50 #0,0,120 #0,0,120 #20,0,0
-        upper_green = np.array([255, 120, 255])  #255,120,255 #255,100,255
+        upper_green = np.array([255, 100, 255])  #255,120,255 #255,100,255
         green_mask = cv2.inRange(image, lower_green, upper_green)
         return green_mask
 
@@ -718,9 +718,9 @@ def detect_and_label_blobs(image, num_detector_calls):
             x_coords[left_end:right_end] = -1.0
 
         # Draw and label the contours
-        cv2.drawContours(image, [box], -1, (0, 255, 255), 2)
+        cv2.drawContours(image, [box], -1, (255, 255, 255), 3)
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    (0, 255, 255), 2)
+                    (255, 255, 255), 2)
 
     if (num_detector_calls % 2 == 0):
 
