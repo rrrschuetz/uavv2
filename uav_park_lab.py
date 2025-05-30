@@ -784,6 +784,7 @@ def detect_and_label_blobs(image, num_detector_calls):
             area = cv2.contourArea(contour)
             if area > 1000:  # 5000 size of parking lot
                 rect = cv2.minAreaRect(contour)
+                center = (int(rect[0][0]), int(rect[0][1]))
                 box = cv2.boxPoints(rect)
                 box = np.int32(box)
                 left_end = min(box[:, 0])
