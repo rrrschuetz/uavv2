@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b956141-f813-45c4-a58a-eaebe564b3d7" name="Changes" comment="bug fixing">
-      <change beforePath="$PROJECT_DIR$/uav_park_lab.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav_park_lab.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -123,7 +123,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-348a24fa61fa-5312c7369657-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.23774.444" />
+        <option value="bundled-python-sdk-dfff61a61320-9cdd278e9d02-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.25410.159" />
       </set>
     </attachedChunks>
   </component>
@@ -135,30 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721856912502</updated>
-    </task>
-    <task id="LOCAL-00711" summary="bug fixing">
-      <option name="closed" value="true" />
-      <created>1746913593851</created>
-      <option name="number" value="00711" />
-      <option name="presentableId" value="LOCAL-00711" />
-      <option name="project" value="LOCAL" />
-      <updated>1746913593851</updated>
-    </task>
-    <task id="LOCAL-00712" summary="bug fixing">
-      <option name="closed" value="true" />
-      <created>1746915489507</created>
-      <option name="number" value="00712" />
-      <option name="presentableId" value="LOCAL-00712" />
-      <option name="project" value="LOCAL" />
-      <updated>1746915489507</updated>
-    </task>
-    <task id="LOCAL-00713" summary="bug fixing">
-      <option name="closed" value="true" />
-      <created>1746915562245</created>
-      <option name="number" value="00713" />
-      <option name="presentableId" value="LOCAL-00713" />
-      <option name="project" value="LOCAL" />
-      <updated>1746915562245</updated>
     </task>
     <task id="LOCAL-00714" summary="bug fixing">
       <option name="closed" value="true" />
@@ -528,7 +504,31 @@
       <option name="project" value="LOCAL" />
       <updated>1747552396530</updated>
     </task>
-    <option name="localTasksCounter" value="760" />
+    <task id="LOCAL-00760" summary="bug fixing">
+      <option name="closed" value="true" />
+      <created>1747565175865</created>
+      <option name="number" value="00760" />
+      <option name="presentableId" value="LOCAL-00760" />
+      <option name="project" value="LOCAL" />
+      <updated>1747565175865</updated>
+    </task>
+    <task id="LOCAL-00761" summary="bug fixing">
+      <option name="closed" value="true" />
+      <created>1747569525769</created>
+      <option name="number" value="00761" />
+      <option name="presentableId" value="LOCAL-00761" />
+      <option name="project" value="LOCAL" />
+      <updated>1747569525769</updated>
+    </task>
+    <task id="LOCAL-00762" summary="bug fixing">
+      <option name="closed" value="true" />
+      <created>1747570080178</created>
+      <option name="number" value="00762" />
+      <option name="presentableId" value="LOCAL-00762" />
+      <option name="project" value="LOCAL" />
+      <updated>1747570080178</updated>
+    </task>
+    <option name="localTasksCounter" value="763" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
