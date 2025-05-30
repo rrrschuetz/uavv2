@@ -505,7 +505,7 @@ class uav_cam(Picamera2):
         # Manuellen Weißabgleich setzen
         print("Max saturation set.")
         self.set_controls({
-            "Saturation": 1.0,
+            "Saturation": 2.0,
             "AwbEnable": True,
             "ColourGains": (self.r_gain, self.b_gain)
         })
