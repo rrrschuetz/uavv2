@@ -1236,7 +1236,7 @@ def align_parallel(pca, sock, shared_race_mode, stop_distance=1.4, max_yaw_diff=
         yaw_diff = orientation(yaw_difference(Gheading_start, Gheading_estimate))
         steer = - (yaw_diff / max_yaw_diff) / 2
         steer = max(min(steer, 1), -1)
-        narrow = abs(yaw_diff) < max_yaw_diff * 2  # allow for early narrow down -> higher precision
+        narrow = abs(yaw_diff) < max_yaw_diff
         position = navigate(sock, narrow)
         front_distance = position['front_distance']
         distance2stop = front_distance - stop_distance
