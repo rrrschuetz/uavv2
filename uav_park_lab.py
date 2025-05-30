@@ -620,7 +620,7 @@ class mask():
 
     def magenta(self, image):
         lower_magenta = np.array([0, 160, 0])   #20,150,150
-        upper_magenta = np.array([255, 255, 100])
+        upper_magenta = np.array([255, 255, 125])
         magenta_mask = cv2.inRange(image, lower_magenta, upper_magenta)
         return magenta_mask
 
