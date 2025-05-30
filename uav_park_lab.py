@@ -804,7 +804,7 @@ def detect_and_label_blobs(image, num_detector_calls):
         # cv2.imwrite('red_mask.jpg', red_mask)
         # cv2.imwrite('green_mask.jpg', green_mask)
 
-    return x_coords, first_line, second_line, magenta_rectangle, line_orientation, image
+    return x_coords, first_line, second_line, magenta_rectangle, line_orientation, image, red_mask, green_mask
 
 
 ######################################################################
@@ -941,7 +941,7 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
 
                 # result_path = detector.detect_and_save("input.jpg")
 
-                Gx_coords, first_line, second_line, parking_lot, line_orientation, image \
+                Gx_coords, first_line, second_line, parking_lot, line_orientation, image, red_mask, green_mask \
                     = detect_and_label_blobs(image, num_detector_calls)
 
                 # if Gclock_wise:
@@ -981,9 +981,6 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
-                    red_mask = mask_filter.red(lab_image)
-                    green_mask = mask_filter.green(lab_image)
-
                     # Farbliche Masken erzeugen
                     red_colored = cv2.merge([red_mask, np.zeros_like(red_mask), np.zeros_like(red_mask)])
                     green_colored = cv2.merge([np.zeros_like(green_mask), green_mask, np.zeros_like(green_mask)])
