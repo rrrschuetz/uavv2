@@ -505,7 +505,7 @@ class uav_cam(Picamera2):
         # Manuellen Weißabgleich setzen
         print("Max saturation set.")
         self.set_controls({
-            "Saturation": 4.0,
+            "Saturation": 1.0,
             "AwbEnable": True,
             "ColourGains": (self.r_gain, self.b_gain)
         })
@@ -718,6 +718,7 @@ def detect_and_label_blobs(image, num_detector_calls):
             x_coords[left_end:right_end] = -1.0
 
         # Draw and label the contours
+        image = combined_mask
         cv2.drawContours(image, [box], -1, (0, 255, 255), 2)
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
