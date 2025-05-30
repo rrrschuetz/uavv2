@@ -789,10 +789,10 @@ def detect_and_label_blobs(image, num_detector_calls):
                 left_end = min(box[:, 0])
                 right_end = max(box[:, 0])
                 if (not Gclock_wise and left_end > COLOR_LEN * 3 / 4) or (Gclock_wise and right_end < COLOR_LEN / 4):
-                    # print(f"Magenta rectangle detected: {area} pixels")
+                    print(f"Magenta rectangle detected: {area} pixels")
                     magenta_rectangle = True
                     cv2.drawContours(image, [contour], -1, (255, 255, 255), 3)  # Draw the magenta rectangle
-
+                    cv2.putText(image, "M", center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255), 2)
         # Add timestamp in the lower left corner
         timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
         cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
