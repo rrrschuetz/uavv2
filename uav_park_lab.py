@@ -718,7 +718,6 @@ def detect_and_label_blobs(image, num_detector_calls):
             x_coords[left_end:right_end] = -1.0
 
         # Draw and label the contours
-        image = combined_mask
         cv2.drawContours(image, [box], -1, (0, 255, 255), 2)
         cv2.putText(image, label, center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 255), 2)
@@ -982,7 +981,18 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
-                    video_writer.write(image)
+                    red_mask = mask_filter.red(lab_image)
+                    green_mask = mask_filter.green(lab_image)
+
+                    # Farbliche Masken erzeugen
+                    red_colored = cv2.merge([red_mask, np.zeros_like(red_mask), np.zeros_like(red_mask)])
+                    green_colored = cv2.merge([np.zeros_like(green_mask), green_mask, np.zeros_like(green_mask)])
+
+                    # Originalbild overlayen
+                    overlayed_image = cv2.addWeighted(image, 0.7, red_colored, 0.3, 0)
+                    overlayed_image = cv2.addWeighted(overlayed_image, 0.7, green_colored, 0.3, 0)
+
+                    video_writer.write(overlayed_image)
                     frame_count += 1
 
                     if frame_count > max_frame_count:
