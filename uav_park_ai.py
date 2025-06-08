@@ -99,6 +99,7 @@ Gaccel_z = 0.0
 Gheading_estimate = 0.0
 Gheading_start = 0.0
 Glap_end = False
+Gpca = none
 Gboost = 0.0
 Glidar_moving_avg_fps = 0.0
 Gcamera_moving_avg_fps = 0.0
@@ -110,30 +111,32 @@ qmc.output_data_rate = (qmc5883.OUTPUT_DATA_RATE_200)
 
 
 # Servo functions
-def set_servo_angle(pca, channel, angle):
+def set_servo_angle(channel, angle):
+    global Gpca
     pulse_min = 260  # Pulse width for 0 degrees
     pulse_max = 380  # Pulse width for 180 degrees
     pulse_width = pulse_min + angle * (pulse_max - pulse_min)
     try:
-        pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
+        Gpca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
     except ValueError:
         print("Invalid angle value: ", angle)
 
 
 # ESC functions
-def set_motor_speed(pca, channel, speed):
+def set_motor_speed(channel, speed):
+    global Gpca
     pulse_min = 310  # Pulse width for 0% speed
     pulse_max = 409  # Pulse width for 100% speed
     pulse_width = pulse_min + speed * (pulse_max - pulse_min)
     try:
-        pca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
+        Gpca.channels[channel].duty_cycle = int(pulse_width / 4096 * 0xFFFF)
     except ValueError:
         print("Invalid speed value: ", speed)
 
 
-def arm_esc(pca, channel):
+def arm_esc(channel):
     print("Arming ESC...")
-    set_motor_speed(pca, channel, 0)
+    set_motor_speed(channel, 0)
     time.sleep(1)
     print("ESC armed")
 
@@ -141,6 +144,12 @@ def arm_esc(pca, channel):
 def start_boost(boost):
     global Gboost
     Gboost = boost
+
+    # short set back
+    set_motor_speed(13, - RACE_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+    time.sleep(0.2)
+    set_motor_speed(13, MOTOR_BASIS)
+
     # Check acclelaration every 0.1 sec
     threading.Timer(0.02, stop_boost).start()
     print(f"Booster of {Gboost} activated.")
@@ -363,7 +372,7 @@ def navigate(sock, narrow=True):
     }
 
 
-def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
+def lidar_thread(sock, shared_GX, shared_GY, shared_race_mode, stop_event):
     global Glidar_string, Gcolor_string
     global Gx_coords, Gfront_distance
     global Glidar_moving_avg_fps
@@ -438,14 +447,13 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
             if 0 < left_min < 0.07 or 0 < right_min < 0.07:
                 print("Emergency break")
                 dir = 1 if left_min < right_min else -1
-                set_servo_angle(pca, 12, SERVO_BASIS + PARK_STEER * SERVO_FACTOR * dir)
+                set_servo_angle(12, SERVO_BASIS + PARK_STEER * SERVO_FACTOR * dir)
                 time.sleep(0.5)
-                set_motor_speed(pca, 13, MOTOR_BASIS - EMERGENCY_SPEED * MOTOR_FACTOR)
+                set_motor_speed(13, MOTOR_BASIS - EMERGENCY_SPEED * MOTOR_FACTOR)
                 time.sleep(0.5)
-                set_motor_speed(pca, 13, MOTOR_BASIS)
-                set_servo_angle(pca, 12, SERVO_BASIS)
+                set_motor_speed(13, MOTOR_BASIS)
+                set_servo_angle(12, SERVO_BASIS)
                 time.sleep(0.5)
-                # start_boost(MOTOR_BOOST)
                 continue
 
             ld = interpolated_distances[:LIDAR_LEN]
@@ -474,8 +482,8 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                 #    X = -X
                 motor = Gboost + MOTOR_FACTOR if Gobstacles else MOTOR_FACTOR_OPENING
                 if -1.0 < X < 1.0 and -1.0 < Y < 0.0:
-                    set_servo_angle(pca, 12, X * SERVO_FACTOR + SERVO_BASIS)
-                    set_motor_speed(pca, 13, Y * motor + MOTOR_BASIS)
+                    set_servo_angle(12, X * SERVO_FACTOR + SERVO_BASIS)
+                    set_motor_speed(13, Y * motor + MOTOR_BASIS)
                 else:
                     pass
                     print("Invalid steering commands:", X, Y)
@@ -815,7 +823,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     return x_coords, first_line, second_line, magenta_rectangle, line_orientation, image, red_mask, green_mask, magenta_mask
 
 
-def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_event):
+def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event):
     global Gcolor_string, Gx_coords, Gfront_distance
     global Gline_orientation
     global Glap_end, Gheading_estimate  # heading
@@ -942,7 +950,7 @@ def camera_thread(pca, uav_camera0, uav_camera1, shared_race_mode, device, stop_
             video_writer.release()
 
 
-def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, stop_event):
+def xbox_controller_process(shared_GX, shared_GY, shared_race_mode, stop_event):
     pygame.init()
     pygame.joystick.init()
 
@@ -966,13 +974,13 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, stop_ev
                 # print(f"JOYAXISMOTION: axis={event.axis}, value={event.value}")
                 if event.axis == 1:
                     shared_GY.value = event.value
-                    set_motor_speed(pca, 13, event.value * MOTOR_FACTOR + MOTOR_BASIS)
+                    set_motor_speed(13, event.value * MOTOR_FACTOR + MOTOR_BASIS)
                 elif event.axis == 2:
                     shared_GX.value = event.value
-                    set_servo_angle(pca, 12, event.value * SERVO_FACTOR + SERVO_BASIS)
+                    set_servo_angle(12, event.value * SERVO_FACTOR + SERVO_BASIS)
                 elif event.axis == 3:
                     pass
-                    # set_servo_angle(pca, 11, abs(event.value) * 1.5 + 0.0)
+                    # set_servo_angle( 11, abs(event.value) * 1.5 + 0.0)
 
             elif event.type == pygame.JOYBALLMOTION:
                 print(f"JOYBALLMOTION: ball={event.ball}, rel={event.rel}")
@@ -990,13 +998,13 @@ def xbox_controller_process(pca, shared_GX, shared_GY, shared_race_mode, stop_ev
                 elif event.button == 3:  # X button
                     print("STOP")
                     shared_race_mode.value = 0
-                    set_motor_speed(pca, 13, MOTOR_BASIS)
-                    set_servo_angle(pca, 12, SERVO_BASIS)
+                    set_motor_speed(13, MOTOR_BASIS)
+                    set_servo_angle(12, SERVO_BASIS)
                 elif event.button == 4:  # Y button
                     print("Training terminated")
                     shared_race_mode.value = 5
-                    set_motor_speed(pca, 13, MOTOR_BASIS)
-                    set_servo_angle(pca, 12, SERVO_BASIS)
+                    set_motor_speed(13, MOTOR_BASIS)
+                    set_servo_angle(12, SERVO_BASIS)
 
             elif event.type == pygame.JOYBUTTONUP:
                 print(f"JOYBUTTONUP: button={event.button}")
@@ -1145,7 +1153,7 @@ def gyro_thread(shared_race_mode, stop_event):
         print("Stopping data read.")
 
 
-def park(pca, sock, shared_race_mode, device):
+def park(sock, shared_race_mode, device):
     global Gheading_estimate, Gheading_start
 
     print(f">>> Parking start heading: {Gheading_estimate} {time.time()}")
@@ -1167,17 +1175,17 @@ def park(pca, sock, shared_race_mode, device):
         position = navigate(sock)
         # print(f"Front distance: {position['front_distance']:.2f}")
         if position['front_distance'] < 0.05: break
-        set_servo_angle(pca, 12, SERVO_BASIS)
-        set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+        set_servo_angle(12, SERVO_BASIS)
+        set_motor_speed(13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
 
     print("Stopping the vehicle, lifting rear axle ")
     blank_led(device)
-    set_motor_speed(pca, 13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
+    set_motor_speed(13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+    set_servo_angle(12, SERVO_BASIS)
     time.sleep(1)
-    set_motor_speed(pca, 13, MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
-    set_servo_angle(pca, 11, LIFTER_UP)
+    set_motor_speed(13, MOTOR_BASIS)
+    set_servo_angle(12, SERVO_BASIS)
+    set_servo_angle(11, LIFTER_UP)
 
 
 def sensor_callback():
@@ -1300,13 +1308,13 @@ def blank_led(device):
     led_out(device, pattern)
 
 
-def ready_gesture(pca):
+def ready_gesture():
     for i in range(2):
-        set_servo_angle(pca, 12, SERVO_BASIS + SERVO_FACTOR / 2)
+        set_servo_angle(12, SERVO_BASIS + SERVO_FACTOR / 2)
         time.sleep(1)
-        set_servo_angle(pca, 12, SERVO_BASIS - SERVO_FACTOR / 2)
+        set_servo_angle(12, SERVO_BASIS - SERVO_FACTOR / 2)
         time.sleep(1)
-    set_servo_angle(pca, 12, SERVO_BASIS)
+    set_servo_angle(12, SERVO_BASIS)
 
 
 def ready_led():
@@ -1337,7 +1345,7 @@ def main():
     global shared_race_mode
     global Glidar_moving_avg_fps, Gcamera_moving_avg_fps
     global Gobstacles
-    global Gmodel_cc, Gmodel_cw
+    global Gmodel_cc, Gmodel_cw, Gpca
 
     print("Starting the UAV program...")
     # Gobstacles = check_usb_device()
@@ -1369,12 +1377,12 @@ def main():
     i2c = busio.I2C(SCL, SDA)
 
     # Create a simple PCA9685 class instance
-    pca = PCA9685(i2c)
-    pca.frequency = 50  # Standard servo frequency
-    arm_esc(pca, 1)
-    set_motor_speed(pca, 13, MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
-    set_servo_angle(pca, 11, LIFTER_BASIS)  # Lifter neutral
+    Gpca = PCA9685(i2c)
+    Gpca.frequency = 50  # Standard servo frequency
+    arm_esc(1)
+    set_motor_speed(13, MOTOR_BASIS)
+    set_servo_angle(12, SERVO_BASIS)
+    set_servo_angle(11, LIFTER_BASIS)  # Lifter neutral
 
     # gyro setup
     print("Initializing WT61 gyroscope sensor...")
@@ -1407,14 +1415,14 @@ def main():
     print("Preparing processes ...")
     stop_event = threading.Event()
     lidar_thread_instance = threading.Thread(target=lidar_thread,
-                                             args=(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event))
+                                             args=(sock, shared_GX, shared_GY, shared_race_mode, stop_event))
     camera_thread_instance = threading.Thread(target=camera_thread,
-                                              args=(pca, picam0, picam1, shared_race_mode, device, stop_event))
+                                              args=(picam0, picam1, shared_race_mode, device, stop_event))
     gyro_thread_instance = threading.Thread(target=gyro_thread, args=(shared_race_mode, stop_event))
 
     proc_stop = multiprocessing.Event()
     xbox_controller_process_instance = Process(target=xbox_controller_process,
-                                               args=(pca, shared_GX, shared_GY, shared_race_mode, proc_stop))
+                                               args=shared_GX, shared_GY, shared_race_mode, proc_stop))
 
     print("Starting processes ...")
     print("LIDAR ...")
@@ -1438,24 +1446,13 @@ def main():
     # Show readiness for race
     smiley_led(device)
     lcd_out(device, f"READY - Clockwise: {Gclock_wise}")
-    if READY_GESTURE: ready_gesture(pca)
+    if READY_GESTURE: ready_gesture()
     ready_led()
 
     print("Steering and power neutral.")
-    set_motor_speed(pca, 13, MOTOR_BASIS)
-    set_servo_angle(pca, 12, SERVO_BASIS)
+    set_motor_speed(13, MOTOR_BASIS)
+    set_servo_angle(12, SERVO_BASIS)
 
-    # compass testing only
-    # while True:
-    #    position = navigate(sock,True)
-    #    front_distance = position['front_distance']
-    #    print(f"front_distance {front_distance:.2f} Gheading_estimate {Gheading_estimate:.2f}")
-
-    # lifter testing only
-    # print("Lifting")
-    # set_servo_angle(pca, 11, LIFTER_UP)
-    # while True:
-    #    time.sleep(1)
 
     try:
         while shared_race_mode.value == 0:
@@ -1464,21 +1461,13 @@ def main():
         if shared_race_mode.value == 1:  # Race
 
             start_time = time.time()
-            set_motor_speed(pca, 13, MOTOR_BASIS)
-            set_servo_angle(pca, 12, SERVO_BASIS)
+            set_motor_speed(13, MOTOR_BASIS)
+            set_servo_angle(12, SERVO_BASIS)
             while shared_race_mode.value != 2:
                 time.sleep(0.1)
 
-            # set_servo_angle(pca, 12, SERVO_BASIS)
-            # front_distance = 3.0
-            # while front_distance > 1.8:
-            #    position = navigate(sock,False)
-            #    front_distance = position['front_distance']
-            #    print(f"front_distance {front_distance:.2f}")
-            #    time.sleep(0.1)
-
             for _ in range(10):
-                set_motor_speed(pca, 13, MOTOR_BASIS)
+                set_motor_speed(13, MOTOR_BASIS)
                 time.sleep(0.1)
 
             print(f"Race time: {time.time() - start_time:.2f} seconds")
@@ -1492,16 +1481,12 @@ def main():
                 start_boost(MOTOR_BOOST)
                 while shared_race_mode.value != 2:
                     time.sleep(0.1)
-                print(f">>> Car race end heading: {Gheading_estimate:.2f} {time.time()}")
-                print(f"Heading estimate: {orientation(Gheading_estimate):.2f}")
-                print(f"Heading start: {orientation(Gheading_start):.2f}")
-                park(pca, sock, shared_race_mode, device)
-                print(f"Race & parking time: {time.time() - start_time:.2f} seconds")
+                #park(sock, shared_race_mode, device)
 
             print("Prepare for shutdown")
             while shared_race_mode.value != 1:
                 time.sleep(0.1)
-            set_servo_angle(pca, 11, LIFTER_BASIS)
+            set_servo_angle(11, LIFTER_BASIS)
             time.sleep(2)
             shared_race_mode.value = 5  # Termination
 
