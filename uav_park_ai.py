@@ -83,6 +83,8 @@ DISTANCE_CORRECTION = -0.10
 
 # Global variables
 Gclock_wise = False
+Gmodel_cc = None
+Gmodel_cw = None
 Glidar_string = ""
 Gcolor_string = ",".join(["0"] * COLOR_LEN)
 Gx_coords = np.zeros(COLOR_LEN, dtype=float)
@@ -366,12 +368,11 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
     global Gx_coords, Gfront_distance
     global Glidar_moving_avg_fps
     global Gobstacles, Gboost
+    global Gmodel_cc, Gmodel_cw
 
     window_size = 10
     input_size = 100  # not too wide !
 
-    model_cc = None
-    model_cw = None
     # scaler_lidar = None
     device = None
 
@@ -393,18 +394,22 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
             valid_distances = median_filter(interpolated_distances[:LIDAR_LEN], size=window_size)
             Gfront_distance = np.max(valid_distances[LIDAR_LEN // 2 - input_size // 2:LIDAR_LEN // 2 + input_size // 2])
 
-            if model_cc is None:
+            if Gmodel_cc is None:
                 # Load the trained model and the scaler
                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
                 # Initialize the model
-                model_cc = CNNModel(LIDAR_LEN, COLOR_LEN).to(device)
-                model_cw = CNNModel(LIDAR_LEN, COLOR_LEN).to(device)
+                Gmodel_cc = CNNModel(LIDAR_LEN, COLOR_LEN).to(device)
+                Gmodel_cw = CNNModel(LIDAR_LEN, COLOR_LEN).to(device)
 
                 # Load the trained weights into the model
                 if Gobstacles:
-                    state_dict_cc = torch.load('./model_cc.pth', map_location=torch.device('cpu'))
-                    state_dict_cw = torch.load('./model_cw.pth', map_location=torch.device('cpu'))
+                    if shared_race_mode.value == 1:
+                        state_dict_cc = torch.load('./model_cc.pth', map_location=torch.device('cpu'))
+                        state_dict_cw = torch.load('./model_cw.pth', map_location=torch.device('cpu'))
+                    else
+                        state_dict_cc = torch.load('./model_cc_park.pth', map_location=torch.device('cpu'))
+                        state_dict_cw = torch.load('./model_cw_park.pth', map_location=torch.device('cpu'))
                 else:
                     state_dict_cc = torch.load('./model_cc_opening.pth', map_location=torch.device('cpu'))
                     state_dict_cw = torch.load('./model_cw_opening.pth', map_location=torch.device('cpu'))
@@ -418,10 +423,10 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                         state_dict_cw[key] = value.float()  # Convert to single precision (float32)
 
                 # Load the state dict into the model
-                model_cc.load_state_dict(state_dict_cc)
-                model_cw.load_state_dict(state_dict_cw)
-                model_cc.eval()
-                model_cw.eval()
+                Gmodel_cc.load_state_dict(state_dict_cc)
+                Gmodel_cw.load_state_dict(state_dict_cw)
+                Gmodel_cc.eval()
+                Gmodel_cw.eval()
 
             # if scaler_lidar is None:
             #    # Load the scaler for LIDAR data
@@ -455,9 +460,9 @@ def lidar_thread(sock, pca, shared_GX, shared_GY, shared_race_mode, stop_event):
                 # Perform inference
                 with torch.no_grad():
                     if not Gclock_wise:
-                        output = model_cc(lidar_tensor, color_tensor)
+                        output = Gmodel_cc(lidar_tensor, color_tensor)
                     else:
-                        output = model_cw(lidar_tensor, color_tensor)
+                        output = Gmodel_cw(lidar_tensor, color_tensor)
 
                 # Convert the model's output to steering commands or other UAV controls
                 steering_commands = output.cpu().numpy()
@@ -1332,6 +1337,7 @@ def main():
     global shared_race_mode
     global Glidar_moving_avg_fps, Gcamera_moving_avg_fps
     global Gobstacles
+    global Gmodel_cc, Gmodel_cw
 
     print("Starting the UAV program...")
     # Gobstacles = check_usb_device()
@@ -1479,9 +1485,11 @@ def main():
             smiley_led(device)
 
             if PARKING_MODE and Gobstacles:
+                Gmodel_cc = None
+                Gmodel_cw = None
+                shared_race_mode.value = 3
                 time.sleep(3)
                 start_boost(MOTOR_BOOST)
-                shared_race_mode.value = 3
                 while shared_race_mode.value != 2:
                     time.sleep(0.1)
                 print(f">>> Car race end heading: {Gheading_estimate:.2f} {time.time()}")
