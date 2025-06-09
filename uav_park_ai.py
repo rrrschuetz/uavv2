@@ -668,7 +668,7 @@ def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle
         aspect_ratio = width / height
         if shared_race_mode.value == 3 or ( \
             aspect_ratio_range[0] <= aspect_ratio <= aspect_ratio_range[1] and
-            angle_range[0] <= angle <= angle_range[1])
+            angle_range[0] <= angle <= angle_range[1]):
             filtered_contours.append(box)
     return filtered_contours
 
