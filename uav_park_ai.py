@@ -416,7 +416,7 @@ def lidar_thread(sock, shared_GX, shared_GY, shared_race_mode, stop_event):
                     if shared_race_mode.value == 1:
                         state_dict_cc = torch.load('./model_cc.pth', map_location=torch.device('cpu'))
                         state_dict_cw = torch.load('./model_cw.pth', map_location=torch.device('cpu'))
-                    else
+                    else:
                         state_dict_cc = torch.load('./model_cc_park.pth', map_location=torch.device('cpu'))
                         state_dict_cw = torch.load('./model_cw_park.pth', map_location=torch.device('cpu'))
                 else:
