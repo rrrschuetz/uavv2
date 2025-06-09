@@ -445,15 +445,20 @@ def lidar_thread(sock, shared_GX, shared_GY, shared_race_mode, stop_event):
             left_min = min(interpolated_distances[LIDAR_LEN // 8 * 3: LIDAR_LEN // 2])
             right_min = min(interpolated_distances[LIDAR_LEN // 2: LIDAR_LEN // 8 * 5])
             if 0 < left_min < 0.07 or 0 < right_min < 0.07:
-                print("Emergency break")
-                dir = 1 if left_min < right_min else -1
-                set_servo_angle(12, SERVO_BASIS + PARK_STEER * SERVO_FACTOR * dir)
-                time.sleep(0.5)
-                set_motor_speed(13, MOTOR_BASIS - EMERGENCY_SPEED * MOTOR_FACTOR)
-                time.sleep(0.5)
-                set_motor_speed(13, MOTOR_BASIS)
-                set_servo_angle(12, SERVO_BASIS)
-                time.sleep(0.5)
+                if shared_race_mode.value == 1:
+                    print("Emergency break")
+                    dir = 1 if left_min < right_min else -1
+                    set_servo_angle(12, SERVO_BASIS + PARK_STEER * SERVO_FACTOR * dir)
+                    time.sleep(0.5)
+                    set_motor_speed(13, MOTOR_BASIS - EMERGENCY_SPEED * MOTOR_FACTOR)
+                    time.sleep(0.5)
+                    set_motor_speed(13, MOTOR_BASIS)
+                    set_servo_angle(12, SERVO_BASIS)
+                    time.sleep(0.5)
+                elif shared_race_mode.value == 3:
+                    shared_race_mode.value = 6
+                    set_motor_speed(13, MOTOR_BASIS)
+                    set_servo_angle(12, SERVO_BASIS)
                 continue
 
             ld = interpolated_distances[:LIDAR_LEN]
@@ -1148,33 +1153,8 @@ def gyro_thread(shared_race_mode, stop_event):
         print("Stopping data read.")
 
 
-def park(sock, shared_race_mode, device):
-    global Gheading_estimate, Gheading_start
-
-    print(f">>> Parking start heading: {Gheading_estimate} {time.time()}")
-    position = navigate(sock, narrow=False)
-    dl = position['left_min_distance']
-    dr = position['right_min_distance']
-
-    if not Gclock_wise:
-        stop_distance = COUNTERCLOCKWISE_TURN_RED if dl > dr else COUNTERCLOCKWISE_TURN_GREEN  # 1.6/1.5
-    else:
-        stop_distance = CLOCKWISE_TURN_RED if dl > dr else CLOCKWISE_TURN_GREEN  # 1.5/1.3
-
-    print(f">>> Car alignment heading: {Gheading_estimate} {time.time()}")
-    print(f"Front distance: {position['front_distance']:.2f}")
-    print(f"stop_distance: {stop_distance:.2f}, left distance: {dl:.2f}, right distance: {dr:.2f}")
-    first_line_led(device)
-
-    while True:
-        position = navigate(sock)
-        # print(f"Front distance: {position['front_distance']:.2f}")
-        if position['front_distance'] < 0.05: break
-        set_servo_angle(12, SERVO_BASIS)
-        set_motor_speed(13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
-
+def park():
     print("Stopping the vehicle, lifting rear axle ")
-    blank_led(device)
     set_motor_speed(13, PARK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
     set_servo_angle(12, SERVO_BASIS)
     time.sleep(1)
@@ -1476,13 +1456,11 @@ def main():
                 start_boost(MOTOR_BOOST)
                 while shared_race_mode.value != 6:
                     time.sleep(0.1)
-                #park(sock, shared_race_mode, device)
+                park()
+                time.sleep(10)
+                set_servo_angle(11, LIFTER_BASIS)
+                time.sleep(2)
 
-            print("Prepare for shutdown")
-            while shared_race_mode.value != 1:
-                time.sleep(0.1)
-            set_servo_angle(11, LIFTER_BASIS)
-            time.sleep(2)
             shared_race_mode.value = 5  # Termination
 
         else:  # Training
