@@ -847,7 +847,6 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
 
     num_detector_calls = 0
     num_laps = 0
-    parking_lot_reached = False
     heading_prev_lap = Gheading_estimate
     max_heading = 0
     cum_heading = 0
@@ -903,12 +902,8 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                             print("End of race.")
 
                 elif shared_race_mode.value == 3:
-
-                    parking_lot_reached = parking_lot_reached or parking_lot
-                    # print("Waiting for parking lot")
-                    if parking_lot_reached and not Glap_end:
-                        shared_race_mode.value = 2
-                        print("Parking lot reached")
+                    #shared_race_mode.value = 6
+                    print("Waiting for parking end")
 
                 # Save the image with labeled contours
                 if WRITE_CAMERA_MOVIE:
@@ -1480,7 +1475,7 @@ def main():
                 shared_race_mode.value = 3
                 time.sleep(3)
                 start_boost(MOTOR_BOOST)
-                while shared_race_mode.value != 5:
+                while shared_race_mode.value != 6:
                     time.sleep(0.1)
                 #park(sock, shared_race_mode, device)
 
