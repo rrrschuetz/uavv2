@@ -1422,7 +1422,7 @@ def main():
 
     proc_stop = multiprocessing.Event()
     xbox_controller_process_instance = Process(target=xbox_controller_process,
-                                               args=shared_GX, shared_GY, shared_race_mode, proc_stop))
+                                               args=(shared_GX, shared_GY, shared_race_mode, proc_stop))
 
     print("Starting processes ...")
     print("LIDAR ...")
