@@ -46,7 +46,7 @@ MOTOR_FACTOR = float(config['Steering']['MOTOR_FACTOR'])  # 0.4 #0.45  # 0.3
 MOTOR_FACTOR_OPENING = float(config['Steering']['MOTOR_FACTOR_OPENING'])  # 0.4 #0.45  # 0.3
 MOTOR_BASIS = float(config['Steering']['MOTOR_BASIS'])  # 0.1
 MOTOR_BOOST = float(config['Steering']['MOTOR_BOOST'])  # 0.2
-MOTOR_ACCEL = float(config['Steering']['MOTOR_ACCEL'])  # 1.0
+MOTOR_ACCEL = float(config['Steering']['MOTOR_ACCEL'])  # 0.99
 LIFTER_BASIS = float(config['Steering']['LIFTER_BASIS'])  # 1.45
 LIFTER_UP = float(config['Steering']['LIFTER_UP'])  # 2.7
 
