@@ -1479,7 +1479,7 @@ def main():
                 shared_race_mode.value = 3
                 time.sleep(3)
                 start_boost(MOTOR_BOOST)
-                while shared_race_mode.value != 2:
+                while shared_race_mode.value != 5:
                     time.sleep(0.1)
                 #park(sock, shared_race_mode, device)
 
