@@ -844,7 +844,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
         fps = 20  # Set frames per second for the output video
         video_filename = "output_video_000.avi"  # Output video file name
         fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
-        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
+        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height // 4))
         frame_count = 0
         file_index = 0
         max_frame_count = 2000  # Maximum number of frames per video file
@@ -925,6 +925,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                     overlayed_image = cv2.addWeighted(overlayed_image, 0.5, green_colored, 0.5, 0)
                     overlayed_image = cv2.addWeighted(overlayed_image, 0.5, magenta_colored, 0.5, 0)
 
+                    overlayed_image = overlayed_image[(frame_height//4):, :]
                     video_writer.write(overlayed_image)
                     frame_count += 1
 
@@ -933,7 +934,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                         file_index += 1
                         frame_count = 0
                         video_filename = f"output_video_{file_index:03d}.avi"
-                        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
+                        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height // 4))
 
                 # time.sleep(0.05)
                 frame_time = time.time() - start_time
