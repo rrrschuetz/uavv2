@@ -837,7 +837,6 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = uav_camera0.capture_array().shape
     frame_width *= 2
-    frame_height //= 2
     print(f"Frame width: {frame_width}, Frame height: {frame_height}")
 
     # VideoWriter setup
@@ -868,10 +867,15 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                 heading_prev_lap = Gheading_estimate
                 # print("cum_heading ",cum_heading)
 
+                if shared_race_mode.value == 3:
+                    crop = frame_height // 4
+                else:
+                    crop = frame_height // 2
+
                 image0 = uav_camera0.image()
                 image1 = uav_camera1.image()
                 image = np.hstack((image0, image1))
-                image = image[frame_height:, :]
+                image = image[crop:, :]
 
                 # result_path = detector.detect_and_save("input.jpg")
 
