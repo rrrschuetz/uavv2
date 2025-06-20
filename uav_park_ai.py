@@ -925,7 +925,8 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                     overlayed_image = cv2.addWeighted(overlayed_image, 0.5, green_colored, 0.5, 0)
                     overlayed_image = cv2.addWeighted(overlayed_image, 0.5, magenta_colored, 0.5, 0)
 
-                    overlayed_image = overlayed_image[(frame_height//4):, :]
+                    if shared_race_mode.value != 3:
+                        overlayed_image = overlayed_image[(frame_height//4):, :]
                     video_writer.write(overlayed_image)
                     frame_count += 1
 
