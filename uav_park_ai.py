@@ -868,9 +868,9 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                 # print("cum_heading ",cum_heading)
 
                 if shared_race_mode.value == 3:
-                    crop = frame_height // 4   # park
+                    crop = frame_height // 4 * 3  # park
                 else:
-                    crop = frame_height // 2   # race
+                    crop = frame_height // 4 * 2  # race
 
                 image0 = uav_camera0.image()
                 image1 = uav_camera1.image()
