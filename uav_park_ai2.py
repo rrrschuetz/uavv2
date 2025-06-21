@@ -657,7 +657,7 @@ class mask():
         return mask
 
 
-def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle_range=(85,95)):
+def filter_contours(contours, min_area=500, angle_range=(85,95)):
     filtered_contours = []
     for contour in contours:
         if cv2.contourArea(contour) < min_area:
@@ -668,13 +668,8 @@ def filter_contours(contours, min_area=500, aspect_ratio_range=(1.0, 4.0), angle
         width, height = rect[1]
         angle = rect[2]
         if  angle_range[0] <= angle <= angle_range[1]:
-            if shared_race_mode.value != 3:
-                if width < height:
-                    width, height = height, width
-                aspect_ratio = width / height
-                if not (aspect_ratio_range[0] <= aspect_ratio <= aspect_ratio_range[1]):
-                    continue
-            filtered_contours.append(box)
+            if shared_race_mode.value == 3 or width < height:
+                filtered_contours.append(box)
     return filtered_contours
 
 
