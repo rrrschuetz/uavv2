@@ -844,6 +844,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
     global Gline_orientation
     global Glap_end, Gheading_estimate  # heading
     global Gcamera_moving_avg_fps, Glidar_moving_avg_fps
+    global Gclock_wise
 
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = uav_camera0.capture_array().shape
@@ -883,6 +884,12 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                 image1 = uav_camera1.image()
                 image = np.hstack((image0, image1))
                 image = image[frame_height:, :]
+
+                cut = frame_width // 4
+                if Gclock_wise:
+                    image[:, :cut, :] = 0
+                else:
+                    image[:, frame_width - cut:, :] = 0
 
                 #Gx_coords, first_line, second_line, parking_lot, line_orientation, image, red_mask, green_mask, magenta_mask \
                 #    = detect_and_label_blobs(image, num_detector_calls)
