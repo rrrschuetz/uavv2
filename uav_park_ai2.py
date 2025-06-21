@@ -97,7 +97,6 @@ Gaccel_y = 0.0
 Gaccel_z = 0.0
 Gheading_estimate = 0.0
 Gheading_start = 0.0
-Glap_end = False
 Gpca = None
 Gboost = 0.0
 Glidar_moving_avg_fps = 0.0
@@ -841,7 +840,7 @@ def detect_and_label_blobs(image, num_detector_calls):
 def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event):
     global Gcolor_string, Gx_coords, Gfront_distance
     global Gline_orientation
-    global Glap_end, Gheading_estimate  # heading
+    global Gheading_estimate  # heading
     global Gcamera_moving_avg_fps, Glidar_moving_avg_fps
     global Gclock_wise
 
@@ -910,13 +909,12 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
 
                     # print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
                     max_heading = max(max_heading, Gheading_estimate)
-                    if Glap_end and max_heading > 350 and abs(cum_heading) > 100 and Gfront_distance < 1.3:
-                    #if max_heading > 350 and abs(cum_heading) > 290:
+                    if (not PARKING_MODE and max_heading > 350 and abs(cum_heading) > 350 and Gfront_distance < 1.3) \
+                        or (PARKING_MODE and max_heading > 350 and abs(cum_heading) > 290):
                         print(f"max_heading {max_heading} cum_heading {cum_heading} Gfront_distance {Gfront_distance}")
                         num_laps += 1
                         max_heading = 0
                         cum_heading = 0
-                        Glap_end = False
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                         # print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
                         # print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
@@ -1113,7 +1111,7 @@ def orientation(angle):
 def gyro_thread(shared_race_mode, stop_event):
     global Gaccel_x, Gaccel_y, Gaccel_z
     global Gpitch, Groll, Gyaw
-    global Gheading_estimate, Gheading_start, Glap_end
+    global Gheading_estimate, Gheading_start
 
     buff = bytearray()  # Buffer to store incoming serial data
     packet_counter = 0  # Counter to skip packets
@@ -1160,9 +1158,7 @@ def gyro_thread(shared_race_mode, stop_event):
                 else:
                     # Get the magnetometer heading (absolute heading)
                     Gheading_estimate = get_magnetometer_heading()
-                    yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
-                    Glap_end = Glap_end or yaw_diff < 10  # no larger value !!
-                    print(f"... Gheading_estimate: {Gheading_estimate:.2f} Glap_end: {Glap_end}")
+                    #print(f"... Gheading_estimate: {Gheading_estimate:.2f}")
                     time.sleep(0.02)
 
     except serial.SerialException as e:
