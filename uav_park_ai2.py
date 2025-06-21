@@ -636,11 +636,11 @@ class mask():
     #    magenta_mask = self._remove_small_contours(self._apply_morphological_operations(magenta_mask))
     #    return magenta_mask
 
-    def magenta(self, image):
-        lower_magenta = np.array([0, 160, 0])   #20,150,150
-        upper_magenta = np.array([255, 255, 127])
-        magenta_mask = cv2.inRange(image, lower_magenta, upper_magenta)
-        return magenta_mask
+    #def magenta(self, image):
+    #    lower_magenta = np.array([0, 160, 0])   #20,150,150
+    #    upper_magenta = np.array([255, 255, 127])
+    #    magenta_mask = cv2.inRange(image, lower_magenta, upper_magenta)
+    #    return magenta_mask
 
     # ---------- Maskenfilterung ----------
     def _apply_morphological_operations(self, mask):
@@ -707,14 +707,14 @@ def detect_and_label_blobs(image, num_detector_calls):
     first_line = False
     second_line = False
     line_orientation = ""
-    magenta_rectangle = False
+    #magenta_rectangle = False
     mask_filter = mask()
 
     # Convert to LAB and build separate masks
     lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     red_mask = mask_filter.red(lab_image)
     green_mask = mask_filter.green(lab_image)
-    magenta_mask = mask_filter.magenta(lab_image)
+    #magenta_mask = mask_filter.magenta(lab_image)
 
     # Find contours for red and green separately
     red_contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -814,20 +814,21 @@ def detect_and_label_blobs(image, num_detector_calls):
 
         # Find and filter contours for magenta blobs only with outwards looking camera
         #contours, _ = cv2.findContours(mask_filter.magenta(hsv_image), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        for contour in contours:
-            area = cv2.contourArea(contour)
-            if area > 1000:  # 5000 size of parking lot
-                rect = cv2.minAreaRect(contour)
-                center = (int(rect[0][0]), int(rect[0][1]))
-                box = cv2.boxPoints(rect)
-                box = np.int32(box)
-                left_end = min(box[:, 0])
-                right_end = max(box[:, 0])
-                #print(f"Magenta rectangle detected: {area} pixels")
-                magenta_rectangle = True
-                cv2.drawContours(image, [contour], -1, (255, 255, 255), 3)  # Draw the magenta rectangle
-               #cv2.putText(image, "M", center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255), 2)
+        #contours, _ = cv2.findContours(magenta_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        #for contour in contours:
+        #    area = cv2.contourArea(contour)
+        #    if area > 1000:  # 5000 size of parking lot
+        #        rect = cv2.minAreaRect(contour)
+        #        center = (int(rect[0][0]), int(rect[0][1]))
+        #        box = cv2.boxPoints(rect)
+        #        box = np.int32(box)
+        #        left_end = min(box[:, 0])
+        #        right_end = max(box[:, 0])
+        #        #print(f"Magenta rectangle detected: {area} pixels")
+        #        magenta_rectangle = True
+        #        cv2.drawContours(image, [contour], -1, (255, 255, 255), 3)  # Draw the magenta rectangle
+        #        cv2.putText(image, "M", center, cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255), 2)
+
         # Add timestamp in the lower left corner
         timestamp = time.strftime("%H:%M:%S", time.localtime()) + f":{int((time.time() % 1) * 100):02d}"
         cv2.putText(image, timestamp, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
@@ -840,8 +841,8 @@ def detect_and_label_blobs(image, num_detector_calls):
         # cv2.imwrite('red_mask.jpg', red_mask)
         # cv2.imwrite('green_mask.jpg', green_mask)
 
-    return x_coords, first_line, second_line, magenta_rectangle, line_orientation, image, red_mask, green_mask, magenta_mask
-
+    #return x_coords, first_line, second_line, magenta_rectangle, line_orientation, image, red_mask, green_mask, magenta_mask
+    return x_coords, first_line, second_line, line_orientation, image, red_mask, green_mask
 
 def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event):
     global Gcolor_string, Gx_coords, Gfront_distance
@@ -888,7 +889,9 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                 image = np.hstack((image0, image1))
                 image = image[frame_height:, :]
 
-                Gx_coords, first_line, second_line, parking_lot, line_orientation, image, red_mask, green_mask, magenta_mask \
+                #Gx_coords, first_line, second_line, parking_lot, line_orientation, image, red_mask, green_mask, magenta_mask \
+                #    = detect_and_label_blobs(image, num_detector_calls)
+                Gx_coords, first_line, second_line, line_orientation, image, red_mask, green_mask \
                     = detect_and_label_blobs(image, num_detector_calls)
 
                 # if Gclock_wise:
@@ -927,12 +930,12 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                     # Farbliche Masken erzeugen
                     red_colored = cv2.merge([red_mask, np.zeros_like(red_mask), np.zeros_like(red_mask)])
                     green_colored = cv2.merge([np.zeros_like(green_mask), green_mask, np.zeros_like(green_mask)])
-                    magenta_colored = cv2.merge([np.zeros_like(magenta_mask), magenta_mask, np.zeros_like(magenta_mask)])
+                    #magenta_colored = cv2.merge([np.zeros_like(magenta_mask), magenta_mask, np.zeros_like(magenta_mask)])
 
                     # Originalbild overlayen
                     overlayed_image = cv2.addWeighted(image, 0.5, red_colored, 0.5, 0)
                     overlayed_image = cv2.addWeighted(overlayed_image, 0.5, green_colored, 0.5, 0)
-                    overlayed_image = cv2.addWeighted(overlayed_image, 0.5, magenta_colored, 0.5, 0)
+                    #overlayed_image = cv2.addWeighted(overlayed_image, 0.5, magenta_colored, 0.5, 0)
                     video_writer.write(overlayed_image)
                     frame_count += 1
 
