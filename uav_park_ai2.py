@@ -36,6 +36,7 @@ WRITE_CAMERA_IMAGE = config.getboolean('Race', 'WRITE_CAMERA_IMAGE')  # False
 WRITE_CAMERA_MOVIE = config.getboolean('Race', 'WRITE_CAMERA_MOVIE')  # False
 Gobstacles = not config.getboolean('Race', 'OPENING_RACE')  # False
 TOTAL_LAPS = int(config['Race']['TOTAL_LAPS'])  # 3
+MONOCHROM_MODE = config.getboolean('Race', 'MONOCHROM_MODE')  # True
 CROPPING_MODE = config.getboolean('Race', 'CROPPING_MODE')  # True
 PARKING_MODE = config.getboolean('Race', 'PARKING_MODE')  # True
 LED_DISPLAY = config.getboolean('Race', 'LED_DISPLAY')  # False
@@ -55,11 +56,6 @@ RACE_SPEED = float(config['Steering']['RACE_SPEED'])  # -0.35
 EMERGENCY_SPEED = float(config['Steering']['EMERGENCY_SPEED'])  # -0.45
 PARK_SPEED = float(config['Steering']['PARK_SPEED'])  # -0.3 #-0.35  # -0.55
 PARK_STEER = float(config['Steering']['PARK_STEER'])  # 0.5   #2.5
-
-CLOCKWISE_TURN_GREEN = float(config['Parking']['CLOCKWISE_TURN_GREEN'])
-CLOCKWISE_TURN_RED = float(config['Parking']['CLOCKWISE_TURN_RED'])
-COUNTERCLOCKWISE_TURN_GREEN = float(config['Parking']['COUNTERCLOCKWISE_TURN_GREEN'])
-COUNTERCLOCKWISE_TURN_RED = float(config['Parking']['COUNTERCLOCKWISE_TURN_RED'])
 
 # LED and LCD output
 print(f"LED_DISPLAY {LED_DISPLAY}")
@@ -719,7 +715,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     green_contours = filter_contours(green_contours)
 
     # If both red and green objects present, pick the one with the largest Y coordinate
-    if red_contours and green_contours:
+    if red_contours and green_contours and MONOCHROM_MODE:
         all_contours = [(cnt, 'R') for cnt in red_contours] + [(cnt, 'G') for cnt in green_contours]
         # contours may be Nx2 or Nx1x2, so reshape to Nx2
         best_contour, best_label = max(
