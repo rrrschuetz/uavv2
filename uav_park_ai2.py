@@ -53,6 +53,8 @@ LIFTER_BASIS = float(config['Steering']['LIFTER_BASIS'])  # 1.45
 LIFTER_UP = float(config['Steering']['LIFTER_UP'])  # 2.7
 
 RACE_SPEED = float(config['Steering']['RACE_SPEED'])  # -0.35
+BACK_SPEED = float(config['Steering']['BACK_SPEED'])  # 0.35
+BACK_SPEED_TIME = float(config['Steering']['BACK_SPEED_TIME'])  # 0.1
 EMERGENCY_SPEED = float(config['Steering']['EMERGENCY_SPEED'])  # -0.45
 PARK_SPEED = float(config['Steering']['PARK_SPEED'])  # -0.3 #-0.35  # -0.55
 PARK_STEER = float(config['Steering']['PARK_STEER'])  # 0.5   #2.5
@@ -143,8 +145,8 @@ def start_boost(boost):
     Gboost = boost
 
     # short set back
-    set_motor_speed(13, -  RACE_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
-    time.sleep(0.2)
+    set_motor_speed(13, -  BACK_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+    time.sleep(BACK_SPEED_TIME)
     set_motor_speed(13, MOTOR_BASIS)
 
     # Check acclelaration every 0.1 sec
