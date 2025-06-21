@@ -885,11 +885,11 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                 image = np.hstack((image0, image1))
                 image = image[frame_height:, :]
 
-                #cut = frame_width // 4
-                #if Gclock_wise:
-                #    image[:, :cut, :] = 0
-                #else:
-                #    image[:, frame_width - cut:, :] = 0
+                cut = frame_width // 4
+                if Gclock_wise:
+                    image[:, :cut, :] = 0
+                else:
+                    image[:, frame_width - cut:, :] = 0
 
                 #Gx_coords, first_line, second_line, parking_lot, line_orientation, image, red_mask, green_mask, magenta_mask \
                 #    = detect_and_label_blobs(image, num_detector_calls)
