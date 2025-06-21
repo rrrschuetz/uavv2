@@ -36,6 +36,7 @@ WRITE_CAMERA_IMAGE = config.getboolean('Race', 'WRITE_CAMERA_IMAGE')  # False
 WRITE_CAMERA_MOVIE = config.getboolean('Race', 'WRITE_CAMERA_MOVIE')  # False
 Gobstacles = not config.getboolean('Race', 'OPENING_RACE')  # False
 TOTAL_LAPS = int(config['Race']['TOTAL_LAPS'])  # 3
+CROPPING_MODE = config.getboolean('Race', 'CROPPING_MODE')  # True
 PARKING_MODE = config.getboolean('Race', 'PARKING_MODE')  # True
 LED_DISPLAY = config.getboolean('Race', 'LED_DISPLAY')  # False
 READY_GESTURE = config.getboolean('Race', 'READY_GESTURE')  # False
@@ -885,11 +886,12 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                 image = np.hstack((image0, image1))
                 image = image[frame_height:, :]
 
-                cut = frame_width // 4
-                if Gclock_wise:
-                    image[:, :cut, :] = 0
-                else:
-                    image[:, frame_width - cut:, :] = 0
+                if CROPPING_MODE:
+                    cut = frame_width // 4
+                    if Gclock_wise:
+                        image[:, :cut, :] = 0
+                    else:
+                        image[:, frame_width - cut:, :] = 0
 
                 #Gx_coords, first_line, second_line, parking_lot, line_orientation, image, red_mask, green_mask, magenta_mask \
                 #    = detect_and_label_blobs(image, num_detector_calls)
