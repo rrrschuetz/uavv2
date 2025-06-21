@@ -837,6 +837,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
     fps_list = deque(maxlen=10)
     frame_height, frame_width, _ = uav_camera0.capture_array().shape
     frame_width *= 2
+    frame_height //= 2
     print(f"Frame width: {frame_width}, Frame height: {frame_height}")
 
     # VideoWriter setup
@@ -844,7 +845,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
         fps = 20  # Set frames per second for the output video
         video_filename = "output_video_000.avi"  # Output video file name
         fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for the output video file
-        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height // 4))
+        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
         frame_count = 0
         file_index = 0
         max_frame_count = 2000  # Maximum number of frames per video file
@@ -867,17 +868,10 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                 heading_prev_lap = Gheading_estimate
                 # print("cum_heading ",cum_heading)
 
-                if shared_race_mode.value == 3:
-                    crop = frame_height // 4 * 3  # park
-                else:
-                    crop = frame_height // 4 * 2  # race
-
                 image0 = uav_camera0.image()
                 image1 = uav_camera1.image()
                 image = np.hstack((image0, image1))
-                image = image[crop:, :]
-
-                # result_path = detector.detect_and_save("input.jpg")
+                image = image[frame_height:, :]
 
                 Gx_coords, first_line, second_line, parking_lot, line_orientation, image, red_mask, green_mask, magenta_mask \
                     = detect_and_label_blobs(image, num_detector_calls)
@@ -924,9 +918,6 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                     overlayed_image = cv2.addWeighted(image, 0.5, red_colored, 0.5, 0)
                     overlayed_image = cv2.addWeighted(overlayed_image, 0.5, green_colored, 0.5, 0)
                     overlayed_image = cv2.addWeighted(overlayed_image, 0.5, magenta_colored, 0.5, 0)
-
-                    if shared_race_mode.value != 3:
-                        overlayed_image = overlayed_image[(frame_height//4):, :]
                     video_writer.write(overlayed_image)
                     frame_count += 1
 
@@ -935,7 +926,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                         file_index += 1
                         frame_count = 0
                         video_filename = f"output_video_{file_index:03d}.avi"
-                        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height // 4))
+                        video_writer = cv2.VideoWriter(video_filename, fourcc, fps, (frame_width, frame_height))
 
                 # time.sleep(0.05)
                 frame_time = time.time() - start_time
