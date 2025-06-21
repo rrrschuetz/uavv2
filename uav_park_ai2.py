@@ -146,8 +146,8 @@ def start_boost(boost):
     Gboost = boost
 
     # short set back
-    set_motor_speed(13, - RACE_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
-    time.sleep(0.2)
+    set_motor_speed(13, - 2 * RACE_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+    time.sleep(0.4)
     set_motor_speed(13, MOTOR_BASIS)
 
     # Check acclelaration every 0.1 sec
@@ -665,7 +665,7 @@ def filter_contours(contours, min_area=500, angle_range=(85,95)):
         rect = cv2.minAreaRect(contour)
         box = cv2.boxPoints(rect)
         box = np.int32(box)
-        width, height = rect[1]
+        height, width = rect[1]
         angle = rect[2]
         if  angle_range[0] <= angle <= angle_range[1]:
             if shared_race_mode.value == 3 or width < height:
