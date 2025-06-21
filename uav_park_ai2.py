@@ -914,6 +914,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                         num_laps += 1
                         max_heading = 0
                         cum_heading = 0
+                        Glap_end = False
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                         # print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
                         # print(f'Camera moving average FPS: {Gcamera_moving_avg_fps:.2f}')
@@ -1158,8 +1159,8 @@ def gyro_thread(shared_race_mode, stop_event):
                     # Get the magnetometer heading (absolute heading)
                     Gheading_estimate = get_magnetometer_heading()
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
-                    # print(f"... Gheading_estimate: {Gheading_estimate:.2f}")
-                    Glap_end = yaw_diff < 10  # no larger value !!
+                    print(f"... Gheading_estimate: {Gheading_estimate:.2f}")
+                    Glap_end = Glap_end or yaw_diff < 10  # no larger value !!
                     time.sleep(0.02)
 
     except serial.SerialException as e:
