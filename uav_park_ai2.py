@@ -146,8 +146,8 @@ def start_boost(boost):
     Gboost = boost
 
     # short set back
-    set_motor_speed(13, - 2 * RACE_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
-    time.sleep(0.4)
+    set_motor_speed(13, - 1.5 * RACE_SPEED * MOTOR_FACTOR + MOTOR_BASIS)
+    time.sleep(0.2)
     set_motor_speed(13, MOTOR_BASIS)
 
     # Check acclelaration every 0.1 sec
