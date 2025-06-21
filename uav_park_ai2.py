@@ -1159,8 +1159,8 @@ def gyro_thread(shared_race_mode, stop_event):
                     # Get the magnetometer heading (absolute heading)
                     Gheading_estimate = get_magnetometer_heading()
                     yaw_diff = abs(yaw_difference(Gheading_estimate, Gheading_start))
-                    print(f"... Gheading_estimate: {Gheading_estimate:.2f}")
                     Glap_end = Glap_end or yaw_diff < 10  # no larger value !!
+                    print(f"... Gheading_estimate: {Gheading_estimate:.2f} Glap_end: {Glap_end}")
                     time.sleep(0.02)
 
     except serial.SerialException as e:
