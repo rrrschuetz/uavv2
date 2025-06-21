@@ -716,7 +716,7 @@ def detect_and_label_blobs(image, num_detector_calls):
     green_contours = filter_contours(green_contours)
 
     # If both red and green objects present, pick the one with the largest Y coordinate
-    if red_contours and green_contours and MONOCHROM_MODE:
+    if shared_race_mode.value == 3 and red_contours and green_contours and MONOCHROM_MODE:
         all_contours = [(cnt, 'R') for cnt in red_contours] + [(cnt, 'G') for cnt in green_contours]
         # contours may be Nx2 or Nx1x2, so reshape to Nx2
         best_contour, best_label = max(
@@ -883,7 +883,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                 image = np.hstack((image0, image1))
                 image = image[frame_height:, :]
 
-                if CROPPING_MODE:
+                if shared_race_mode.value == 3 and CROPPING_MODE:
                     cut = frame_width // 4
                     if Gclock_wise:
                         image[:, :cut, :] = 0
