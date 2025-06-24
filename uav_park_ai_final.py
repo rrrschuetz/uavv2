@@ -1184,6 +1184,8 @@ def sensor_callback():
         print("Race started")
         start_boost(MOTOR_BOOST)
         shared_race_mode.value = 1
+    elif shared_race_mode.value == 6:
+        set_servo_angle(11, LIFTER_BASIS)
 
 
 def get_clock_wise(sock):
@@ -1462,25 +1464,20 @@ def main():
             if PARKING_MODE and Gobstacles:
                 Gmodel_cc = None
                 Gmodel_cw = None
-                stop3sec = False
+
                 shared_race_mode.value = 3
                 while shared_race_mode.value != 6:
-                    if not stop3sec and 350 reached:
-                        stop3sec = True
-                        for _ in range(10):
-                            set_motor_speed(13, MOTOR_BASIS)
-                            time.sleep(0.1)
-                        time.sleep(3)
-                        start_boost(MOTOR_BOOST)
+                    time.sleep(0.1)
+                for _ in range(10):
+                    set_motor_speed(13, MOTOR_BASIS)
                     time.sleep(0.1)
                 time.sleep(3)
-                shared_race_mode.value = 3
                 start_boost(MOTOR_BOOST)
 
+                shared_race_mode.value = 3
+                while shared_race_mode.value != 6:
+                    time.sleep(0.1)
                 park()
-                time.sleep(10)
-                set_servo_angle(11, LIFTER_BASIS)
-                time.sleep(2)
 
             else:
                 for _ in range(10):
