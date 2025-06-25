@@ -1193,6 +1193,7 @@ def sensor_callback():
         shared_race_mode.value = 1
     elif shared_race_mode.value == 6:
         set_servo_angle(11, LIFTER_BASIS)
+        shared_race_mode.value = 5
 
 
 def get_clock_wise(sock):
@@ -1485,6 +1486,8 @@ def main():
                 while shared_race_mode.value != 6:
                     time.sleep(0.1)
                 park()
+                while shared_race_mode.value != 5:
+                    time.sleep(0.1)
 
             else:
                 for _ in range(10):
