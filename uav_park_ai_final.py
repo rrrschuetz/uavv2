@@ -863,7 +863,7 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
     num_detector_calls = 0
     num_laps = 0
     heading_prev_lap = Gheading_estimate
-    max_heading = 0
+    #max_heading = 0
     cum_heading = 0
 
     # detector = MarkingDetector(output_dir="detections")
@@ -907,13 +907,19 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
 
                 if shared_race_mode.value == 1:
                     # print(f"max_heading {max_heading} Gheading_estimate {Gheading_estimate}")
-                    max_heading = max(max_heading, Gheading_estimate)
-                    if (not PARKING_MODE and max_heading > 350 and abs(cum_heading) > 350 and Gfront_distance < 1.3) \
-                        or (PARKING_MODE and max_heading > 350 and abs(cum_heading) > 350 and num_laps < TOTAL_LAPS) \
-                        or (PARKING_MODE and max_heading > 350 and abs(cum_heading) > 290 and num_laps == TOTAL_LAPS-1):
-                        print(f"max_heading {max_heading} cum_heading {cum_heading} Gfront_distance {Gfront_distance}")
+                    #max_heading = max(max_heading, Gheading_estimate)
+                    #if (not PARKING_MODE and max_heading > 350 and abs(cum_heading) > 350 and Gfront_distance < 1.3) \
+                    #    or (PARKING_MODE and max_heading > 350 and abs(cum_heading) > 350 and num_laps < TOTAL_LAPS) \
+                    #    or (PARKING_MODE and max_heading > 350 and abs(cum_heading) > 290 and num_laps == TOTAL_LAPS-1):
+                    #    print(f"max_heading {max_heading} cum_heading {cum_heading} Gfront_distance {Gfront_distance}")
+
+                    if (not PARKING_MODE and abs(cum_heading) > 350 and Gfront_distance < 1.3) \
+                        or (PARKING_MODE and abs(cum_heading) > 350 and num_laps < TOTAL_LAPS) \
+                        or (PARKING_MODE and abs(cum_heading) > 290 and num_laps == TOTAL_LAPS - 1):
+                        print(f"cum_heading {cum_heading} Gfront_distance {Gfront_distance}")
+
                         num_laps += 1
-                        max_heading = 0
+                        #max_heading = 0
                         cum_heading = 0
                         print(f"Laps completed: {num_laps} / {Gheading_estimate:.2f}")
                         # print(f'LIDAR moving average FPS: {Glidar_moving_avg_fps:.2f}')
@@ -923,7 +929,8 @@ def camera_thread(uav_camera0, uav_camera1, shared_race_mode, device, stop_event
                             print("End of race.")
 
                 elif shared_race_mode.value == 3:
-                    if PARKING_MODE and max_heading > 350 and abs(cum_heading) > 340:
+                    #if PARKING_MODE and max_heading > 350 and abs(cum_heading) > 340:
+                    if PARKING_MODE and abs(cum_heading) > 340:
                         shared_race_mode.value = 6
                         print("Pause 3 sec")
 
